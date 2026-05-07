@@ -1,8 +1,8 @@
 package com.lawauto.backend.user;
 
 import jakarta.transaction.Transactional;
+import java.util.Objects;
 import java.util.Set;
-import java.util.List;
 import java.util.UUID;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -32,7 +32,7 @@ public class UserAdminService {
     }
 
     public UserDetail getUserDetail(UUID orgId, UUID userId) {
-        UserEntity user = userRepository.findById(userId)
+        UserEntity user = userRepository.findById(Objects.requireNonNull(userId))
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found"));
         if (!orgId.equals(user.getOrgId())) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "User does not belong to org");
@@ -40,7 +40,7 @@ public class UserAdminService {
 
         RoleKey role = userRoleRepository.findByUserId(userId).stream()
                 .findFirst()
-                .flatMap(userRole -> roleRepository.findById(userRole.getRoleId()))
+                .flatMap(userRole -> roleRepository.findById(Objects.requireNonNull(userRole.getRoleId())))
                 .map(RoleEntity::getKey)
                 .orElse(null);
 
@@ -58,7 +58,7 @@ public class UserAdminService {
 
     @Transactional
     public void updateUserRole(UUID orgId, UUID userId, RoleKey roleKey) {
-        UserEntity user = userRepository.findById(userId)
+        UserEntity user = userRepository.findById(Objects.requireNonNull(userId))
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found"));
         if (!orgId.equals(user.getOrgId())) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "User does not belong to org");
@@ -81,7 +81,7 @@ public class UserAdminService {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Unsupported user status");
         }
 
-        UserEntity user = userRepository.findById(userId)
+        UserEntity user = userRepository.findById(Objects.requireNonNull(userId))
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found"));
         if (!orgId.equals(user.getOrgId())) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "User does not belong to org");

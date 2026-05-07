@@ -8,7 +8,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import com.lawauto.backend.common.GlobalExceptionHandler;
-import java.util.Map;
+import java.util.Objects;
 import java.util.UUID;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -33,34 +33,38 @@ class AuthControllerTest {
         UUID userId = UUID.randomUUID();
         UUID orgId = UUID.randomUUID();
 
-        when(authService.register(any())).thenReturn(Map.of(
-                "token", "jwt-token",
-                "refreshToken", "refresh-token",
-                "userId", userId,
-                "orgId", orgId,
-                "email", "user@example.com",
-                "role", "LAWYER"
-        ));
+        when(authService.register(any())).thenReturn(AuthResponseDto.builder()
+                .token("jwt-token")
+                .refreshToken("refresh-token")
+                .userId(userId)
+                .orgId(orgId)
+                .email("user@example.com")
+                .role("LAWYER")
+                .build()
+        );
 
         String body = """
                 {"orgId":"%s","email":"user@example.com","fullName":"User Test","password":"Password123","role":"LAWYER"}
                 """.formatted(orgId);
 
-        mockMvc.perform(post("/api/auth/register").contentType(MediaType.APPLICATION_JSON).content(body))
+        mockMvc.perform(post("/api/auth/register").contentType(Objects.requireNonNull(MediaType.APPLICATION_JSON)).content(Objects.requireNonNull(body)))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.token").value("jwt-token"))
-                .andExpect(jsonPath("$.refreshToken").value("refresh-token"));
+                .andExpect(jsonPath("$.data.token").value("jwt-token"))
+                .andExpect(jsonPath("$.data.refreshToken").value("refresh-token"));
     }
 
     @Test
     void refreshReturnsToken() throws Exception {
-        when(authService.refresh(any())).thenReturn(Map.of("token", "new-access", "refreshToken", "new-refresh"));
+        when(authService.refresh(any())).thenReturn(AuthResponseDto.builder()
+                .token("new-access")
+                .refreshToken("new-refresh")
+                .build());
 
         mockMvc.perform(post("/api/auth/refresh")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"refreshToken\":\"abc\"}"))
+                        .contentType(Objects.requireNonNull(MediaType.APPLICATION_JSON))
+                        .content(Objects.requireNonNull("{\"refreshToken\":\"abc\"}")))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.token").value("new-access"));
+                .andExpect(jsonPath("$.data.token").value("new-access"));
     }
 
     @Test
@@ -70,7 +74,7 @@ class AuthControllerTest {
                 {"orgId":"%s","email":"user@example.com","fullName":"User Test","role":"LAWYER"}
                 """.formatted(orgId);
 
-        mockMvc.perform(post("/api/auth/register").contentType(MediaType.APPLICATION_JSON).content(body))
+        mockMvc.perform(post("/api/auth/register").contentType(Objects.requireNonNull(MediaType.APPLICATION_JSON)).content(Objects.requireNonNull(body)))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.fieldErrors.password").exists());
 

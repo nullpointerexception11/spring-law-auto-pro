@@ -9,7 +9,6 @@ import com.lawauto.backend.auth.AuthPrincipal;
 import com.lawauto.backend.auth.AuthorizationGuard;
 import com.lawauto.backend.auth.JwtAuthFilter;
 import com.lawauto.backend.common.GlobalExceptionHandler;
-import java.util.Optional;
 import java.util.UUID;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -29,7 +28,7 @@ class OrgControllerTest {
 
     @MockBean private JwtAuthFilter jwtAuthFilter;
     @MockBean private AuthorizationGuard authorizationGuard;
-    @MockBean private OrgRepository orgRepository;
+    @MockBean private OrgService orgService;
 
     @Test
     void meReturnsCurrentOrg() throws Exception {
@@ -37,12 +36,13 @@ class OrgControllerTest {
         UUID userId = UUID.randomUUID();
         AuthPrincipal principal = new AuthPrincipal(userId, orgId, "ADMIN", "admin@lawauto.com");
 
-        Org org = new Org();
-        setField(org, "id", orgId);
-        setField(org, "name", "Law Auto Org");
+        OrgResponseDto org = OrgResponseDto.builder()
+                .id(orgId)
+                .name("Law Auto Org")
+                .build();
 
         when(authorizationGuard.currentPrincipal()).thenReturn(principal);
-        when(orgRepository.findById(orgId)).thenReturn(Optional.of(org));
+        when(orgService.getOrg(orgId)).thenReturn(org);
 
         mockMvc.perform(get("/api/orgs/me"))
                 .andExpect(status().isOk())
@@ -57,20 +57,10 @@ class OrgControllerTest {
         AuthPrincipal principal = new AuthPrincipal(userId, orgId, "ADMIN", "admin@lawauto.com");
 
         when(authorizationGuard.currentPrincipal()).thenReturn(principal);
-        when(orgRepository.findById(orgId)).thenReturn(Optional.empty());
+        when(orgService.getOrg(orgId)).thenThrow(new org.springframework.web.server.ResponseStatusException(org.springframework.http.HttpStatus.BAD_REQUEST, "Organization not found"));
 
         mockMvc.perform(get("/api/orgs/me"))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.error").value("Organization not found"));
-    }
-
-    private static void setField(Object target, String fieldName, Object value) {
-        try {
-            var field = target.getClass().getDeclaredField(fieldName);
-            field.setAccessible(true);
-            field.set(target, value);
-        } catch (ReflectiveOperationException ex) {
-            throw new RuntimeException(ex);
-        }
     }
 }

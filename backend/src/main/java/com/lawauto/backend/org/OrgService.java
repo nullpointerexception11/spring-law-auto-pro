@@ -17,7 +17,7 @@ public class OrgService {
     }
 
     public OrgResponseDto getOrg(UUID orgId) {
-        Org org = orgRepository.findById(orgId)
+        Org org = orgRepository.findById(java.util.Objects.requireNonNull(orgId))
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Organization not found"));
         return OrgResponseDto.fromEntity(org);
     }

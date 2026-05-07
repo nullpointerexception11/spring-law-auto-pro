@@ -11,6 +11,7 @@ import com.lawauto.backend.auth.AuthorizationGuard;
 import com.lawauto.backend.auth.JwtAuthFilter;
 import com.lawauto.backend.common.GlobalExceptionHandler;
 import java.util.List;
+import java.util.Objects;
 import java.util.UUID;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -36,14 +37,14 @@ class ResearchControllerTest {
     @Test
     void listReturnsData() throws Exception {
         UUID orgId = UUID.randomUUID();
-        ResearchSessionEntity entity = new ResearchSessionEntity();
-        entity.setId(UUID.randomUUID());
-        entity.setOrgId(orgId);
-        entity.setTitle("AİHM ifade özgürlüğü");
-        entity.setScopeType("GENERAL");
-        entity.setStatus("ACTIVE");
+        ResearchDto.Session session = ResearchDto.Session.builder()
+                .id(UUID.randomUUID())
+                .title("AİHM ifade özgürlüğü")
+                .scopeType("GENERAL")
+                .status("ACTIVE")
+                .build();
 
-        when(researchService.listSessions(orgId)).thenReturn(List.of(entity));
+        when(researchService.listSessions(orgId)).thenReturn(Objects.requireNonNull(List.of(session)));
 
         mockMvc.perform(get("/api/research-sessions").param("orgId", orgId.toString()))
                 .andExpect(status().isOk())
@@ -59,8 +60,8 @@ class ResearchControllerTest {
                 """.formatted(UUID.randomUUID());
 
         mockMvc.perform(post("/api/research-sessions")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(body))
+                        .contentType(Objects.requireNonNull(MediaType.APPLICATION_JSON))
+                        .content(Objects.requireNonNull(body)))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.fieldErrors.title").exists())
                 .andExpect(jsonPath("$.fieldErrors.scopeType").exists());
@@ -83,9 +84,9 @@ class ResearchControllerTest {
                 """;
         mockMvc.perform(post("/api/research-sessions/{sessionId}/notes", sessionId)
                         .param("orgId", orgId.toString())
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(body))
+                        .contentType(Objects.requireNonNull(MediaType.APPLICATION_JSON))
+                        .content(Objects.requireNonNull(body)))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.id").value(noteId.toString()));
+                .andExpect(jsonPath("$.data").value(noteId.toString()));
     }
 }

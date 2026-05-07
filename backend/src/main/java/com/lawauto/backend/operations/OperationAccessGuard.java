@@ -1,6 +1,7 @@
 package com.lawauto.backend.operations;
 
 import com.lawauto.backend.auth.AuthPrincipal;
+import java.util.Objects;
 import java.util.UUID;
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
@@ -54,7 +55,7 @@ public class OperationAccessGuard {
             default -> throw new IllegalArgumentException("Forbidden: unsupported role");
         };
 
-        Integer count = jdbc.queryForObject(sql, params(principal, caseId), Integer.class);
+        Integer count = jdbc.queryForObject(sql, Objects.requireNonNull(params(principal, caseId)), Integer.class);
         if (count == null || count == 0) {
             throw new IllegalArgumentException("Forbidden: no access to case");
         }
@@ -105,7 +106,7 @@ public class OperationAccessGuard {
                 .addValue("orgId", principal.orgId())
                 .addValue("userId", principal.userId());
 
-        Integer count = jdbc.queryForObject(sql, source, Integer.class);
+        Integer count = jdbc.queryForObject(sql, Objects.requireNonNull(source), Integer.class);
         if (count == null || count == 0) {
             throw new IllegalArgumentException("Forbidden: no access to client");
         }

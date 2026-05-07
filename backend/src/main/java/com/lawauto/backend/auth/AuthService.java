@@ -111,7 +111,7 @@ public class AuthService {
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid refresh token");
         }
 
-        UserEntity user = userRepository.findById(userId)
+        UserEntity user = userRepository.findById(java.util.Objects.requireNonNull(userId))
                 .orElseThrow(() -> new IllegalArgumentException("User not found"));
 
         if (!"ACTIVE".equalsIgnoreCase(user.getStatus())) {
@@ -145,8 +145,10 @@ public class AuthService {
 
     private String resolveRole(UUID userId) {
         return userRoleRepository.findByUserId(userId).stream()
-                .map(ur -> roleRepository.findById(ur.getRoleId()).orElse(null))
-                .filter(java.util.Objects::nonNull)
+                .flatMap(ur -> {
+                    UUID roleId = ur.getRoleId();
+                    return roleId != null ? roleRepository.findById(roleId).stream() : java.util.stream.Stream.empty();
+                })
                 .map(r -> r.getKey().name())
                 .findFirst()
                 .orElse("LAWYER");

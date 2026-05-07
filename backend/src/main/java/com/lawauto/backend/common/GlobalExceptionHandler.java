@@ -60,6 +60,12 @@ public class GlobalExceptionHandler {
                 .body(ApiErrorResponse.of(403, ex.getMessage(), request.getRequestURI()));
     }
 
+    @ExceptionHandler(org.springframework.web.server.ResponseStatusException.class)
+    public ResponseEntity<ApiErrorResponse> handleResponseStatus(org.springframework.web.server.ResponseStatusException ex, HttpServletRequest request) {
+        return ResponseEntity.status(ex.getStatusCode())
+                .body(ApiErrorResponse.of(ex.getStatusCode().value(), ex.getReason(), request.getRequestURI()));
+    }
+
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ApiErrorResponse> handleGeneric(Exception ex, HttpServletRequest request) {
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)

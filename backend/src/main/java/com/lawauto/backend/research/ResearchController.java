@@ -45,31 +45,31 @@ public class ResearchController {
     }
 
     @PostMapping
-    public Map<String, UUID> create(@Valid @RequestBody CreateResearchSessionRequest req) {
+    public ApiResponse<UUID> create(@Valid @RequestBody CreateResearchSessionRequest req) {
         authorizationGuard.requireOrg(req.orgId());
         AuthPrincipal principal = authorizationGuard.currentPrincipal();
-        return Map.of("id", researchService.createSession(principal, req));
+        return ApiResponse.ok(researchService.createSession(principal, req));
     }
 
     @PostMapping("/{sessionId}/results")
-    public Map<String, UUID> addResult(
+    public ApiResponse<UUID> addResult(
             @RequestParam UUID orgId,
             @PathVariable UUID sessionId,
             @Valid @RequestBody AddResearchResultRequest req
     ) {
         authorizationGuard.requireOrg(orgId);
-        return Map.of("id", researchService.addResult(orgId, sessionId, req));
+        return ApiResponse.ok(researchService.addResult(orgId, sessionId, req));
     }
 
     @PostMapping("/{sessionId}/notes")
-    public Map<String, UUID> addNote(
+    public ApiResponse<UUID> addNote(
             @RequestParam UUID orgId,
             @PathVariable UUID sessionId,
             @Valid @RequestBody AddResearchNoteRequest req
     ) {
         authorizationGuard.requireOrg(orgId);
         AuthPrincipal principal = authorizationGuard.currentPrincipal();
-        return Map.of("id", researchService.addNote(principal, orgId, sessionId, req));
+        return ApiResponse.ok(researchService.addNote(principal, orgId, sessionId, req));
     }
 
     public record CreateResearchSessionRequest(

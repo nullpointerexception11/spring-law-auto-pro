@@ -9,6 +9,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.lawauto.backend.auth.AuthPrincipal;
 import java.util.Optional;
 import java.util.UUID;
+import org.springframework.web.server.ResponseStatusException;
 import org.junit.jupiter.api.Test;
 
 class PetitionTemplateServiceTest {
@@ -51,7 +52,7 @@ class PetitionTemplateServiceTest {
         );
         AuthPrincipal principal = new AuthPrincipal(UUID.randomUUID(), req.orgId(), "ADMIN", "a@a.com");
 
-        assertThrows(IllegalArgumentException.class, () -> service.create(principal, req));
+        assertThrows(ResponseStatusException.class, () -> service.create(principal, req));
     }
 
     @Test
@@ -71,6 +72,6 @@ class PetitionTemplateServiceTest {
                 "{\"version\":1,\"type\":\"PETITION_TEMPLATE\",\"sections\":[{\"key\":\"x\",\"title\":\"A\",\"mode\":\"INPUT\"},{\"key\":\"x\",\"title\":\"B\",\"mode\":\"INPUT\"}]}"
         );
 
-        assertThrows(IllegalArgumentException.class, () -> service.update(orgId, id, req));
+        assertThrows(ResponseStatusException.class, () -> service.update(orgId, id, req));
     }
 }

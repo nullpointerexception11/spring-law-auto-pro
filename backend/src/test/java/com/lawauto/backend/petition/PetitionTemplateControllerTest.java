@@ -3,7 +3,6 @@ package com.lawauto.backend.petition;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -12,6 +11,7 @@ import com.lawauto.backend.auth.AuthorizationGuard;
 import com.lawauto.backend.auth.JwtAuthFilter;
 import com.lawauto.backend.common.GlobalExceptionHandler;
 import java.util.List;
+import java.util.Objects;
 import java.util.UUID;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -36,14 +36,14 @@ class PetitionTemplateControllerTest {
     @Test
     void listReturnsTemplates() throws Exception {
         UUID orgId = UUID.randomUUID();
-        PetitionTemplateEntity t = new PetitionTemplateEntity();
-        t.setId(UUID.randomUUID());
-        t.setOrgId(orgId);
-        t.setName("Ceza Dilekçe Şablonu");
-        t.setVersion(1);
-        t.setActive(true);
-        t.setStructureJson("{\"sections\":[]}");
-        when(service.listByOrg(orgId)).thenReturn(List.of(t));
+        PetitionTemplateDto t = PetitionTemplateDto.builder()
+                .id(UUID.randomUUID())
+                .name("Ceza Dilekçe Şablonu")
+                .version(1)
+                .isActive(true)
+                .structureJson("{\"sections\":[]}")
+                .build();
+        when(service.listByOrg(orgId)).thenReturn(Objects.requireNonNull(List.of(t)));
 
         mockMvc.perform(get("/api/admin/petition-templates").param("orgId", orgId.toString()))
                 .andExpect(status().isOk())
@@ -58,8 +58,8 @@ class PetitionTemplateControllerTest {
                 }
                 """.formatted(UUID.randomUUID());
         mockMvc.perform(post("/api/admin/petition-templates")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(body))
+                        .contentType(Objects.requireNonNull(MediaType.APPLICATION_JSON))
+                        .content(Objects.requireNonNull(body)))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.fieldErrors.name").exists())
                 .andExpect(jsonPath("$.fieldErrors.structureJson").exists());

@@ -15,6 +15,7 @@ import com.lawauto.backend.common.GlobalExceptionHandler;
 import com.lawauto.backend.operations.OperationAccessGuard;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Objects;
 import java.util.UUID;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -45,7 +46,7 @@ class CasePetitionDraftControllerTest {
                 UUID.randomUUID(), orgId, caseId, null, "Taslak", "İçerik", "{\"subject\":\"Deneme\"}", "DRAFT", false, null, UUID.randomUUID(),
                 LocalDateTime.now(), LocalDateTime.now()
         );
-        when(service.listByCase(orgId, caseId)).thenReturn(List.of(dto));
+        when(service.listByCase(orgId, caseId)).thenReturn(Objects.requireNonNull(List.of(dto)));
 
         mockMvc.perform(get("/api/cases/{caseId}/petition-drafts", caseId).param("orgId", orgId.toString()))
                 .andExpect(status().isOk())
@@ -67,8 +68,8 @@ class CasePetitionDraftControllerTest {
                 """.formatted(orgId, anotherCase, UUID.randomUUID());
 
         mockMvc.perform(post("/api/cases/{caseId}/petition-drafts", caseId)
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(body))
+                        .contentType(Objects.requireNonNull(MediaType.APPLICATION_JSON))
+                        .content(Objects.requireNonNull(body)))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.error").value("caseId path/body mismatch"));
     }
@@ -85,8 +86,8 @@ class CasePetitionDraftControllerTest {
                 """;
         mockMvc.perform(patch("/api/cases/{caseId}/petition-drafts/{draftId}", caseId, draftId)
                         .param("orgId", orgId.toString())
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(body))
+                        .contentType(Objects.requireNonNull(MediaType.APPLICATION_JSON))
+                        .content(Objects.requireNonNull(body)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.data").value("petition-draft-updated"));
 

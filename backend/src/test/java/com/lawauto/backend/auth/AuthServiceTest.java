@@ -14,7 +14,7 @@ import com.lawauto.backend.user.UserEntity;
 import com.lawauto.backend.user.UserRepository;
 import com.lawauto.backend.user.UserRoleRepository;
 import java.time.LocalDateTime;
-import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;
@@ -40,6 +40,7 @@ class AuthServiceTest {
     }
 
     @Test
+    @SuppressWarnings("null")
     void registerCreatesUserAndReturnsToken() {
         UUID orgId = UUID.randomUUID();
         AuthService.RegisterRequest request = new AuthService.RegisterRequest(
@@ -59,16 +60,16 @@ class AuthServiceTest {
         role.setCreatedAt(LocalDateTime.now());
 
         when(roleRepository.findByOrgIdAndKey(orgId, RoleKey.LAWYER)).thenReturn(Optional.of(role));
-        when(userRepository.save(any(UserEntity.class))).thenAnswer(inv -> inv.getArgument(0));
+        when(userRepository.save(any())).thenAnswer(inv -> Objects.requireNonNull(inv.getArgument(0, UserEntity.class)));
 
-        Map<String, Object> result = authService.register(request);
+        AuthResponseDto result = authService.register(request);
 
-        assertTrue(result.containsKey("token"));
-        assertTrue(result.containsKey("refreshToken"));
-        assertEquals("lawyer@example.com", result.get("email"));
-        assertEquals("LAWYER", result.get("role"));
+        assertTrue(result.getToken() != null);
+        assertTrue(result.getRefreshToken() != null);
+        assertEquals("lawyer@example.com", result.getEmail());
+        assertEquals("LAWYER", result.getRole());
 
-        verify(userRepository).save(any(UserEntity.class));
+        verify(userRepository).save(any());
         verify(userRoleRepository).save(any());
         verify(refreshTokenRepository).save(any(), any(), any(), any());
     }

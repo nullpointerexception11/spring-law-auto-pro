@@ -7,8 +7,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 import com.lawauto.backend.auth.AuthorizationGuard;
 import com.lawauto.backend.auth.JwtAuthFilter;
-import com.lawauto.backend.operations.OperationAccessGuard;
 import com.lawauto.backend.common.GlobalExceptionHandler;
+import java.util.Objects;
 import java.util.UUID;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -172,9 +172,9 @@ class OperationsValidationTest {
     }
 
     private void assertValidation(String path, String body, String field) throws Exception {
-        mockMvc.perform(post(path)
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(body))
+        mockMvc.perform(post(Objects.requireNonNull(path))
+                        .contentType(Objects.requireNonNull(MediaType.APPLICATION_JSON))
+                        .content(Objects.requireNonNull(body)))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.status").value(400))
                 .andExpect(jsonPath("$.error").value("Validation failed"))

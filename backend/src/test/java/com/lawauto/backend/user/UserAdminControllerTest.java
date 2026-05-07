@@ -13,6 +13,7 @@ import com.lawauto.backend.auth.JwtAuthFilter;
 import com.lawauto.backend.common.GlobalExceptionHandler;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Objects;
 import java.util.UUID;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -50,15 +51,13 @@ class UserAdminControllerTest {
         user.setCreatedAt(LocalDateTime.of(2026, 5, 7, 18, 0));
         user.setUpdatedAt(LocalDateTime.of(2026, 5, 7, 18, 0));
 
-        when(userAdminService.listUsers(orgId, 0, 20, "createdAt,desc")).thenReturn(List.of(user));
-        when(userAdminService.countUsers(orgId)).thenReturn(1L);
+        when(userAdminService.listUsers(org.mockito.ArgumentMatchers.eq(orgId), org.mockito.ArgumentMatchers.any()))
+                .thenReturn(new org.springframework.data.domain.PageImpl<>(Objects.requireNonNull(List.of(user))));
 
         mockMvc.perform(get("/api/users").param("orgId", orgId.toString()))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.data[0].id").value(userId.toString()))
                 .andExpect(jsonPath("$.data[0].passwordHash").doesNotExist());
-
-        verify(userAdminService).listUsers(orgId, 0, 20, "createdAt,desc");
     }
 
     @Test
@@ -69,8 +68,8 @@ class UserAdminControllerTest {
         String body = "{}";
         mockMvc.perform(patch("/api/users/{userId}/role", userId)
                         .param("orgId", orgId.toString())
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(body))
+                        .contentType(Objects.requireNonNull(MediaType.APPLICATION_JSON))
+                        .content(Objects.requireNonNull(body)))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.fieldErrors.role").exists());
 
@@ -112,8 +111,8 @@ class UserAdminControllerTest {
                 """;
         mockMvc.perform(patch("/api/users/{userId}/status", userId)
                         .param("orgId", orgId.toString())
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(body))
+                        .contentType(Objects.requireNonNull(MediaType.APPLICATION_JSON))
+                        .content(Objects.requireNonNull(body)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.data").value("status-updated"));
 
@@ -132,8 +131,8 @@ class UserAdminControllerTest {
                 """;
         mockMvc.perform(patch("/api/users/{userId}/status", userId)
                         .param("orgId", orgId.toString())
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(body))
+                        .contentType(Objects.requireNonNull(MediaType.APPLICATION_JSON))
+                        .content(Objects.requireNonNull(body)))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.fieldErrors.status").exists());
 

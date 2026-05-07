@@ -1,6 +1,5 @@
 package com.lawauto.backend.operations;
 
-import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
@@ -11,9 +10,9 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 import com.lawauto.backend.auth.AuthorizationGuard;
 import com.lawauto.backend.auth.JwtAuthFilter;
-import com.lawauto.backend.operations.OperationAccessGuard;
 import com.lawauto.backend.common.GlobalExceptionHandler;
 import java.util.List;
+import java.util.Objects;
 import java.util.UUID;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -53,14 +52,14 @@ class OperationsControllerTest {
         UUID caseId = UUID.randomUUID();
         UUID userId = UUID.randomUUID();
 
-        when(hearingService.listByOrg(orgId)).thenReturn(List.of(
+        when(hearingService.listByOrg(orgId)).thenReturn(Objects.requireNonNull(List.of(
                 new OperationDtos.HearingDto(
                         hearingId, orgId, caseId,
                         java.time.LocalDateTime.of(2026, 5, 8, 10, 0),
                         "Istanbul 1. Asliye", "ilk durusma", null, userId,
                         java.time.LocalDateTime.of(2026, 5, 7, 12, 0)
                 )
-        ));
+        )));
 
         mockMvc.perform(get("/api/operations/hearings").param("orgId", orgId.toString()))
                 .andExpect(status().isOk())
@@ -82,8 +81,8 @@ class OperationsControllerTest {
                 """.formatted(UUID.randomUUID(), UUID.randomUUID(), UUID.randomUUID());
 
         mockMvc.perform(post("/api/operations/case-payments")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(body))
+                        .contentType(Objects.requireNonNull(MediaType.APPLICATION_JSON))
+                        .content(Objects.requireNonNull(body)))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.fieldErrors.amount").exists());
 
