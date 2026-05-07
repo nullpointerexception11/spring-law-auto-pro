@@ -12,7 +12,7 @@ import java.time.LocalDateTime;
 import java.util.UUID;
 
 @Entity
-@Table(name = "\"PetitionTemplate\"")
+@Table(name = "PetitionTemplate")
 @Getter
 @Setter
 @NoArgsConstructor
@@ -20,7 +20,7 @@ public class PetitionTemplateEntity {
     @Id
     private UUID id;
     
-    @Column(name = "\"orgId\"", nullable = false)
+    @Column(name = "orgId", nullable = false)
     private UUID orgId;
     
     @Column(nullable = false)
@@ -29,18 +29,18 @@ public class PetitionTemplateEntity {
     @Column(nullable = false)
     private int version;
     
-    @Column(name = "\"isActive\"", nullable = false)
+    @Column(name = "isActive", nullable = false)
     private boolean isActive;
     
-    @Column(name = "\"structureJson\"", nullable = false)
+    @Column(name = "structureJson", nullable = false)
     private String structureJson;
     
-    @Column(name = "\"createdByUserId\"", nullable = false)
+    @Column(name = "createdByUserId", nullable = false)
     private UUID createdByUserId;
     
-    @Column(name = "\"createdAt\"", nullable = false)
+    @Column(name = "createdAt", nullable = false)
     private LocalDateTime createdAt;
     
-    @Column(name = "\"updatedAt\"", nullable = false)
+    @Column(name = "updatedAt", nullable = false)
     private LocalDateTime updatedAt;
 }

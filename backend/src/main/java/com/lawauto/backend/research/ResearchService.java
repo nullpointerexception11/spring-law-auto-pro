@@ -4,8 +4,10 @@ import com.lawauto.backend.auth.AuthPrincipal;
 import jakarta.transaction.Transactional;
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.UUID;
+import java.util.stream.Collectors;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.web.server.ResponseStatusException;
 
 @Service
 public class ResearchService {
@@ -23,17 +25,19 @@ public class ResearchService {
         this.noteRepository = noteRepository;
     }
 
-    public List<ResearchSessionEntity> listSessions(UUID orgId) {
-        return sessionRepository.findByOrgIdOrderByCreatedAtDesc(orgId);
+    public List<ResearchDto.Session> listSessions(UUID orgId) {
+        return sessionRepository.findByOrgIdOrderByCreatedAtDesc(orgId).stream()
+                .map(ResearchDto.Session::fromEntity)
+                .collect(Collectors.toList());
     }
 
-    public ResearchBundle getSession(UUID orgId, UUID sessionId) {
+    public ResearchDto.Bundle getSession(UUID orgId, UUID sessionId) {
         ResearchSessionEntity session = findSession(orgId, sessionId);
-        return new ResearchBundle(
-                session,
-                resultRepository.findByResearchSessionIdOrderByCreatedAtDesc(sessionId),
-                noteRepository.findByResearchSessionIdOrderByCreatedAtDesc(sessionId)
-        );
+        return ResearchDto.Bundle.builder()
+                .session(ResearchDto.Session.fromEntity(session))
+                .results(resultRepository.findByResearchSessionIdOrderByCreatedAtDesc(sessionId).stream().map(ResearchDto.Result::fromEntity).collect(Collectors.toList()))
+                .notes(noteRepository.findByResearchSessionIdOrderByCreatedAtDesc(sessionId).stream().map(ResearchDto.Note::fromEntity).collect(Collectors.toList()))
+                .build();
     }
 
     @Transactional
@@ -88,12 +92,8 @@ public class ResearchService {
 
     private ResearchSessionEntity findSession(UUID orgId, UUID sessionId) {
         return sessionRepository.findByIdAndOrgId(sessionId, orgId)
-                .orElseThrow(() -> new IllegalArgumentException("Research session not found"));
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Research session not found"));
     }
 
-    public record ResearchBundle(
-            ResearchSessionEntity session,
-            List<ResearchResultEntity> results,
-            List<ResearchNoteEntity> notes
-    ) {}
+
 }

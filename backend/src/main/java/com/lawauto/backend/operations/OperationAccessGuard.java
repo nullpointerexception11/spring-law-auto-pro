@@ -20,35 +20,35 @@ public class OperationAccessGuard {
         String sql = switch (principal.role()) {
             case "LAWYER" -> """
                     select count(1)
-                    from \"Case\" c
-                    where c.\"id\" = :caseId
-                      and c.\"orgId\" = :orgId
-                      and c.\"deletedAt\" is null
+                    from Case c
+                    where c.id = :caseId
+                      and c.orgId = :orgId
+                      and c.deletedAt is null
                       and (
-                        c.\"createdByUserId\" = :userId
+                        c.createdByUserId = :userId
                         or exists (
-                          select 1 from \"CaseLawyer\" cl
-                          where cl.\"caseId\" = c.\"id\"
-                            and cl.\"lawyerUserId\" = :userId
-                            and cl.\"endedAt\" is null
+                          select 1 from CaseLawyer cl
+                          where cl.caseId = c.id
+                            and cl.lawyerUserId = :userId
+                            and cl.endedAt is null
                         )
                       )
                     """;
             case "SECRETARY" -> """
                     select count(1)
-                    from \"Case\" c
-                    where c.\"id\" = :caseId
-                      and c.\"orgId\" = :orgId
-                      and c.\"deletedAt\" is null
+                    from Case c
+                    where c.id = :caseId
+                      and c.orgId = :orgId
+                      and c.deletedAt is null
                       and exists (
                         select 1
-                        from \"CaseLawyer\" cl
-                        join \"SecretaryLawyer\" sl on sl.\"lawyerUserId\" = cl.\"lawyerUserId\"
-                        where cl.\"caseId\" = c.\"id\"
-                          and cl.\"endedAt\" is null
-                          and sl.\"secretaryUserId\" = :userId
-                          and sl.\"orgId\" = :orgId
-                          and sl.\"endedAt\" is null
+                        from CaseLawyer cl
+                        join SecretaryLawyer sl on sl.lawyerUserId = cl.lawyerUserId
+                        where cl.caseId = c.id
+                          and cl.endedAt is null
+                          and sl.secretaryUserId = :userId
+                          and sl.orgId = :orgId
+                          and sl.endedAt is null
                       )
                     """;
             default -> throw new IllegalArgumentException("Forbidden: unsupported role");
@@ -66,35 +66,35 @@ public class OperationAccessGuard {
         String sql = switch (principal.role()) {
             case "LAWYER" -> """
                     select count(1)
-                    from \"Client\" c
-                    where c.\"id\" = :clientId
-                      and c.\"orgId\" = :orgId
-                      and c.\"deletedAt\" is null
+                    from Client c
+                    where c.id = :clientId
+                      and c.orgId = :orgId
+                      and c.deletedAt is null
                       and (
-                        c.\"createdByUserId\" = :userId
+                        c.createdByUserId = :userId
                         or exists (
-                          select 1 from \"ClientLawyer\" cl
-                          where cl.\"clientId\" = c.\"id\"
-                            and cl.\"lawyerUserId\" = :userId
-                            and cl.\"endedAt\" is null
+                          select 1 from ClientLawyer cl
+                          where cl.clientId = c.id
+                            and cl.lawyerUserId = :userId
+                            and cl.endedAt is null
                         )
                       )
                     """;
             case "SECRETARY" -> """
                     select count(1)
-                    from \"Client\" c
-                    where c.\"id\" = :clientId
-                      and c.\"orgId\" = :orgId
-                      and c.\"deletedAt\" is null
+                    from Client c
+                    where c.id = :clientId
+                      and c.orgId = :orgId
+                      and c.deletedAt is null
                       and exists (
                         select 1
-                        from \"ClientLawyer\" cl
-                        join \"SecretaryLawyer\" sl on sl.\"lawyerUserId\" = cl.\"lawyerUserId\"
-                        where cl.\"clientId\" = c.\"id\"
-                          and cl.\"endedAt\" is null
-                          and sl.\"secretaryUserId\" = :userId
-                          and sl.\"orgId\" = :orgId
-                          and sl.\"endedAt\" is null
+                        from ClientLawyer cl
+                        join SecretaryLawyer sl on sl.lawyerUserId = cl.lawyerUserId
+                        where cl.clientId = c.id
+                          and cl.endedAt is null
+                          and sl.secretaryUserId = :userId
+                          and sl.orgId = :orgId
+                          and sl.endedAt is null
                       )
                     """;
             default -> throw new IllegalArgumentException("Forbidden: unsupported role");

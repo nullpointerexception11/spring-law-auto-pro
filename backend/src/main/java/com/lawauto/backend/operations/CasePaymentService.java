@@ -18,8 +18,8 @@ public class CasePaymentService {
 
     public List<CasePaymentDto> listByOrg(UUID orgId) {
         String sql = """
-                select \"id\", \"orgId\", \"caseId\", \"amount\", \"currency\", \"paidAt\", \"method\", \"note\", \"receiptFileId\", \"recordedByUserId\", \"createdAt\"
-                from \"CasePayment\" where \"orgId\"=:orgId and \"deletedAt\" is null order by \"paidAt\" desc
+                select id, orgId, caseId, amount, currency, paidAt, method, note, receiptFileId, recordedByUserId, createdAt
+                from CasePayment where orgId=:orgId and deletedAt is null order by paidAt desc
                 """;
         return jdbc.query(sql, new MapSqlParameterSource("orgId", orgId), (rs, n) -> new CasePaymentDto(
                 rs.getObject("id", UUID.class), rs.getObject("orgId", UUID.class), rs.getObject("caseId", UUID.class),
@@ -33,8 +33,8 @@ public class CasePaymentService {
     public UUID create(CreateCasePaymentRequest req) {
         UUID id = UUID.randomUUID();
         String sql = """
-                insert into \"CasePayment\" (\"id\", \"orgId\", \"caseId\", \"amount\", \"currency\", \"paidAt\", \"method\", \"note\", \"receiptFileId\", \"recordedByUserId\", \"updatedAt\")
-                values (:id, :orgId, :caseId, :amount, :currency, :paidAt, :method::\"PaymentMethod\", :note, :receiptFileId, :recordedByUserId, now())
+                insert into CasePayment (id, orgId, caseId, amount, currency, paidAt, method, note, receiptFileId, recordedByUserId, updatedAt)
+                values (:id, :orgId, :caseId, :amount, :currency, :paidAt, :method::PaymentMethod, :note, :receiptFileId, :recordedByUserId, now())
                 """;
         jdbc.update(sql, new MapSqlParameterSource()
                 .addValue("id", id).addValue("orgId", req.orgId()).addValue("caseId", req.caseId())

@@ -10,7 +10,7 @@ import java.time.LocalDateTime;
 import java.util.UUID;
 
 @Entity
-@Table(name = "\"Role\"")
+@Table(name = "Role")
 public class RoleEntity {
     @Id
     private UUID id;

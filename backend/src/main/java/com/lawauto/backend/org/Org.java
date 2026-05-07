@@ -12,7 +12,7 @@ import java.time.LocalDateTime;
 import java.util.UUID;
 
 @Entity
-@Table(name = "\"Org\"")
+@Table(name = "Org")
 @Getter
 @Setter
 @NoArgsConstructor
@@ -23,9 +23,9 @@ public class Org {
     @Column(nullable = false)
     private String name;
 
-    @Column(name = "\"createdAt\"", nullable = false)
+    @Column(name = "createdAt", nullable = false)
     private LocalDateTime createdAt;
 
-    @Column(name = "\"updatedAt\"", nullable = false)
+    @Column(name = "updatedAt", nullable = false)
     private LocalDateTime updatedAt;
 }

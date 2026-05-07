@@ -33,13 +33,13 @@ public class ResearchController {
     }
 
     @GetMapping
-    public ApiResponse<List<ResearchSessionEntity>> list(@RequestParam UUID orgId) {
+    public ApiResponse<List<ResearchDto.Session>> list(@RequestParam UUID orgId) {
         authorizationGuard.requireOrg(orgId);
         return ApiResponse.ok(researchService.listSessions(orgId));
     }
 
     @GetMapping("/{sessionId}")
-    public ApiResponse<ResearchService.ResearchBundle> detail(@RequestParam UUID orgId, @PathVariable UUID sessionId) {
+    public ApiResponse<ResearchDto.Bundle> detail(@RequestParam UUID orgId, @PathVariable UUID sessionId) {
         authorizationGuard.requireOrg(orgId);
         return ApiResponse.ok(researchService.getSession(orgId, sessionId));
     }

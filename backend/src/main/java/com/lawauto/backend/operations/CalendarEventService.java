@@ -18,10 +18,10 @@ public class CalendarEventService {
 
     public List<CalendarEventDto> listByOrg(UUID orgId) {
         String sql = """
-                select \"id\", \"orgId\", \"ownerUserId\", \"startsAt\", \"endsAt\", \"title\", \"body\", \"remindAt\", \"relatedCaseId\", \"relatedClientId\", \"createdAt\"
-                from \"CalendarEvent\"
-                where \"orgId\" = :orgId and \"deletedAt\" is null
-                order by \"startsAt\" asc
+                select id, orgId, ownerUserId, startsAt, endsAt, title, body, remindAt, relatedCaseId, relatedClientId, createdAt
+                from CalendarEvent
+                where orgId = :orgId and deletedAt is null
+                order by startsAt asc
                 """;
         return jdbc.query(sql, new MapSqlParameterSource("orgId", orgId), (rs, n) -> new CalendarEventDto(
                 rs.getObject("id", UUID.class),
@@ -42,7 +42,7 @@ public class CalendarEventService {
     public UUID create(CreateCalendarEventRequest req) {
         UUID id = UUID.randomUUID();
         String sql = """
-                insert into \"CalendarEvent\" (\"id\", \"orgId\", \"ownerUserId\", \"startsAt\", \"endsAt\", \"title\", \"body\", \"remindAt\", \"relatedCaseId\", \"relatedClientId\", \"updatedAt\")
+                insert into CalendarEvent (id, orgId, ownerUserId, startsAt, endsAt, title, body, remindAt, relatedCaseId, relatedClientId, updatedAt)
                 values (:id, :orgId, :ownerUserId, :startsAt, :endsAt, :title, :body, :remindAt, :relatedCaseId, :relatedClientId, now())
                 """;
         jdbc.update(sql, new MapSqlParameterSource()

@@ -18,10 +18,10 @@ public class HearingService {
 
     public List<HearingDto> listByOrg(UUID orgId) {
         String sql = """
-                select \"id\", \"orgId\", \"caseId\", \"hearingAt\", \"court\", \"notes\", \"result\", \"createdByUserId\", \"createdAt\"
-                from \"Hearing\"
-                where \"orgId\" = :orgId and \"deletedAt\" is null
-                order by \"hearingAt\" asc
+                select id, orgId, caseId, hearingAt, court, notes, result, createdByUserId, createdAt
+                from Hearing
+                where orgId = :orgId and deletedAt is null
+                order by hearingAt asc
                 """;
         return jdbc.query(sql, new MapSqlParameterSource("orgId", orgId), (rs, n) -> new HearingDto(
                 rs.getObject("id", UUID.class),
@@ -40,7 +40,7 @@ public class HearingService {
     public UUID create(CreateHearingRequest req) {
         UUID id = UUID.randomUUID();
         String sql = """
-                insert into \"Hearing\" (\"id\", \"orgId\", \"caseId\", \"hearingAt\", \"court\", \"notes\", \"result\", \"createdByUserId\", \"updatedAt\")
+                insert into Hearing (id, orgId, caseId, hearingAt, court, notes, result, createdByUserId, updatedAt)
                 values (:id, :orgId, :caseId, :hearingAt, :court, :notes, :result, :createdByUserId, now())
                 """;
         jdbc.update(sql, new MapSqlParameterSource()

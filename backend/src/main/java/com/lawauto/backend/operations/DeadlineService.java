@@ -18,10 +18,10 @@ public class DeadlineService {
 
     public List<DeadlineDto> listByOrg(UUID orgId) {
         String sql = """
-                select \"id\", \"orgId\", \"caseId\", \"type\", \"dueAt\", \"remindAt\", \"status\", \"notes\", \"createdByUserId\", \"createdAt\"
-                from \"Deadline\"
-                where \"orgId\" = :orgId and \"deletedAt\" is null
-                order by \"dueAt\" asc
+                select id, orgId, caseId, type, dueAt, remindAt, status, notes, createdByUserId, createdAt
+                from Deadline
+                where orgId = :orgId and deletedAt is null
+                order by dueAt asc
                 """;
         return jdbc.query(sql, new MapSqlParameterSource("orgId", orgId), (rs, n) -> new DeadlineDto(
                 rs.getObject("id", UUID.class),
@@ -41,7 +41,7 @@ public class DeadlineService {
     public UUID create(CreateDeadlineRequest req) {
         UUID id = UUID.randomUUID();
         String sql = """
-                insert into \"Deadline\" (\"id\", \"orgId\", \"caseId\", \"type\", \"dueAt\", \"remindAt\", \"status\", \"notes\", \"createdByUserId\", \"updatedAt\")
+                insert into Deadline (id, orgId, caseId, type, dueAt, remindAt, status, notes, createdByUserId, updatedAt)
                 values (:id, :orgId, :caseId, :type, :dueAt, :remindAt, :status, :notes, :createdByUserId, now())
                 """;
         jdbc.update(sql, new MapSqlParameterSource()

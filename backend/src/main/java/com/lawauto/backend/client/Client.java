@@ -12,7 +12,7 @@ import java.time.LocalDateTime;
 import java.util.UUID;
 
 @Entity
-@Table(name = "\"Client\"")
+@Table(name = "Client")
 @Getter
 @Setter
 @NoArgsConstructor
@@ -20,15 +20,15 @@ public class Client {
     @Id
     private UUID id;
 
-    @Column(name = "\"orgId\"", nullable = false)
+    @Column(name = "orgId", nullable = false)
     private UUID orgId;
 
-    @Column(name = "\"fullName\"", nullable = false)
+    @Column(name = "fullName", nullable = false)
     private String fullName;
 
     private String phone;
     private String email;
 
-    @Column(name = "\"deletedAt\"")
+    @Column(name = "deletedAt")
     private LocalDateTime deletedAt;
 }

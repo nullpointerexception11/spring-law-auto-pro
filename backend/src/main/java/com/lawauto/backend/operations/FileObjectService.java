@@ -16,8 +16,8 @@ public class FileObjectService {
 
     public List<FileObjectDto> listByOrg(UUID orgId) {
         String sql = """
-                select \"id\", \"orgId\", \"storageKey\", \"fileName\", \"mimeType\", \"sizeBytes\", \"sha256\", \"createdAt\"
-                from \"FileObject\" where \"orgId\"=:orgId order by \"createdAt\" desc
+                select id, orgId, storageKey, fileName, mimeType, sizeBytes, sha256, createdAt
+                from FileObject where orgId=:orgId order by createdAt desc
                 """;
         return jdbc.query(sql, new MapSqlParameterSource("orgId", orgId), (rs, n) -> new FileObjectDto(
                 rs.getObject("id", UUID.class), rs.getObject("orgId", UUID.class), rs.getString("storageKey"),
@@ -30,7 +30,7 @@ public class FileObjectService {
     public UUID create(CreateFileObjectRequest req) {
         UUID id = UUID.randomUUID();
         String sql = """
-                insert into \"FileObject\" (\"id\", \"orgId\", \"storageKey\", \"fileName\", \"mimeType\", \"sizeBytes\", \"sha256\")
+                insert into FileObject (id, orgId, storageKey, fileName, mimeType, sizeBytes, sha256)
                 values (:id, :orgId, :storageKey, :fileName, :mimeType, :sizeBytes, :sha256)
                 """;
         jdbc.update(sql, new MapSqlParameterSource()

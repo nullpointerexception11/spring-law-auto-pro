@@ -14,7 +14,7 @@ import java.time.LocalDateTime;
 import java.util.UUID;
 
 @Entity
-@Table(name = "\"Case\"")
+@Table(name = "Case")
 @Getter
 @Setter
 @NoArgsConstructor
@@ -22,10 +22,10 @@ public class CaseEntity {
     @Id
     private UUID id;
 
-    @Column(name = "\"orgId\"", nullable = false)
+    @Column(name = "orgId", nullable = false)
     private UUID orgId;
 
-    @Column(name = "\"clientId\"", nullable = false)
+    @Column(name = "clientId", nullable = false)
     private UUID clientId;
 
     @Column(nullable = false)
@@ -35,7 +35,7 @@ public class CaseEntity {
     @Column(nullable = false)
     private CaseStatus status;
 
-    @Column(name = "\"deletedAt\"")
+    @Column(name = "deletedAt")
     private LocalDateTime deletedAt;
 }
 

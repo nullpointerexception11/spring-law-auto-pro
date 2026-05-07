@@ -115,7 +115,7 @@ public class DeleteRequestService {
             default -> throw new IllegalArgumentException("Soft delete not supported for entityType: " + entityType);
         };
 
-        String sql = "update \"" + table + "\" set \"deletedAt\"=now(), \"deletedByUserId\"=:byUserId where \"id\"=:id";
+        String sql = "update \"" + table + " set deletedAt=now(), deletedByUserId=:byUserId where id\"=:id";
         jdbc.update(sql, new MapSqlParameterSource().addValue("id", entityId).addValue("byUserId", byUserId));
     }
 
@@ -134,7 +134,7 @@ public class DeleteRequestService {
             default -> throw new IllegalArgumentException("Unknown entityType: " + entityType);
         };
 
-        String sql = "delete from \"" + table + "\" where \"id\"=:id";
+        String sql = "delete from \"" + table + " where id\"=:id";
         jdbc.update(sql, new MapSqlParameterSource().addValue("id", entityId));
     }
 }

@@ -11,7 +11,7 @@ import java.util.UUID;
 
 @Entity
 @IdClass(UserRoleEntity.UserRoleId.class)
-@Table(name = "\"UserRole\"")
+@Table(name = "UserRole")
 public class UserRoleEntity {
     @Id
     @Column(name = "userId")

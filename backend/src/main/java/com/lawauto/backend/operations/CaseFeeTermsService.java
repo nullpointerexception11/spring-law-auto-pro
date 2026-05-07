@@ -16,8 +16,8 @@ public class CaseFeeTermsService {
 
     public Optional<CaseFeeTermsDto> findByCaseId(UUID caseId) {
         String sql = """
-                select \"id\", \"orgId\", \"caseId\", \"model\", \"baseFeeAmount\", \"successFeePercent\", \"currency\", \"notes\", \"createdByUserId\", \"createdAt\"
-                from \"CaseFeeTerms\" where \"caseId\"=:caseId
+                select id, orgId, caseId, model, baseFeeAmount, successFeePercent, currency, notes, createdByUserId, createdAt
+                from CaseFeeTerms where caseId=:caseId
                 """;
         return jdbc.query(sql, new MapSqlParameterSource("caseId", caseId), (rs, n) -> new CaseFeeTermsDto(
                 rs.getObject("id", UUID.class), rs.getObject("orgId", UUID.class), rs.getObject("caseId", UUID.class),
@@ -30,15 +30,15 @@ public class CaseFeeTermsService {
     @Transactional
     public void upsert(UpsertCaseFeeTermsRequest req) {
         String sql = """
-                insert into \"CaseFeeTerms\" (\"id\", \"orgId\", \"caseId\", \"model\", \"baseFeeAmount\", \"successFeePercent\", \"currency\", \"notes\", \"createdByUserId\", \"updatedAt\")
-                values (:id, :orgId, :caseId, :model::\"FeeModel\", :baseFeeAmount, :successFeePercent, :currency, :notes, :createdByUserId, now())
-                on conflict (\"caseId\") do update set
-                  \"model\" = excluded.\"model\",
-                  \"baseFeeAmount\" = excluded.\"baseFeeAmount\",
-                  \"successFeePercent\" = excluded.\"successFeePercent\",
-                  \"currency\" = excluded.\"currency\",
-                  \"notes\" = excluded.\"notes\",
-                  \"updatedAt\" = now()
+                insert into CaseFeeTerms (id, orgId, caseId, model, baseFeeAmount, successFeePercent, currency, notes, createdByUserId, updatedAt)
+                values (:id, :orgId, :caseId, :model::FeeModel, :baseFeeAmount, :successFeePercent, :currency, :notes, :createdByUserId, now())
+                on conflict (caseId) do update set
+                  model = excluded.model,
+                  baseFeeAmount = excluded.baseFeeAmount,
+                  successFeePercent = excluded.successFeePercent,
+                  currency = excluded.currency,
+                  notes = excluded.notes,
+                  updatedAt = now()
                 """;
         jdbc.update(sql, new MapSqlParameterSource()
                 .addValue("id", UUID.randomUUID()).addValue("orgId", req.orgId()).addValue("caseId", req.caseId())

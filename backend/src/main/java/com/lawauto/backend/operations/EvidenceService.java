@@ -16,8 +16,8 @@ public class EvidenceService {
 
     public List<EvidenceDto> listByOrg(UUID orgId) {
         String sql = """
-                select \"id\", \"orgId\", \"caseId\", \"description\", \"fileId\", \"createdByUserId\", \"createdAt\"
-                from \"Evidence\" where \"orgId\"=:orgId and \"deletedAt\" is null order by \"createdAt\" desc
+                select id, orgId, caseId, description, fileId, createdByUserId, createdAt
+                from Evidence where orgId=:orgId and deletedAt is null order by createdAt desc
                 """;
         return jdbc.query(sql, new MapSqlParameterSource("orgId", orgId), (rs, n) -> new EvidenceDto(
                 rs.getObject("id", UUID.class), rs.getObject("orgId", UUID.class), rs.getObject("caseId", UUID.class),
@@ -30,7 +30,7 @@ public class EvidenceService {
     public UUID create(CreateEvidenceRequest req) {
         UUID id = UUID.randomUUID();
         String sql = """
-                insert into \"Evidence\" (\"id\", \"orgId\", \"caseId\", \"description\", \"fileId\", \"createdByUserId\")
+                insert into Evidence (id, orgId, caseId, description, fileId, createdByUserId)
                 values (:id, :orgId, :caseId, :description, :fileId, :createdByUserId)
                 """;
         jdbc.update(sql, new MapSqlParameterSource()
