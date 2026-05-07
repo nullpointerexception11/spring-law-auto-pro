@@ -1,6 +1,7 @@
 C:\Users\Orhan's Comp\Desktop\spring-law-auto-pro\backend\src\main\java\com\lawauto\backend\auth\AuthController.java
 C:\Users\Orhan's Comp\Desktop\spring-law-auto-pro\backend\src\main\java\com\lawauto\backend\auth\AuthorizationGuard.java
 C:\Users\Orhan's Comp\Desktop\spring-law-auto-pro\backend\src\main\java\com\lawauto\backend\auth\AuthPrincipal.java
+C:\Users\Orhan's Comp\Desktop\spring-law-auto-pro\backend\src\main\java\com\lawauto\backend\auth\AuthResponseDto.java
 C:\Users\Orhan's Comp\Desktop\spring-law-auto-pro\backend\src\main\java\com\lawauto\backend\auth\AuthService.java
 C:\Users\Orhan's Comp\Desktop\spring-law-auto-pro\backend\src\main\java\com\lawauto\backend\auth\JwtAuthFilter.java
 C:\Users\Orhan's Comp\Desktop\spring-law-auto-pro\backend\src\main\java\com\lawauto\backend\auth\JwtService.java
@@ -9,10 +10,14 @@ C:\Users\Orhan's Comp\Desktop\spring-law-auto-pro\backend\src\main\java\com\lawa
 C:\Users\Orhan's Comp\Desktop\spring-law-auto-pro\backend\src\main\java\com\lawauto\backend\cases\CaseController.java
 C:\Users\Orhan's Comp\Desktop\spring-law-auto-pro\backend\src\main\java\com\lawauto\backend\cases\CaseEntity.java
 C:\Users\Orhan's Comp\Desktop\spring-law-auto-pro\backend\src\main\java\com\lawauto\backend\cases\CaseRepository.java
+C:\Users\Orhan's Comp\Desktop\spring-law-auto-pro\backend\src\main\java\com\lawauto\backend\cases\CaseResponseDto.java
+C:\Users\Orhan's Comp\Desktop\spring-law-auto-pro\backend\src\main\java\com\lawauto\backend\cases\CaseService.java
 C:\Users\Orhan's Comp\Desktop\spring-law-auto-pro\backend\src\main\java\com\lawauto\backend\cases\CaseStatus.java
 C:\Users\Orhan's Comp\Desktop\spring-law-auto-pro\backend\src\main\java\com\lawauto\backend\client\Client.java
 C:\Users\Orhan's Comp\Desktop\spring-law-auto-pro\backend\src\main\java\com\lawauto\backend\client\ClientController.java
 C:\Users\Orhan's Comp\Desktop\spring-law-auto-pro\backend\src\main\java\com\lawauto\backend\client\ClientRepository.java
+C:\Users\Orhan's Comp\Desktop\spring-law-auto-pro\backend\src\main\java\com\lawauto\backend\client\ClientResponseDto.java
+C:\Users\Orhan's Comp\Desktop\spring-law-auto-pro\backend\src\main\java\com\lawauto\backend\client\ClientService.java
 C:\Users\Orhan's Comp\Desktop\spring-law-auto-pro\backend\src\main\java\com\lawauto\backend\common\ApiErrorResponse.java
 C:\Users\Orhan's Comp\Desktop\spring-law-auto-pro\backend\src\main\java\com\lawauto\backend\common\ApiResponse.java
 C:\Users\Orhan's Comp\Desktop\spring-law-auto-pro\backend\src\main\java\com\lawauto\backend\common\GlobalExceptionHandler.java
@@ -40,6 +45,8 @@ C:\Users\Orhan's Comp\Desktop\spring-law-auto-pro\backend\src\main\java\com\lawa
 C:\Users\Orhan's Comp\Desktop\spring-law-auto-pro\backend\src\main\java\com\lawauto\backend\org\Org.java
 C:\Users\Orhan's Comp\Desktop\spring-law-auto-pro\backend\src\main\java\com\lawauto\backend\org\OrgController.java
 C:\Users\Orhan's Comp\Desktop\spring-law-auto-pro\backend\src\main\java\com\lawauto\backend\org\OrgRepository.java
+C:\Users\Orhan's Comp\Desktop\spring-law-auto-pro\backend\src\main\java\com\lawauto\backend\org\OrgResponseDto.java
+C:\Users\Orhan's Comp\Desktop\spring-law-auto-pro\backend\src\main\java\com\lawauto\backend\org\OrgService.java
 C:\Users\Orhan's Comp\Desktop\spring-law-auto-pro\backend\src\main\java\com\lawauto\backend\petition\CasePetitionDraftController.java
 C:\Users\Orhan's Comp\Desktop\spring-law-auto-pro\backend\src\main\java\com\lawauto\backend\petition\LocalExportStorageService.java
 C:\Users\Orhan's Comp\Desktop\spring-law-auto-pro\backend\src\main\java\com\lawauto\backend\petition\PetitionDocumentRenderer.java
@@ -48,10 +55,12 @@ C:\Users\Orhan's Comp\Desktop\spring-law-auto-pro\backend\src\main\java\com\lawa
 C:\Users\Orhan's Comp\Desktop\spring-law-auto-pro\backend\src\main\java\com\lawauto\backend\petition\PetitionDraftExportService.java
 C:\Users\Orhan's Comp\Desktop\spring-law-auto-pro\backend\src\main\java\com\lawauto\backend\petition\PetitionDraftService.java
 C:\Users\Orhan's Comp\Desktop\spring-law-auto-pro\backend\src\main\java\com\lawauto\backend\petition\PetitionTemplateController.java
+C:\Users\Orhan's Comp\Desktop\spring-law-auto-pro\backend\src\main\java\com\lawauto\backend\petition\PetitionTemplateDto.java
 C:\Users\Orhan's Comp\Desktop\spring-law-auto-pro\backend\src\main\java\com\lawauto\backend\petition\PetitionTemplateEntity.java
 C:\Users\Orhan's Comp\Desktop\spring-law-auto-pro\backend\src\main\java\com\lawauto\backend\petition\PetitionTemplateRepository.java
 C:\Users\Orhan's Comp\Desktop\spring-law-auto-pro\backend\src\main\java\com\lawauto\backend\petition\PetitionTemplateService.java
 C:\Users\Orhan's Comp\Desktop\spring-law-auto-pro\backend\src\main\java\com\lawauto\backend\research\ResearchController.java
+C:\Users\Orhan's Comp\Desktop\spring-law-auto-pro\backend\src\main\java\com\lawauto\backend\research\ResearchDto.java
 C:\Users\Orhan's Comp\Desktop\spring-law-auto-pro\backend\src\main\java\com\lawauto\backend\research\ResearchNoteEntity.java
 C:\Users\Orhan's Comp\Desktop\spring-law-auto-pro\backend\src\main\java\com\lawauto\backend\research\ResearchNoteRepository.java
 C:\Users\Orhan's Comp\Desktop\spring-law-auto-pro\backend\src\main\java\com\lawauto\backend\research\ResearchResultEntity.java
