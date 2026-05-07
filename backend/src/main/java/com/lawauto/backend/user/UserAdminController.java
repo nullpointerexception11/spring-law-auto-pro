@@ -8,6 +8,10 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import java.util.List;
 import java.util.UUID;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
@@ -32,17 +36,22 @@ public class UserAdminController {
     @GetMapping
     public ApiResponse<List<UserSummary>> list(
             @RequestParam UUID orgId,
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "20") int size,
-            @RequestParam(defaultValue = "createdAt,desc") String sort
+            @PageableDefault(size = 20, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable
     ) {
         authorizationGuard.requireOrg(orgId);
         authorizationGuard.requireRole("ADMIN");
-        List<UserSummary> users = userAdminService.listUsers(orgId, page, size, sort).stream()
+        
+        Page<UserEntity> usersPage = userAdminService.listUsers(orgId, pageable);
+        
+        List<UserSummary> users = usersPage.stream()
                 .map(u -> new UserSummary(u.getId(), u.getOrgId(), u.getEmail(), u.getFullName(), u.getStatus(), u.getCreatedAt(), u.getUpdatedAt()))
                 .toList();
-        long total = userAdminService.countUsers(orgId);
-        return ApiResponse.ok(users, new PageMeta(page, size, total, sort));
+                
+        String sortString = pageable.getSort().isSorted() 
+                ? pageable.getSort().iterator().next().getProperty() + "," + pageable.getSort().iterator().next().getDirection().name().toLowerCase()
+                : "createdAt,desc";
+
+        return ApiResponse.ok(users, new PageMeta(usersPage.getNumber(), usersPage.getSize(), usersPage.getTotalElements(), sortString));
     }
 
     @GetMapping("/{userId}")

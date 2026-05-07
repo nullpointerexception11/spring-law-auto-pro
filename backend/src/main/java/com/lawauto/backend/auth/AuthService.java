@@ -17,6 +17,8 @@ import java.util.UUID;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.web.server.ResponseStatusException;
+import org.springframework.http.HttpStatus;
 
 @Service
 public class AuthService {
@@ -41,7 +43,7 @@ public class AuthService {
         this.jwtService = jwtService;
     }
 
-    public Map<String, Object> register(RegisterRequest request) {
+    public AuthResponseDto register(RegisterRequest request) {
         userRepository.findByOrgIdAndEmail(request.orgId(), request.email())
                 .ifPresent(u -> { throw new IllegalArgumentException("Email already exists in this org"); });
 
@@ -77,12 +79,12 @@ public class AuthService {
         return issueTokens(user, role.getKey().name());
     }
 
-    public Map<String, Object> login(LoginRequest request) {
+    public AuthResponseDto login(LoginRequest request) {
         UserEntity user = userRepository.findByOrgIdAndEmail(request.orgId(), request.email().toLowerCase())
-                .orElseThrow(() -> new IllegalArgumentException("Invalid credentials"));
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid credentials"));
 
         if (!passwordEncoder.matches(request.password(), user.getPasswordHash())) {
-            throw new IllegalArgumentException("Invalid credentials");
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid credentials");
         }
 
         if (!"ACTIVE".equalsIgnoreCase(user.getStatus())) {
@@ -93,20 +95,20 @@ public class AuthService {
         return issueTokens(user, roleKey);
     }
 
-    public Map<String, Object> refresh(RefreshRequest request) {
+    public AuthResponseDto refresh(RefreshRequest request) {
         RefreshTokenRecord tokenRecord = refreshTokenRepository.findActiveByRawToken(request.refreshToken());
-        if (tokenRecord == null) throw new IllegalArgumentException("Invalid refresh token");
+        if (tokenRecord == null) throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid refresh token");
 
         Claims claims = jwtService.parse(request.refreshToken());
         if (!"refresh".equals(claims.get("typ", String.class))) {
-            throw new IllegalArgumentException("Invalid token type");
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid token type");
         }
 
         UUID userId = UUID.fromString(claims.getSubject());
         UUID orgId = UUID.fromString(claims.get("orgId", String.class));
 
         if (!tokenRecord.userId().equals(userId) || !tokenRecord.orgId().equals(orgId)) {
-            throw new IllegalArgumentException("Invalid refresh token");
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid refresh token");
         }
 
         UserEntity user = userRepository.findById(userId)
@@ -126,19 +128,19 @@ public class AuthService {
         return Map.of("status", "logged_out");
     }
 
-    private Map<String, Object> issueTokens(UserEntity user, String roleKey) {
+    private AuthResponseDto issueTokens(UserEntity user, String roleKey) {
         String accessToken = jwtService.generateToken(user.getId(), user.getOrgId(), user.getEmail(), roleKey);
         String refreshToken = jwtService.generateRefreshToken(user.getId(), user.getOrgId(), user.getEmail(), roleKey);
         refreshTokenRepository.save(user.getOrgId(), user.getId(), refreshToken, LocalDateTime.now().plusDays(14));
 
-        return Map.of(
-                "token", accessToken,
-                "refreshToken", refreshToken,
-                "userId", user.getId(),
-                "orgId", user.getOrgId(),
-                "email", user.getEmail(),
-                "role", roleKey
-        );
+        return AuthResponseDto.builder()
+                .token(accessToken)
+                .refreshToken(refreshToken)
+                .userId(user.getId())
+                .orgId(user.getOrgId())
+                .email(user.getEmail())
+                .role(roleKey)
+                .build();
     }
 
     private String resolveRole(UUID userId) {

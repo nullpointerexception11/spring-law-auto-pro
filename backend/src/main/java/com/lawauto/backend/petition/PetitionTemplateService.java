@@ -9,7 +9,10 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
+import java.util.stream.Collectors;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.web.server.ResponseStatusException;
 
 @Service
 public class PetitionTemplateService {
@@ -22,8 +25,10 @@ public class PetitionTemplateService {
         this.objectMapper = objectMapper;
     }
 
-    public List<PetitionTemplateEntity> listByOrg(UUID orgId) {
-        return repository.findByOrgIdOrderByNameAscVersionDesc(orgId);
+    public List<PetitionTemplateDto> listByOrg(UUID orgId) {
+        return repository.findByOrgIdOrderByNameAscVersionDesc(orgId).stream()
+                .map(PetitionTemplateDto::fromEntity)
+                .collect(Collectors.toList());
     }
 
     @Transactional
@@ -46,7 +51,7 @@ public class PetitionTemplateService {
     @Transactional
     public void update(UUID orgId, UUID templateId, PetitionTemplateController.UpdatePetitionTemplateRequest req) {
         PetitionTemplateEntity entity = repository.findByIdAndOrgId(templateId, orgId)
-                .orElseThrow(() -> new IllegalArgumentException("Petition template not found"));
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Petition template not found"));
         if (req.name() != null && !req.name().isBlank()) entity.setName(req.name().trim());
         if (req.structureJson() != null && !req.structureJson().isBlank()) {
             validateStructureJson(req.structureJson());
@@ -60,7 +65,7 @@ public class PetitionTemplateService {
     @Transactional
     public void activate(UUID orgId, UUID templateId) {
         PetitionTemplateEntity selected = repository.findByIdAndOrgId(templateId, orgId)
-                .orElseThrow(() -> new IllegalArgumentException("Petition template not found"));
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Petition template not found"));
         List<PetitionTemplateEntity> all = repository.findByOrgIdOrderByNameAscVersionDesc(orgId);
         for (PetitionTemplateEntity item : all) {
             boolean active = item.getId().equals(templateId);
@@ -111,10 +116,12 @@ public class PetitionTemplateService {
                     throw new IllegalArgumentException("Invalid template: unsupported mode " + mode);
                 }
             }
-        } catch (IllegalArgumentException ex) {
+        } catch (ResponseStatusException ex) {
             throw ex;
+        } catch (IllegalArgumentException ex) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, ex.getMessage());
         } catch (Exception ex) {
-            throw new IllegalArgumentException("Invalid template: malformed structureJson");
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid template: malformed structureJson");
         }
     }
 }

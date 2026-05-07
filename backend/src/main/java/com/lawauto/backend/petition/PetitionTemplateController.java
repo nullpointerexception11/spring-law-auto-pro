@@ -32,7 +32,7 @@ public class PetitionTemplateController {
     }
 
     @GetMapping
-    public ApiResponse<List<PetitionTemplateEntity>> list(@RequestParam UUID orgId) {
+    public ApiResponse<List<PetitionTemplateDto>> list(@RequestParam UUID orgId) {
         authorizationGuard.requireOrg(orgId);
         authorizationGuard.requireRole("ADMIN");
         return ApiResponse.ok(service.listByOrg(orgId));

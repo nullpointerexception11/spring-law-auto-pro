@@ -10,19 +10,18 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @RequestMapping("/api/orgs")
 public class OrgController {
-    private final OrgRepository orgRepository;
+    private final OrgService orgService;
     private final AuthorizationGuard authorizationGuard;
 
-    public OrgController(OrgRepository orgRepository, AuthorizationGuard authorizationGuard) {
-        this.orgRepository = orgRepository;
+    public OrgController(OrgService orgService, AuthorizationGuard authorizationGuard) {
+        this.orgService = orgService;
         this.authorizationGuard = authorizationGuard;
     }
 
     @GetMapping("/me")
-    public ApiResponse<Org> me() {
+    public ApiResponse<OrgResponseDto> me() {
         AuthPrincipal principal = authorizationGuard.currentPrincipal();
-        Org org = orgRepository.findById(principal.orgId())
-                .orElseThrow(() -> new IllegalArgumentException("Organization not found"));
-        return ApiResponse.ok(org);
+        OrgResponseDto orgResponse = orgService.getOrg(principal.orgId());
+        return ApiResponse.ok(orgResponse);
     }
 }

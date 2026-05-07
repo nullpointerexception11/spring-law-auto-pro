@@ -1,5 +1,6 @@
 package com.lawauto.backend.auth;
 
+import com.lawauto.backend.common.ApiResponse;
 import jakarta.validation.Valid;
 import java.util.Map;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -17,22 +18,22 @@ public class AuthController {
     }
 
     @PostMapping("/register")
-    public Map<String, Object> register(@Valid @RequestBody AuthService.RegisterRequest request) {
-        return authService.register(request);
+    public ApiResponse<AuthResponseDto> register(@Valid @RequestBody AuthService.RegisterRequest request) {
+        return ApiResponse.ok(authService.register(request));
     }
 
     @PostMapping("/login")
-    public Map<String, Object> login(@Valid @RequestBody AuthService.LoginRequest request) {
-        return authService.login(request);
+    public ApiResponse<AuthResponseDto> login(@Valid @RequestBody AuthService.LoginRequest request) {
+        return ApiResponse.ok(authService.login(request));
     }
 
     @PostMapping("/refresh")
-    public Map<String, Object> refresh(@Valid @RequestBody AuthService.RefreshRequest request) {
-        return authService.refresh(request);
+    public ApiResponse<AuthResponseDto> refresh(@Valid @RequestBody AuthService.RefreshRequest request) {
+        return ApiResponse.ok(authService.refresh(request));
     }
 
     @PostMapping("/logout")
-    public Map<String, String> logout(@Valid @RequestBody AuthService.LogoutRequest request) {
-        return authService.logout(request);
+    public ApiResponse<Map<String, String>> logout(@Valid @RequestBody AuthService.LogoutRequest request) {
+        return ApiResponse.ok(authService.logout(request));
     }
 }

@@ -4,9 +4,11 @@ import jakarta.transaction.Transactional;
 import java.util.Set;
 import java.util.List;
 import java.util.UUID;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Sort;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.web.server.ResponseStatusException;
 
 @Service
 public class UserAdminService {
@@ -25,21 +27,15 @@ public class UserAdminService {
         this.userRoleRepository = userRoleRepository;
     }
 
-    public List<UserEntity> listUsers(UUID orgId, int page, int size, String sort) {
-        Sort parsedSort = parseSort(sort);
-        PageRequest pageable = PageRequest.of(Math.max(page, 0), Math.min(Math.max(size, 1), 100), parsedSort);
+    public Page<UserEntity> listUsers(UUID orgId, Pageable pageable) {
         return userRepository.findByOrgId(orgId, pageable);
-    }
-
-    public long countUsers(UUID orgId) {
-        return userRepository.countByOrgId(orgId);
     }
 
     public UserDetail getUserDetail(UUID orgId, UUID userId) {
         UserEntity user = userRepository.findById(userId)
-                .orElseThrow(() -> new IllegalArgumentException("User not found"));
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found"));
         if (!orgId.equals(user.getOrgId())) {
-            throw new IllegalArgumentException("User does not belong to org");
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "User does not belong to org");
         }
 
         RoleKey role = userRoleRepository.findByUserId(userId).stream()
@@ -63,13 +59,13 @@ public class UserAdminService {
     @Transactional
     public void updateUserRole(UUID orgId, UUID userId, RoleKey roleKey) {
         UserEntity user = userRepository.findById(userId)
-                .orElseThrow(() -> new IllegalArgumentException("User not found"));
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found"));
         if (!orgId.equals(user.getOrgId())) {
-            throw new IllegalArgumentException("User does not belong to org");
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "User does not belong to org");
         }
 
         RoleEntity role = roleRepository.findByOrgIdAndKey(orgId, roleKey)
-                .orElseThrow(() -> new IllegalArgumentException("Role not found in org"));
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Role not found in org"));
 
         userRoleRepository.deleteByUserId(userId);
         UserRoleEntity userRole = new UserRoleEntity();
@@ -82,25 +78,20 @@ public class UserAdminService {
     public void updateUserStatus(UUID orgId, UUID userId, String status) {
         String normalizedStatus = status == null ? null : status.trim().toUpperCase();
         if (normalizedStatus == null || !ALLOWED_USER_STATUSES.contains(normalizedStatus)) {
-            throw new IllegalArgumentException("Unsupported user status");
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Unsupported user status");
         }
 
         UserEntity user = userRepository.findById(userId)
-                .orElseThrow(() -> new IllegalArgumentException("User not found"));
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found"));
         if (!orgId.equals(user.getOrgId())) {
-            throw new IllegalArgumentException("User does not belong to org");
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "User does not belong to org");
         }
 
         user.setStatus(normalizedStatus);
         userRepository.save(user);
     }
 
-    private Sort parseSort(String sort) {
-        String[] parts = sort.split(",", 2);
-        String field = parts.length > 0 ? parts[0] : "createdAt";
-        Sort.Direction direction = parts.length > 1 && "asc".equalsIgnoreCase(parts[1]) ? Sort.Direction.ASC : Sort.Direction.DESC;
-        return Sort.by(direction, field);
-    }
+
 
     public record UserDetail(
             UUID id,
