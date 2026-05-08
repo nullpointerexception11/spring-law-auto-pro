@@ -41,6 +41,12 @@ public class AiInteraction {
 
     private Integer tokenCount;
 
+    @Column(nullable = false)
+    @Builder.Default
+    private Boolean containsSensitiveData = false;
+
+    private OffsetDateTime retentionExpiresAt;
+
     private String relatedEntityType;
     private UUID relatedEntityId;
 

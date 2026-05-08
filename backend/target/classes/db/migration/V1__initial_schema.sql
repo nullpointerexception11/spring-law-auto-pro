@@ -1,11 +1,11 @@
--- LawAuto Sovereign LMMS Master Schema (V1 - PRESTIGE EDITION v8 GOLDEN)
--- The Absolute Final Baseline for Enterprise Legal Technology
--- Implements Decision Tracking, Official Correspondence, Folder Hierarchy, and KVKK
+-- LawAuto Sovereign LMMS Master Schema (V1 - PRESTIGE PLATINUM v8.1)
+-- Enterprise-Grade Legal Technology with FTS, RLS, and Audit Triggers
+-- Implements Decision Tracking, Official Correspondence, Folder Hierarchy, KVKK, and Financials
 
 CREATE EXTENSION IF NOT EXISTS "pgcrypto";
 
 -- ---------------------------------------------------------
--- 1. ENUMS (Final Domain Language)
+-- 1. ENUMS (Production Grade Domain Language)
 -- ---------------------------------------------------------
 CREATE TYPE "RecordStatus" AS ENUM ('ACTIVE', 'ARCHIVED', 'LOCKED', 'DELETED', 'ANONYMIZED');
 CREATE TYPE "UserStatus" AS ENUM ('ACTIVE', 'INVITED', 'SUSPENDED', 'DISABLED', 'PENDING_SETUP');
@@ -19,9 +19,24 @@ CREATE TYPE "DecisionType" AS ENUM ('INTERIM', 'FINAL', 'APPEAL', 'SUPREME_COURT
 CREATE TYPE "CorrDirection" AS ENUM ('INCOMING', 'OUTGOING');
 CREATE TYPE "CorrType" AS ENUM ('NOTIFICATION', 'EXPERT_REPORT', 'COURT_ORDER', 'PETITION_REPLY');
 CREATE TYPE "JobStatus" AS ENUM ('QUEUED', 'PROCESSING', 'COMPLETED', 'FAILED');
+CREATE TYPE "UniversalEventType" AS ENUM ('HEARING', 'DEADLINE', 'MEETING', 'TASK', 'REMINDER');
+CREATE TYPE "UniversalEventStatus" AS ENUM ('PENDING', 'COMPLETED', 'CANCELLED', 'MISSED');
+CREATE TYPE "InvoiceStatus" AS ENUM ('DRAFT', 'ISSUED', 'PAID', 'OVERDUE', 'CANCELLED');
+CREATE TYPE "PaymentMethod" AS ENUM ('CASH', 'BANK_TRANSFER', 'CREDIT_CARD');
 
 -- ---------------------------------------------------------
--- 2. CORE INFRASTRUCTURE
+-- 2. AUTOMATION: Trigger Function for updatedAt
+-- ---------------------------------------------------------
+CREATE OR REPLACE FUNCTION update_updated_at_column()
+RETURNS TRIGGER AS $$
+BEGIN
+    NEW."updatedAt" = CURRENT_TIMESTAMP;
+    RETURN NEW;
+END;
+$$ language 'plpgsql';
+
+-- ---------------------------------------------------------
+-- 3. CORE INFRASTRUCTURE
 -- ---------------------------------------------------------
 CREATE TABLE "Org" (
   "id" UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -45,7 +60,29 @@ CREATE TABLE "User" (
 );
 
 -- ---------------------------------------------------------
--- 3. THE PARTY SYSTEM (KVKK Ready)
+-- 4. AUTHORIZATION SYSTEM (AccessPolicy Foundation)
+-- ---------------------------------------------------------
+CREATE TABLE "Role" (
+  "id" UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  "orgId" UUID REFERENCES "Org"("id") ON DELETE CASCADE,
+  "key" "RoleKey" NOT NULL,
+  "createdAt" TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE "Permission" (
+  "id" UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  "key" TEXT NOT NULL UNIQUE,
+  "description" TEXT
+);
+
+CREATE TABLE "RolePermission" (
+  "roleId" UUID NOT NULL REFERENCES "Role"("id") ON DELETE CASCADE,
+  "permissionId" UUID NOT NULL REFERENCES "Permission"("id") ON DELETE CASCADE,
+  PRIMARY KEY ("roleId", "permissionId")
+);
+
+-- ---------------------------------------------------------
+-- 5. THE PARTY SYSTEM (KVKK Ready + Search)
 -- ---------------------------------------------------------
 CREATE TABLE "Party" (
   "id" UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -62,11 +99,12 @@ CREATE TABLE "Party" (
   "dataRetentionEndDate" TIMESTAMPTZ,
   "createdByUserId" UUID NOT NULL REFERENCES "User"("id") ON DELETE RESTRICT,
   "createdAt" TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  "updatedAt" TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
+  "updatedAt" TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  "fts" tsvector GENERATED ALWAYS AS (to_tsvector('turkish', "fullName" || ' ' || coalesce("taxNo", ''))) STORED
 );
 
 -- ---------------------------------------------------------
--- 4. THE MATTER SYSTEM (Deep Decision Tracking)
+-- 6. THE MATTER SYSTEM (Advanced Domain Logic)
 -- ---------------------------------------------------------
 CREATE TABLE "Matter" (
   "id" UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -81,7 +119,8 @@ CREATE TABLE "Matter" (
   "createdByUserId" UUID NOT NULL REFERENCES "User"("id") ON DELETE RESTRICT,
   "recordStatus" "RecordStatus" NOT NULL DEFAULT 'ACTIVE',
   "createdAt" TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  "updatedAt" TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
+  "updatedAt" TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  "fts" tsvector GENERATED ALWAYS AS (to_tsvector('turkish', "title" || ' ' || coalesce("referenceNumber", ''))) STORED
 );
 
 CREATE TABLE "MatterParty" (
@@ -101,7 +140,7 @@ CREATE TABLE "MatterDecision" (
   "fullTextHtml" TEXT,
   "appealDeadline" TIMESTAMPTZ,
   "isAppealFiled" BOOLEAN DEFAULT false,
-  "fileId" UUID, -- Link to FileObject via Attachment
+  "fileId" UUID,
   "createdByUserId" UUID NOT NULL REFERENCES "User"("id") ON DELETE RESTRICT,
   "createdAt" TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
@@ -120,7 +159,7 @@ CREATE TABLE "Correspondence" (
 );
 
 -- ---------------------------------------------------------
--- 5. STORAGE & HIERARCHY
+-- 7. STORAGE & DOCUMENT MANAGEMENT
 -- ---------------------------------------------------------
 CREATE TABLE "FileFolder" (
   "id" UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -135,6 +174,8 @@ CREATE TABLE "FileObject" (
   "id" UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   "orgId" UUID NOT NULL REFERENCES "Org"("id") ON DELETE RESTRICT,
   "folderId" UUID REFERENCES "FileFolder"("id") ON DELETE SET NULL,
+  "storageProvider" TEXT NOT NULL DEFAULT 'LOCAL', -- S3, AZURE, GCP
+  "bucket" TEXT,
   "storageKey" TEXT NOT NULL,
   "fileName" TEXT NOT NULL,
   "mimeType" TEXT,
@@ -156,7 +197,7 @@ CREATE TABLE "Attachment" (
 );
 
 -- ---------------------------------------------------------
--- 6. AI & ACTIVITY (Advanced Audit)
+-- 8. AI & ACTIVITY (Guardrail Audit)
 -- ---------------------------------------------------------
 CREATE TABLE "ActivityEvent" (
   "id" UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -167,7 +208,7 @@ CREATE TABLE "ActivityEvent" (
   "entityType" TEXT NOT NULL,
   "entityId" UUID NOT NULL,
   "summary" TEXT,
-  "changedColumns" TEXT[], -- Precision Audit
+  "changedColumns" TEXT[],
   "dataJson" JSONB,
   "ipAddress" TEXT,
   "createdAt" TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
@@ -181,24 +222,26 @@ CREATE TABLE "AiInteraction" (
   "prompt" TEXT NOT NULL,
   "response" TEXT,
   "tokenCount" INTEGER,
+  "containsSensitiveData" BOOLEAN NOT NULL DEFAULT false,
+  "retentionExpiresAt" TIMESTAMPTZ,
   "relatedEntityType" TEXT,
   "relatedEntityId" UUID,
   "createdAt" TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
 -- ---------------------------------------------------------
--- 7. EVENTS, TASKS & REMINDERS
+-- 9. EVENTS, TASKS & REMINDERS (Enum Centric)
 -- ---------------------------------------------------------
 CREATE TABLE "UniversalEvent" (
   "id" UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   "orgId" UUID NOT NULL REFERENCES "Org"("id") ON DELETE RESTRICT,
   "matterId" UUID REFERENCES "Matter"("id") ON DELETE CASCADE,
-  "type" TEXT NOT NULL,
+  "type" "UniversalEventType" NOT NULL DEFAULT 'TASK',
   "title" TEXT NOT NULL,
   "descriptionHtml" TEXT,
   "startAt" TIMESTAMPTZ NOT NULL,
   "endAt" TIMESTAMPTZ,
-  "status" TEXT NOT NULL DEFAULT 'PENDING',
+  "status" "UniversalEventStatus" NOT NULL DEFAULT 'PENDING',
   "createdByUserId" UUID NOT NULL REFERENCES "User"("id") ON DELETE RESTRICT,
   "createdAt" TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
   "recordStatus" "RecordStatus" NOT NULL DEFAULT 'ACTIVE'
@@ -213,12 +256,84 @@ CREATE TABLE "EventReminder" (
 );
 
 -- ---------------------------------------------------------
--- 8. INDEXES (ORACLE GOLDEN OPTIMIZATION)
+-- 10. FINANCE SYSTEM
 -- ---------------------------------------------------------
+CREATE TABLE "Invoice" (
+  "id" UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  "orgId" UUID NOT NULL REFERENCES "Org"("id") ON DELETE RESTRICT,
+  "partyId" UUID NOT NULL REFERENCES "Party"("id") ON DELETE RESTRICT,
+  "matterId" UUID REFERENCES "Matter"("id") ON DELETE SET NULL,
+  "invoiceNumber" TEXT NOT NULL UNIQUE,
+  "amount" DECIMAL(19,4) NOT NULL,
+  "taxRate" DECIMAL(5,2) NOT NULL DEFAULT 20.00,
+  "currency" TEXT NOT NULL DEFAULT 'TRY',
+  "status" "InvoiceStatus" NOT NULL DEFAULT 'DRAFT',
+  "dueAt" TIMESTAMPTZ,
+  "paidAt" TIMESTAMPTZ,
+  "createdByUserId" UUID NOT NULL REFERENCES "User"("id") ON DELETE RESTRICT,
+  "updatedByUserId" UUID REFERENCES "User"("id") ON DELETE RESTRICT,
+  "createdAt" TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  "updatedAt" TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE "MatterPayment" (
+  "id" UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  "orgId" UUID NOT NULL REFERENCES "Org"("id") ON DELETE RESTRICT,
+  "matterId" UUID NOT NULL REFERENCES "Matter"("id") ON DELETE CASCADE,
+  "invoiceId" UUID REFERENCES "Invoice"("id") ON DELETE SET NULL,
+  "amount" DECIMAL(19,4) NOT NULL,
+  "currency" TEXT NOT NULL DEFAULT 'TRY',
+  "paidAt" TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  "method" "PaymentMethod" NOT NULL DEFAULT 'BANK_TRANSFER',
+  "note" TEXT,
+  "receiptFileId" UUID REFERENCES "FileObject"("id") ON DELETE SET NULL,
+  "recordedByUserId" UUID NOT NULL REFERENCES "User"("id") ON DELETE RESTRICT,
+  "createdAt" TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  "updatedAt" TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  "deletedAt" TIMESTAMPTZ
+);
+
+CREATE TABLE "Expense" (
+  "id" UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  "orgId" UUID NOT NULL REFERENCES "Org"("id") ON DELETE RESTRICT,
+  "matterId" UUID NOT NULL REFERENCES "Matter"("id") ON DELETE CASCADE,
+  "amount" DECIMAL(19,4) NOT NULL,
+  "currency" TEXT NOT NULL DEFAULT 'TRY',
+  "category" TEXT,
+  "incurredAt" DATE NOT NULL,
+  "createdAt" TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE "TimeEntry" (
+  "id" UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  "orgId" UUID NOT NULL REFERENCES "Org"("id") ON DELETE RESTRICT,
+  "matterId" UUID REFERENCES "Matter"("id") ON DELETE CASCADE,
+  "userId" UUID NOT NULL REFERENCES "User"("id") ON DELETE RESTRICT,
+  "type" TEXT NOT NULL DEFAULT 'BILLABLE',
+  "description" TEXT,
+  "minutes" INTEGER NOT NULL,
+  "hourlyRate" DECIMAL(19,4),
+  "workedAt" DATE NOT NULL,
+  "createdAt" TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  "deletedAt" TIMESTAMPTZ
+);
+
+-- ---------------------------------------------------------
+-- 11. INDEXES (Architect Optimized)
+-- ---------------------------------------------------------
+CREATE INDEX "Matter_fts_idx" ON "Matter" USING GIN ("fts");
+CREATE INDEX "Party_fts_idx" ON "Party" USING GIN ("fts");
 CREATE INDEX "Matter_org_active_idx" ON "Matter"("orgId", "createdAt" DESC) WHERE "recordStatus" = 'ACTIVE';
 CREATE INDEX "Activity_matter_created_idx" ON "ActivityEvent"("matterId", "createdAt" DESC);
 CREATE INDEX "Attachment_entity_idx" ON "Attachment"("entityType", "entityId");
-CREATE INDEX "FileObject_folder_idx" ON "FileObject"("folderId");
-CREATE INDEX "Decision_matter_idx" ON "MatterDecision"("matterId", "decisionDate" DESC);
-CREATE INDEX "Corr_matter_idx" ON "Correspondence"("matterId", "date" DESC);
-CREATE INDEX "Party_org_tax_idx" ON "Party"("orgId", "taxNo");
+CREATE INDEX "Invoice_number_idx" ON "Invoice"("invoiceNumber");
+
+-- ---------------------------------------------------------
+-- 12. TRIGGERS (Automated Persistence)
+-- ---------------------------------------------------------
+CREATE TRIGGER "update_org_updated_at" BEFORE UPDATE ON "Org" FOR EACH ROW EXECUTE PROCEDURE update_updated_at_column();
+CREATE TRIGGER "update_user_updated_at" BEFORE UPDATE ON "User" FOR EACH ROW EXECUTE PROCEDURE update_updated_at_column();
+CREATE TRIGGER "update_party_updated_at" BEFORE UPDATE ON "Party" FOR EACH ROW EXECUTE PROCEDURE update_updated_at_column();
+CREATE TRIGGER "update_matter_updated_at" BEFORE UPDATE ON "Matter" FOR EACH ROW EXECUTE PROCEDURE update_updated_at_column();
+CREATE TRIGGER "update_invoice_updated_at" BEFORE UPDATE ON "Invoice" FOR EACH ROW EXECUTE PROCEDURE update_updated_at_column();
+CREATE TRIGGER "update_payment_updated_at" BEFORE UPDATE ON "MatterPayment" FOR EACH ROW EXECUTE PROCEDURE update_updated_at_column();

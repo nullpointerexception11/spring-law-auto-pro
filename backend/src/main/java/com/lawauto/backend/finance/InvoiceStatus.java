@@ -2,8 +2,8 @@ package com.lawauto.backend.finance;
 
 public enum InvoiceStatus {
     DRAFT,
-    SENT,
+    ISSUED,
     PAID,
-    CANCELLED,
-    OVERDUE
+    OVERDUE,
+    CANCELLED
 }

@@ -1,9 +1,9 @@
 package com.lawauto.backend.cases;
 
-public enum EventType {
+public enum UniversalEventType {
     HEARING,
     DEADLINE,
     MEETING,
-    REMINDER,
-    TASK
+    TASK,
+    REMINDER
 }

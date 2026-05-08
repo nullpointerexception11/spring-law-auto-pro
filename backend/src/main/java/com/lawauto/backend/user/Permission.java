@@ -2,7 +2,6 @@ package com.lawauto.backend.user;
 
 import jakarta.persistence.*;
 import lombok.*;
-
 import java.util.UUID;
 
 @Entity
@@ -19,7 +18,7 @@ public class Permission {
     private UUID id;
 
     @Column(nullable = false, unique = true)
-    private String name;
+    private String key;
 
     private String description;
 }

@@ -31,7 +31,7 @@ public class Invoice {
     private Org org;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "clientId", nullable = false)
+    @JoinColumn(name = "partyId", nullable = false)
     private Party party;
 
     @ManyToOne(fetch = FetchType.LAZY)

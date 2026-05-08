@@ -1,8 +1,8 @@
 package com.lawauto.backend.cases;
 
-public enum EventStatus {
+public enum UniversalEventStatus {
     PENDING,
     COMPLETED,
     CANCELLED,
-    OVERDUE
+    MISSED
 }

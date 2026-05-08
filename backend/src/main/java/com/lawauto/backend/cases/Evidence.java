@@ -7,7 +7,7 @@ import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
 
-import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 import java.util.UUID;
 
 @Entity
@@ -28,8 +28,8 @@ public class Evidence {
     private Org org;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "caseId", nullable = false)
-    private CaseEntity caseEntity;
+    @JoinColumn(name = "matterId", nullable = false)
+    private Matter matter;
 
     private String description;
 
@@ -47,7 +47,7 @@ public class Evidence {
 
     @CreationTimestamp
     @Column(nullable = false, updatable = false)
-    private LocalDateTime createdAt;
+    private OffsetDateTime createdAt;
 
-    private LocalDateTime deletedAt;
+    private OffsetDateTime deletedAt;
 }

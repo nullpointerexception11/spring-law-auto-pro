@@ -33,39 +33,27 @@ public class UniversalEvent {
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    private EventType type;
+    private UniversalEventType type;
 
     @Column(nullable = false)
     private String title;
 
     @Column(columnDefinition = "TEXT")
-    private String description;
+    private String descriptionHtml;
 
     @Column(nullable = false)
     private OffsetDateTime startAt;
 
     private OffsetDateTime endAt;
-    private String location;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     @Builder.Default
-    private EventStatus status = EventStatus.PENDING;
-
-    @Column(columnDefinition = "TEXT")
-    private String result;
+    private UniversalEventStatus status = UniversalEventStatus.PENDING;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "createdByUserId", nullable = false)
     private User createdBy;
-
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "updatedByUserId")
-    private User updatedBy;
-
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "deletedByUserId")
-    private User deletedBy;
 
     @CreationTimestamp
     @Column(nullable = false, updatable = false)
@@ -74,6 +62,4 @@ public class UniversalEvent {
     @UpdateTimestamp
     @Column(nullable = false)
     private OffsetDateTime updatedAt;
-
-    private OffsetDateTime deletedAt;
 }

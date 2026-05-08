@@ -1,5 +1,6 @@
 package com.lawauto.backend.org;
 
+import com.lawauto.backend.common.RecordStatus;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
@@ -27,9 +28,10 @@ public class Org {
     @Column(unique = true)
     private String subdomain;
 
+    @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     @Builder.Default
-    private Boolean isActive = true;
+    private RecordStatus status = RecordStatus.ACTIVE;
 
     @CreationTimestamp
     @Column(nullable = false, updatable = false)
@@ -38,6 +40,4 @@ public class Org {
     @UpdateTimestamp
     @Column(nullable = false)
     private OffsetDateTime updatedAt;
-
-    private OffsetDateTime archivedAt;
 }
