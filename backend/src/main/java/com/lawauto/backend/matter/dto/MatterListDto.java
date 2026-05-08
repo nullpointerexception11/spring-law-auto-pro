@@ -12,5 +12,7 @@ public record MatterListDto(
     String title,
     String referenceNumber,
     MatterStatus status,
-    OffsetDateTime openedAt
+    OffsetDateTime openedAt,
+    String clientName,
+    String assignedLawyerName
 ) {}
