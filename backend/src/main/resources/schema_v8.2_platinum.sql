@@ -1,26 +1,24 @@
 -- ==========================================
--- PRESTIGE PLATINUM v8.2 DATABASE SCHEMA
+-- PRESTIGE PLATINUM v8.2 DATABASE SCHEMA (REVISION 2)
+-- Architect: User & Antigravity
 -- Target: PostgreSQL 16+
 -- ==========================================
 
--- ENUMS
+-- 1. DOMAIN-CRITICAL ENUMS (State & Core Status)
 CREATE TYPE "UserStatus" AS ENUM ('PENDING', 'ACTIVE', 'INACTIVE', 'INVITED', 'ANONYMIZED');
 CREATE TYPE "RoleKey" AS ENUM ('PLATFORM_ADMIN', 'ORG_ADMIN', 'LAWYER', 'STAFF', 'CLIENT');
 CREATE TYPE "MatterStatus" AS ENUM ('ACTIVE', 'CLOSED', 'ARCHIVED', 'SUSPENDED');
-CREATE TYPE "PartyType" AS ENUM ('CLIENT', 'OPPONENT', 'JUDGE', 'WITNESS', 'EXPERT', 'COURT_STAFF');
 CREATE TYPE "UniversalEventType" AS ENUM ('HEARING', 'DEADLINE', 'MEETING', 'TASK', 'REMINDER');
 CREATE TYPE "UniversalEventStatus" AS ENUM ('PENDING', 'COMPLETED', 'CANCELED', 'MISSED');
 CREATE TYPE "FeeType" AS ENUM ('BASE_ONLY', 'SUCCESS_ONLY', 'HYBRID');
-CREATE TYPE "ExpenseType" AS ENUM ('COURT_FEE', 'NOTIFICATION', 'EXPERT', 'TRAVEL', 'OTHER');
 CREATE TYPE "CorrDirection" AS ENUM ('INCOMING', 'OUTGOING');
-CREATE TYPE "CorrType" AS ENUM ('EMAIL', 'LETTER', 'FAX', 'PORTAL_MESSAGE', 'INTERNAL');
 CREATE TYPE "NotificationChannel" AS ENUM ('IN_APP', 'EMAIL', 'PUSH');
 CREATE TYPE "NotificationStatus" AS ENUM ('PENDING', 'SENT', 'READ', 'FAILED');
 CREATE TYPE "SignatureStatus" AS ENUM ('REQUESTED', 'SIGNED', 'EXPIRED', 'REJECTED');
-CREATE TYPE "DeleteEntityType" AS ENUM ('PARTY', 'MATTER', 'PETITION', 'EVIDENCE', 'HEARING', 'DEADLINE', 'PAYMENT', 'CALENDAR_EVENT', 'NOTE', 'FILE_OBJECT');
 CREATE TYPE "DeleteMode" AS ENUM ('SOFT', 'HARD');
+CREATE TYPE "DeleteStatus" AS ENUM ('PENDING', 'APPROVED', 'REJECTED', 'EXECUTED');
 
--- CORE TABLES
+-- 2. CORE TABLES
 CREATE TABLE "Org" (
   "id" UUID PRIMARY KEY,
   "name" TEXT NOT NULL UNIQUE,
@@ -63,15 +61,44 @@ CREATE TABLE "UserRole" (
 CREATE TABLE "FileObject" (
   "id" UUID PRIMARY KEY,
   "orgId" UUID NOT NULL REFERENCES "Org"("id"),
+  "storageProvider" TEXT DEFAULT 'S3', -- 'S3', 'LOCAL', 'GCS'
   "storageKey" TEXT NOT NULL,
   "fileName" TEXT NOT NULL,
   "mimeType" TEXT,
   "sizeBytes" BIGINT,
   "sha256" TEXT,
+  "ocrStatus" TEXT DEFAULT 'PENDING', -- 'PENDING', 'COMPLETED', 'FAILED', 'NOT_APPLICABLE'
+  "extractedText" TEXT,
   "createdAt" TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
--- MATTER & PARTIES
+-- 3. BUSINESS-CONFIGURABLE TAXONOMY (Reference Tables)
+CREATE TABLE "MatterPartyRole" (
+  "id" UUID PRIMARY KEY,
+  "orgId" UUID NOT NULL REFERENCES "Org"("id"),
+  "name" TEXT NOT NULL, -- 'PLAINTIFF', 'DEFENDANT', 'WITNESS', 'JUDGE'
+  "category" TEXT, -- 'OPPOSING', 'CLIENT', 'COURT'
+  "createdAt" TIMESTAMPTZ DEFAULT NOW(),
+  UNIQUE("orgId", "name")
+);
+
+CREATE TABLE "ExpenseCategory" (
+  "id" UUID PRIMARY KEY,
+  "orgId" UUID NOT NULL REFERENCES "Org"("id"),
+  "name" TEXT NOT NULL, -- 'COURT_FEE', 'NOTIFICATION', 'EXPERT'
+  "createdAt" TIMESTAMPTZ DEFAULT NOW(),
+  UNIQUE("orgId", "name")
+);
+
+CREATE TABLE "CorrespondenceType" (
+  "id" UUID PRIMARY KEY,
+  "orgId" UUID NOT NULL REFERENCES "Org"("id"),
+  "name" TEXT NOT NULL, -- 'EMAIL', 'LETTER', 'FAX', 'PORTAL_MESSAGE'
+  "createdAt" TIMESTAMPTZ DEFAULT NOW(),
+  UNIQUE("orgId", "name")
+);
+
+-- 4. MATTER & PARTIES
 CREATE TABLE "Matter" (
   "id" UUID PRIMARY KEY,
   "orgId" UUID NOT NULL REFERENCES "Org"("id"),
@@ -87,10 +114,10 @@ CREATE TABLE "Matter" (
   "updatedAt" TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
+-- Party is pure Identity now (Concept Drift Fixed)
 CREATE TABLE "Party" (
   "id" UUID PRIMARY KEY,
   "orgId" UUID NOT NULL REFERENCES "Org"("id"),
-  "type" "PartyType" NOT NULL,
   "fullName" TEXT NOT NULL,
   "email" TEXT,
   "phone" TEXT,
@@ -101,14 +128,15 @@ CREATE TABLE "Party" (
   "updatedAt" TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
+-- Contextual Role Mapping
 CREATE TABLE "MatterParty" (
   "matterId" UUID NOT NULL REFERENCES "Matter"("id"),
   "partyId" UUID NOT NULL REFERENCES "Party"("id"),
-  "roleInMatter" TEXT, -- e.g. 'PLAINTIFF', 'DEFENDANT'
-  PRIMARY KEY ("matterId", "partyId")
+  "roleId" UUID NOT NULL REFERENCES "MatterPartyRole"("id"),
+  PRIMARY KEY ("matterId", "partyId", "roleId")
 );
 
--- LITIGATION DETAILS
+-- 5. LITIGATION DETAILS
 CREATE TABLE "LitigationDetail" (
   "matterId" UUID PRIMARY KEY REFERENCES "Matter"("id") ON DELETE CASCADE,
   "courtName" TEXT,
@@ -122,20 +150,20 @@ CREATE TABLE "LitigationDetail" (
   "finalJudgmentDate" DATE
 );
 
--- ADVANCED HEARINGS
+-- 6. ADVANCED HEARINGS
 CREATE TABLE "Hearing" (
   "id" UUID PRIMARY KEY,
   "orgId" UUID NOT NULL REFERENCES "Org"("id"),
   "matterId" UUID NOT NULL REFERENCES "Matter"("id"),
   "hearingDate" TIMESTAMPTZ NOT NULL,
   "judge" TEXT,
-  "outcome" TEXT,
+  "outcome" TEXT, -- 'ADJOURNED', 'DECISION_GIVEN', 'SETTLED'
   "minutesLink" UUID REFERENCES "FileObject"("id"),
   "notes" TEXT,
   "createdAt" TIMESTAMPTZ DEFAULT NOW()
 );
 
--- FEE AGREEMENTS
+-- 7. FEE AGREEMENTS
 CREATE TABLE "FeeAgreement" (
   "id" UUID PRIMARY KEY,
   "orgId" UUID NOT NULL REFERENCES "Org"("id"),
@@ -149,13 +177,13 @@ CREATE TABLE "FeeAgreement" (
   "createdAt" TIMESTAMPTZ DEFAULT NOW()
 );
 
--- EXPENSES
+-- 8. EXPENSES
 CREATE TABLE "Expense" (
   "id" UUID PRIMARY KEY,
   "orgId" UUID NOT NULL REFERENCES "Org"("id"),
   "matterId" UUID REFERENCES "Matter"("id"),
   "partyId" UUID REFERENCES "Party"("id"),
-  "type" "ExpenseType" NOT NULL,
+  "categoryId" UUID NOT NULL REFERENCES "ExpenseCategory"("id"),
   "amount" DECIMAL(19,4) NOT NULL,
   "currency" TEXT DEFAULT 'TRY',
   "expenseDate" DATE NOT NULL,
@@ -165,13 +193,13 @@ CREATE TABLE "Expense" (
   "createdAt" TIMESTAMPTZ DEFAULT NOW()
 );
 
--- CORRESPONDENCE
+-- 9. CORRESPONDENCE
 CREATE TABLE "Correspondence" (
   "id" UUID PRIMARY KEY,
   "orgId" UUID NOT NULL REFERENCES "Org"("id"),
   "matterId" UUID NOT NULL REFERENCES "Matter"("id"),
   "direction" "CorrDirection" NOT NULL,
-  "type" "CorrType" NOT NULL,
+  "typeId" UUID NOT NULL REFERENCES "CorrespondenceType"("id"),
   "referenceNo" TEXT,
   "subject" TEXT,
   "sentAt" TIMESTAMPTZ,
@@ -182,7 +210,7 @@ CREATE TABLE "Correspondence" (
   "createdAt" TIMESTAMPTZ DEFAULT NOW()
 );
 
--- INVITATIONS
+-- 10. INVITATIONS
 CREATE TABLE "Invitation" (
   "id" UUID PRIMARY KEY,
   "orgId" UUID NOT NULL REFERENCES "Org"("id"),
@@ -195,7 +223,7 @@ CREATE TABLE "Invitation" (
   "createdAt" TIMESTAMPTZ DEFAULT NOW()
 );
 
--- NOTIFICATIONS
+-- 11. NOTIFICATIONS (Prod-Ready)
 CREATE TABLE "Notification" (
   "id" UUID PRIMARY KEY,
   "orgId" UUID NOT NULL REFERENCES "Org"("id"),
@@ -206,12 +234,15 @@ CREATE TABLE "Notification" (
   "entityType" TEXT,
   "entityId" UUID,
   "status" "NotificationStatus" DEFAULT 'PENDING',
+  "retryCount" INTEGER DEFAULT 0,
+  "lastError" TEXT,
+  "nextRetryAt" TIMESTAMPTZ,
   "sentAt" TIMESTAMPTZ,
   "readAt" TIMESTAMPTZ,
   "createdAt" TIMESTAMPTZ DEFAULT NOW()
 );
 
--- DOCUMENT TEMPLATES
+-- 12. DOCUMENT TEMPLATES
 CREATE TABLE "DocumentTemplate" (
   "id" UUID PRIMARY KEY,
   "orgId" UUID NOT NULL REFERENCES "Org"("id"),
@@ -234,7 +265,7 @@ CREATE TABLE "GeneratedDocument" (
   "createdAt" TIMESTAMPTZ DEFAULT NOW()
 );
 
--- RETENTION
+-- 13. RETENTION
 CREATE TABLE "RetentionPolicy" (
   "id" UUID PRIMARY KEY,
   "orgId" UUID NOT NULL REFERENCES "Org"("id"),
@@ -244,7 +275,7 @@ CREATE TABLE "RetentionPolicy" (
   "createdAt" TIMESTAMPTZ DEFAULT NOW()
 );
 
--- IMPERSONATION
+-- 14. IMPERSONATION
 CREATE TABLE "ImpersonationLog" (
   "id" UUID PRIMARY KEY,
   "orgId" UUID NOT NULL REFERENCES "Org"("id"),
@@ -255,7 +286,7 @@ CREATE TABLE "ImpersonationLog" (
   "reason" TEXT
 );
 
--- API KEYS
+-- 15. API KEYS
 CREATE TABLE "ApiKey" (
   "id" UUID PRIMARY KEY,
   "orgId" UUID NOT NULL REFERENCES "Org"("id"),
@@ -267,13 +298,14 @@ CREATE TABLE "ApiKey" (
   "createdAt" TIMESTAMPTZ DEFAULT NOW()
 );
 
--- SIGNATURE REQUESTS
+-- 16. SIGNATURE REQUESTS (E-Sign Workflow)
 CREATE TABLE "SignatureRequest" (
   "id" UUID PRIMARY KEY,
   "orgId" UUID NOT NULL REFERENCES "Org"("id"),
   "entityType" TEXT NOT NULL,
   "entityId" UUID NOT NULL,
   "partyId" UUID NOT NULL REFERENCES "Party"("id"),
+  "signOrder" INTEGER DEFAULT 1,
   "status" "SignatureStatus" NOT NULL DEFAULT 'REQUESTED',
   "requestedAt" TIMESTAMPTZ DEFAULT NOW(),
   "signedAt" TIMESTAMPTZ,
@@ -281,7 +313,7 @@ CREATE TABLE "SignatureRequest" (
   "validUntil" TIMESTAMPTZ
 );
 
--- OPERATIONAL TOOLS
+-- 17. OPERATIONAL TOOLS
 CREATE TABLE "UniversalEvent" (
   "id" UUID PRIMARY KEY,
   "orgId" UUID NOT NULL REFERENCES "Org"("id"),
@@ -291,6 +323,7 @@ CREATE TABLE "UniversalEvent" (
   "descriptionHtml" TEXT,
   "startAt" TIMESTAMPTZ NOT NULL,
   "endAt" TIMESTAMPTZ,
+  "rrule" TEXT, -- iCal recurrence standard
   "status" "UniversalEventStatus" DEFAULT 'PENDING',
   "createdByUserId" UUID NOT NULL REFERENCES "User"("id"),
   "createdAt" TIMESTAMPTZ NOT NULL DEFAULT NOW(),
@@ -310,8 +343,25 @@ CREATE TABLE "ActivityEvent" (
   "createdAt" TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
+-- 18. GENERIC DELETE QUEUE
+CREATE TABLE "DeleteQueue" (
+  "id" UUID PRIMARY KEY,
+  "orgId" UUID NOT NULL REFERENCES "Org"("id"),
+  "entityType" TEXT NOT NULL, -- Generic TEXT string instead of Enum
+  "entityId" UUID NOT NULL,
+  "mode" "DeleteMode" NOT NULL,
+  "status" "DeleteStatus" DEFAULT 'PENDING',
+  "reason" TEXT,
+  "requestedByUserId" UUID NOT NULL REFERENCES "User"("id"),
+  "reviewedByUserId" UUID REFERENCES "User"("id"),
+  "executedByUserId" UUID REFERENCES "User"("id"),
+  "requestedAt" TIMESTAMPTZ DEFAULT NOW(),
+  "reviewedAt" TIMESTAMPTZ,
+  "executedAt" TIMESTAMPTZ
+);
+
 -- INDEXES FOR PERFORMANCE & SEARCH
 CREATE INDEX "idx_matter_org_status" ON "Matter"("orgId", "status");
-CREATE INDEX "idx_party_org_type" ON "Party"("orgId", "type");
 CREATE INDEX "idx_event_org_start" ON "UniversalEvent"("orgId", "startAt");
-CREATE INDEX "idx_notification_user_status" ON "Notification"("userId", "status");
+CREATE INDEX "idx_notification_retry" ON "Notification"("status", "nextRetryAt");
+CREATE INDEX "idx_deletequeue_status" ON "DeleteQueue"("orgId", "status");
