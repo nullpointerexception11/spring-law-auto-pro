@@ -34,6 +34,7 @@ public class Matter {
     private String referenceNumber;
 
     @Enumerated(EnumType.STRING)
+    @JdbcTypeCode(SqlTypes.NAMED_ENUM)
     @Builder.Default
     private MatterStatus status = MatterStatus.ACTIVE;
 
