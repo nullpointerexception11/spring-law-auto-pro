@@ -24,4 +24,13 @@ public class LocalExportStorageService {
             throw new UncheckedIOException(e);
         }
     }
+
+    public byte[] read(String storageKey) {
+        try {
+            Path target = root.resolve(storageKey).normalize();
+            return Files.readAllBytes(target);
+        } catch (IOException e) {
+            throw new UncheckedIOException(e);
+        }
+    }
 }

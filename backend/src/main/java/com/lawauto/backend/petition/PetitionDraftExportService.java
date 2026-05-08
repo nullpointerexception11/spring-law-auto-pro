@@ -11,6 +11,7 @@ import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import java.util.UUID;
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
@@ -23,19 +24,22 @@ public class PetitionDraftExportService {
     private final PetitionDocumentRenderer renderer;
     private final LocalExportStorageService storageService;
     private final ObjectMapper objectMapper;
+    private final PetitionPlaceholderService placeholderService;
 
     public PetitionDraftExportService(
             NamedParameterJdbcTemplate jdbc,
             FileObjectService fileObjectService,
             PetitionDocumentRenderer renderer,
             LocalExportStorageService storageService,
-            ObjectMapper objectMapper
+            ObjectMapper objectMapper,
+            PetitionPlaceholderService placeholderService
     ) {
         this.jdbc = jdbc;
         this.fileObjectService = fileObjectService;
         this.renderer = renderer;
         this.storageService = storageService;
         this.objectMapper = objectMapper;
+        this.placeholderService = placeholderService;
     }
 
     public ExportResult export(UUID orgId, UUID draftId, String format) {
@@ -61,10 +65,19 @@ public class PetitionDraftExportService {
                 draft.caseId(),
                 draft.title(),
                 draft.content(),
-                parseSections(draft.templateStructureJson(), draft.content(), draft.sectionValuesJson())
+                parseSections(draft.caseId(), draft.templateStructureJson(), draft.content(), draft.sectionValuesJson())
         );
 
-        byte[] bytes = normalized.equals("docx") ? renderer.renderDocx(payload) : renderer.renderPdf(payload);
+        byte[] bytes;
+        if (draft.templateFileId() != null) {
+            String templateKey = fileObjectService.getStorageKey(draft.templateFileId());
+            byte[] templateBytes = storageService.read(templateKey);
+            Map<String, String> placeholders = placeholderService.getPlaceholders(draft.caseId());
+            bytes = renderer.renderDocxFromTemplate(templateBytes, placeholders);
+        } else {
+            bytes = normalized.equals("docx") ? renderer.renderDocx(payload) : renderer.renderPdf(payload);
+        }
+        
         storageService.save(storageKey, bytes);
         int sizeBytes = bytes.length;
         String sha256 = sha256Hex(bytes);
@@ -81,9 +94,11 @@ public class PetitionDraftExportService {
         return new ExportResult(fileId, fileName, mimeType, storageKey, normalized);
     }
 
+    @SuppressWarnings("null")
     private DraftProjection findDraft(UUID orgId, UUID draftId) {
         String sql = """
-                select d."id",d."orgId",d."caseId",d."title",d."content",d."sectionValuesJson",t."structureJson" as "templateStructureJson"
+                select d."id",d."orgId",d."caseId",d."title",d."content",d."sectionValuesJson",
+                       t."structureJson" as "templateStructureJson", t."template_file_id"
                 from "PetitionDraft" d
                 left join "PetitionTemplate" t on t."id" = d."templateId"
                 where d."id"=:id and d."orgId"=:orgId
@@ -97,15 +112,19 @@ public class PetitionDraftExportService {
                     rs.getString("title"),
                     rs.getString("content"),
                     rs.getString("sectionValuesJson"),
-                    rs.getString("templateStructureJson")
+                    rs.getString("templateStructureJson"),
+                    rs.getObject("template_file_id", UUID.class)
             );
         });
     }
 
-    private List<TemplateSection> parseSections(String structureJson, String draftContent, String sectionValuesJson) {
+    private List<TemplateSection> parseSections(UUID caseId, String structureJson, String draftContent, String sectionValuesJson) {
         List<TemplateSection> sections = new ArrayList<>();
+        Map<String, String> placeholders = placeholderService.getPlaceholders(caseId);
+
         if (structureJson == null || structureJson.isBlank()) {
-            return List.of(new TemplateSection("Icerik", draftContent == null ? "" : draftContent));
+            String finalContent = placeholderService.replace(draftContent, placeholders);
+            return List.of(new TemplateSection("Icerik", finalContent));
         }
         try {
             JsonNode root = objectMapper.readTree(structureJson);
@@ -124,14 +143,20 @@ public class PetitionDraftExportService {
                     if (body.contains("{{body}}")) {
                         body = body.replace("{{body}}", draftContent == null ? "" : draftContent);
                     }
+                    
+                    // Apply dynamic placeholders from Insurance/Case/Client
+                    body = placeholderService.replace(body, placeholders);
+                    
                     sections.add(new TemplateSection(title, body));
                 }
             }
         } catch (Exception ignored) {
-            return List.of(new TemplateSection("Icerik", draftContent == null ? "" : draftContent));
+            String finalContent = placeholderService.replace(draftContent, placeholders);
+            return List.of(new TemplateSection("Icerik", finalContent));
         }
         if (sections.isEmpty()) {
-            sections.add(new TemplateSection("Icerik", draftContent == null ? "" : draftContent));
+            String finalContent = placeholderService.replace(draftContent, placeholders);
+            sections.add(new TemplateSection("Icerik", finalContent));
         }
         return sections;
     }
@@ -170,7 +195,8 @@ public class PetitionDraftExportService {
             String title,
             String content,
             String sectionValuesJson,
-            String templateStructureJson
+            String templateStructureJson,
+            UUID templateFileId
     ) {}
 
     public record ExportPayload(UUID draftId, UUID caseId, String title, String content, List<TemplateSection> sections) {}

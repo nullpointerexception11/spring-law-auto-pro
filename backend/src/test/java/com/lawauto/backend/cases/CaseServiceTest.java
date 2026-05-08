@@ -19,12 +19,13 @@ import org.springframework.security.access.AccessDeniedException;
 class CaseServiceTest {
 
     @Mock private CaseRepository caseRepository;
+    @Mock private InsuranceDetailRepository insuranceDetailRepository;
 
     private CaseService caseService;
 
     @BeforeEach
     void setUp() {
-        caseService = new CaseService(caseRepository);
+        caseService = new CaseService(caseRepository, insuranceDetailRepository);
     }
 
     @Test

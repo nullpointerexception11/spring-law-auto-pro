@@ -35,6 +35,33 @@ public class CaseEntity {
     @Column(nullable = false)
     private CaseStatus status;
 
+    @Column(name = "case_number")
+    private String caseNumber;
+
+    @Column(name = "case_type")
+    private String caseType;
+
+    @Column(name = "court_name")
+    private String courtName;
+
+    @Column(name = "is_insurance")
+    private boolean insurance;
+
+    @Column(columnDefinition = "TEXT")
+    private String notes;
+
+    @Column(name = "status_court")
+    private String statusCourt;
+
+    @Column(name = "status_deadline")
+    private LocalDateTime statusDeadline;
+
+    @Column(name = "trial_date")
+    private LocalDateTime trialDate;
+
+    @Column(name = "created_at", updatable = false)
+    private LocalDateTime createdAt = LocalDateTime.now();
+
     @Column(name = "deletedAt")
     private LocalDateTime deletedAt;
 }

@@ -13,6 +13,12 @@ import org.apache.pdfbox.pdmodel.font.Standard14Fonts;
 import org.apache.pdfbox.pdmodel.font.PDType1Font;
 import org.apache.poi.xwpf.usermodel.XWPFDocument;
 import org.apache.poi.xwpf.usermodel.XWPFParagraph;
+import org.apache.poi.xwpf.usermodel.XWPFRun;
+import org.apache.poi.xwpf.usermodel.XWPFTable;
+import org.apache.poi.xwpf.usermodel.XWPFTableCell;
+import org.apache.poi.xwpf.usermodel.XWPFTableRow;
+import java.io.ByteArrayInputStream;
+import java.util.Map;
 import org.springframework.stereotype.Component;
 
 @Component
@@ -65,6 +71,52 @@ public class PetitionDocumentRenderer {
             return out.toByteArray();
         } catch (IOException e) {
             throw new UncheckedIOException(e);
+        }
+    }
+
+    public byte[] renderDocxFromTemplate(byte[] templateBytes, Map<String, String> placeholders) {
+        try (XWPFDocument document = new XWPFDocument(new ByteArrayInputStream(templateBytes)); 
+             ByteArrayOutputStream out = new ByteArrayOutputStream()) {
+            
+            // Replace in paragraphs
+            for (XWPFParagraph paragraph : document.getParagraphs()) {
+                replaceInParagraph(paragraph, placeholders);
+            }
+            
+            // Replace in tables
+            for (XWPFTable table : document.getTables()) {
+                for (XWPFTableRow row : table.getRows()) {
+                    for (XWPFTableCell cell : row.getTableCells()) {
+                        for (XWPFParagraph paragraph : cell.getParagraphs()) {
+                            replaceInParagraph(paragraph, placeholders);
+                        }
+                    }
+                }
+            }
+            
+            document.write(out);
+            return out.toByteArray();
+        } catch (IOException e) {
+            throw new UncheckedIOException(e);
+        }
+    }
+
+    private void replaceInParagraph(XWPFParagraph paragraph, Map<String, String> placeholders) {
+        for (Map.Entry<String, String> entry : placeholders.entrySet()) {
+            String placeholder = "{{" + entry.getKey() + "}}";
+            String value = entry.getValue() == null ? "" : entry.getValue();
+            
+            String text = paragraph.getText();
+            if (text.contains(placeholder)) {
+                // Simplified replacement: might break formatting if placeholder is split across runs
+                // For a robust version, we'd need to merge runs or use a more complex logic
+                for (XWPFRun run : paragraph.getRuns()) {
+                    String runText = run.getText(0);
+                    if (runText != null && runText.contains(placeholder)) {
+                        run.setText(runText.replace(placeholder, value), 0);
+                    }
+                }
+            }
         }
     }
 

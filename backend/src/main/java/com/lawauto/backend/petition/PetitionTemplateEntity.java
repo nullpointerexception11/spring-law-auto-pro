@@ -43,4 +43,7 @@ public class PetitionTemplateEntity {
     
     @Column(name = "updatedAt", nullable = false)
     private LocalDateTime updatedAt;
+
+    @Column(name = "template_file_id")
+    private UUID templateFileId;
 }

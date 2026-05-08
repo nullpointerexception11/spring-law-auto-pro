@@ -39,4 +39,9 @@ public class FileObjectService {
                 .addValue("sizeBytes", req.sizeBytes()).addValue("sha256", req.sha256()));
         return id;
     }
+
+    public String getStorageKey(UUID id) {
+        String sql = "select storageKey from FileObject where id=:id";
+        return jdbc.queryForObject(sql, new MapSqlParameterSource("id", id), String.class);
+    }
 }
