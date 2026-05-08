@@ -10,7 +10,7 @@ import java.time.LocalDateTime;
 import java.util.UUID;
 
 @Entity
-@Table(name = "Role")
+@Table(name = "\"Role\"")
 public class RoleEntity {
     @Id
     private UUID id;
@@ -19,7 +19,7 @@ public class RoleEntity {
     private UUID orgId;
 
     @Enumerated(EnumType.STRING)
-    @Column(name = "key", nullable = false)
+    @Column(name = "\"key\"", nullable = false)
     private RoleKey key;
 
     @Column(name = "createdAt", nullable = false)

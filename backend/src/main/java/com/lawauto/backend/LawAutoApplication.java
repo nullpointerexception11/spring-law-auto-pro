@@ -41,6 +41,7 @@ public class LawAutoApplication {
                         newRole.setId(java.util.UUID.randomUUID());
                         newRole.setOrgId(u.getOrgId());
                         newRole.setKey(RoleKey.SUPER_ADMIN);
+                        newRole.setCreatedAt(java.time.LocalDateTime.now());
                         return roleRepo.save(newRole);
                     });
 
