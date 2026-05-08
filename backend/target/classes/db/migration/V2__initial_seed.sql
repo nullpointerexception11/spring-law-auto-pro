@@ -1,5 +1,5 @@
--- LawAuto Prestige Seed (V2 Platinum) - FIXED UUIDs
--- Populates the Prestige Matter-Centric Schema with valid relations
+-- LawAuto Prestige Seed (V2 Platinum) - Final Corrected
+-- Synchronized with Java Entities and v8.2 Schema
 
 -- 1. Organizations
 INSERT INTO "Org" ("id", "name", "displayName") VALUES
@@ -15,13 +15,13 @@ INSERT INTO "MatterPartyRole" ("id", "orgId", "name", "category") VALUES
 ('20000000-2222-2222-2222-222222222222', '11111111-1111-1111-1111-111111111111', 'KARŞI TARAF', 'OPPOSING');
 
 -- 4. Sample Parties
-INSERT INTO "Party" ("id", "orgId", "fullName", "createdByUserId") VALUES
-('30000000-1111-1111-1111-111111111111', '11111111-1111-1111-1111-111111111111', 'Global Tech Corp', 'f1111111-1111-1111-1111-111111111111'),
-('40000000-2222-2222-2222-222222222222', '11111111-1111-1111-1111-111111111111', 'Mehmet Yılmaz', 'f1111111-1111-1111-1111-111111111111');
+INSERT INTO "Party" ("id", "orgId", "fullName") VALUES
+('30000000-1111-1111-1111-111111111111', '11111111-1111-1111-1111-111111111111', 'Global Tech Corp'),
+('40000000-2222-2222-2222-222222222222', '11111111-1111-1111-1111-111111111111', 'Mehmet Yılmaz');
 
 -- 5. A Litigation Matter
-INSERT INTO "Matter" ("id", "orgId", "title", "referenceNumber", "status", "createdByUserId") VALUES
-('50000000-1111-1111-1111-111111111111', '11111111-1111-1111-1111-111111111111', 'Yılmaz vs Ticaret Davası', '2024/452 E.', 'ACTIVE', 'f1111111-1111-1111-1111-111111111111');
+INSERT INTO "Matter" ("id", "orgId", "title", "referenceNumber", "status", "openedAt") VALUES
+('50000000-1111-1111-1111-111111111111', '11111111-1111-1111-1111-111111111111', 'Yılmaz vs Ticaret Davası', '2024/452 E.', 'ACTIVE', NOW());
 
 -- 6. Attach Parties to Matter
 INSERT INTO "MatterParty" ("matterId", "partyId", "roleId") VALUES
