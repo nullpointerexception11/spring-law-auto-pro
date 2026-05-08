@@ -28,4 +28,15 @@ public class MatterController {
     public Page<MatterListDto> listMatters(@RequestParam UUID orgId, Pageable pageable) {
         return matterService.listMatters(orgId, pageable);
     }
+
+    /**
+     * GET /api/matters/{matterId}?orgId={orgId}
+     * Returns a highly optimized, comprehensive Read Model for the Matter Detail view.
+     */
+    @org.springframework.web.bind.annotation.GetMapping("/{matterId}")
+    public com.lawauto.backend.matter.dto.MatterDetailDto getMatterDetail(
+            @org.springframework.web.bind.annotation.PathVariable UUID matterId,
+            @RequestParam UUID orgId) {
+        return matterService.getMatterDetail(orgId, matterId);
+    }
 }

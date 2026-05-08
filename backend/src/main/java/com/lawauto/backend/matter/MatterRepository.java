@@ -24,4 +24,19 @@ public interface MatterRepository extends JpaRepository<Matter, UUID> {
         ORDER BY m.openedAt DESC
     """)
     Page<MatterListDto> findAllListDtosByOrgId(@Param("orgId") UUID orgId, Pageable pageable);
+
+    /**
+     * Highly optimized comprehensive Read Model query for the Matter Detail view.
+     * Uses a LEFT JOIN to fetch LitigationDetail seamlessly without N+1.
+     */
+    @Query("""
+        SELECT new com.lawauto.backend.matter.dto.MatterDetailDto(
+            m.id, m.title, m.referenceNumber, m.status, m.summary, m.description, m.tags, m.openedAt, m.closedAt,
+            ld.courtName, ld.caseNumber, ld.judgeName, ld.decisionDate
+        )
+        FROM Matter m
+        LEFT JOIN LitigationDetail ld ON m.id = ld.matterId
+        WHERE m.id = :matterId AND m.org.id = :orgId
+    """)
+    java.util.Optional<com.lawauto.backend.matter.dto.MatterDetailDto> findDetailDtoByIdAndOrgId(@Param("matterId") UUID matterId, @Param("orgId") UUID orgId);
 }

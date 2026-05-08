@@ -29,10 +29,30 @@ public record MatterDetailDto(
     // Nested Read Models for the Detail View
     List<PartySummaryDto> parties
 ) {
+    /**
+     * Secondary constructor for JPQL mapping. 
+     * Initializes the parties list as empty. It will be populated by the Service layer.
+     */
+    public MatterDetailDto(UUID id, String title, String referenceNumber, MatterStatus status, 
+                           String summary, String description, String[] tags, 
+                           OffsetDateTime openedAt, OffsetDateTime closedAt, 
+                           String courtName, String caseNumber, String judgeName, LocalDate decisionDate) {
+        this(id, title, referenceNumber, status, summary, description, tags, openedAt, closedAt, 
+             courtName, caseNumber, judgeName, decisionDate, List.of());
+    }
+
+    /**
+     * Wither method to immutably add the parties list after fetching.
+     */
+    public MatterDetailDto withParties(List<PartySummaryDto> newParties) {
+        return new MatterDetailDto(id, title, referenceNumber, status, summary, description, tags, 
+                                   openedAt, closedAt, courtName, caseNumber, judgeName, decisionDate, newParties);
+    }
+
     public record PartySummaryDto(
         UUID partyId,
         String fullName,
-        String roleName, // Comes from MatterPartyRole
+        String roleName, 
         String roleCategory
     ) {}
 }
