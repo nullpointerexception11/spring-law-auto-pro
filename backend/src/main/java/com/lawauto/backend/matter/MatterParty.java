@@ -13,6 +13,7 @@ import lombok.*;
 public class MatterParty {
 
     @EmbeddedId
+    @Builder.Default
     private MatterPartyId id = new MatterPartyId();
 
     @ManyToOne(fetch = FetchType.LAZY)
