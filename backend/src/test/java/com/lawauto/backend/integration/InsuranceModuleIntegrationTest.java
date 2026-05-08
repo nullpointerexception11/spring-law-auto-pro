@@ -67,7 +67,7 @@ class InsuranceModuleIntegrationTest extends BasePostgresIntegrationTest {
         assertThat(caseEntity.isInsurance()).isTrue();
         assertThat(caseEntity.getTitle()).isEqualTo("Sigorta Hasar Davasi");
 
-        assertThat(insuranceRepository.findByCaseId(caseId)).isPresent().hasValueSatisfying(ins -> {
+        assertThat(insuranceRepository.findByCaseId(java.util.Objects.requireNonNull(caseId))).isPresent().hasValueSatisfying(ins -> {
             assertThat(ins.getCarPlate()).isEqualTo("34ABC123");
             assertThat(ins.getInsuranceCompany()).isEqualTo("Allianz");
         });
