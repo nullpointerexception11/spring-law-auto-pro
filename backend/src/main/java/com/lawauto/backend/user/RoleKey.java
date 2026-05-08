@@ -1,8 +1,9 @@
 package com.lawauto.backend.user;
 
 public enum RoleKey {
-    SUPER_ADMIN,
-    ADMIN,
+    PLATFORM_OWNER,
+    PLATFORM_ADMIN,
+    ORG_ADMIN,
     LAWYER,
     SECRETARY
 }

@@ -4,6 +4,11 @@ import com.lawauto.backend.org.Org;
 import com.lawauto.backend.org.OrgRepository;
 import com.lawauto.backend.user.UserEntity;
 import com.lawauto.backend.user.UserRepository;
+import com.lawauto.backend.user.RoleEntity;
+import com.lawauto.backend.user.UserRoleEntity;
+import com.lawauto.backend.user.RoleKey;
+import com.lawauto.backend.user.RoleRepository;
+import com.lawauto.backend.user.UserRoleRepository;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -29,10 +34,16 @@ public class SuperAdminAuthTest {
     private UserRepository userRepository;
 
     @MockBean
-    private com.lawauto.backend.auth.RefreshTokenRepository refreshTokenRepository;
+    private PasswordEncoder passwordEncoder;
 
     @MockBean
-    private PasswordEncoder passwordEncoder;
+    private RoleRepository roleRepository;
+
+    @MockBean
+    private UserRoleRepository userRoleRepository;
+
+    @MockBean
+    private com.lawauto.backend.auth.RefreshTokenRepository refreshTokenRepository;
 
     @Test
     public void testSuperAdminLoginBypass() {
@@ -54,8 +65,19 @@ public class SuperAdminAuthTest {
         when(orgRepository.findByName(orgName)).thenReturn(Optional.of(mockOrg));
         when(userRepository.findByOrgIdAndEmail(mockOrg.getId(), email)).thenReturn(Optional.of(mockUser));
         
+        RoleEntity mockRole = new RoleEntity();
+        mockRole.setId(UUID.randomUUID());
+        mockRole.setKey(RoleKey.SUPER_ADMIN);
+
+        UserRoleEntity mockUserRole = new UserRoleEntity();
+        mockUserRole.setUserId(mockUser.getId());
+        mockUserRole.setRoleId(mockRole.getId());
+
+        when(userRoleRepository.findByUserId(mockUser.getId())).thenReturn(java.util.List.of(mockUserRole));
+        when(roleRepository.findById(mockRole.getId())).thenReturn(Optional.of(mockRole));
+        
         // Şifre artık doğru eşleşmeli (Bypass kaldırıldı)
-        when(passwordEncoder.matches(eq(password), anyString())).thenReturn(true);
+        when(passwordEncoder.matches(eq(password), any())).thenReturn(true);
 
         // WHEN
         AuthService.LoginRequest request = new AuthService.LoginRequest(orgName, email, password);

@@ -1,68 +1,82 @@
 package com.lawauto.backend.cases;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.EnumType;
-import jakarta.persistence.Enumerated;
-import jakarta.persistence.Id;
-import jakarta.persistence.Table;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import com.lawauto.backend.org.Org;
+import com.lawauto.backend.user.User;
+import jakarta.persistence.*;
+import lombok.*;
+import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.UpdateTimestamp;
 
-import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 import java.util.UUID;
 
 @Entity
-@Table(name = "Case")
+@Table(name = "\"Case\"")
 @Getter
 @Setter
 @NoArgsConstructor
+@AllArgsConstructor
+@Builder
 public class CaseEntity {
+
     @Id
+    @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
 
-    @Column(name = "orgId", nullable = false)
-    private UUID orgId;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "orgId", nullable = false)
+    private Org org;
 
-    @Column(name = "clientId", nullable = false)
-    private UUID clientId;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "caseTypeId")
+    private CaseType caseType;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "courtId")
+    private Court court;
 
     @Column(nullable = false)
     private String title;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    private CaseStatus status;
+    @Builder.Default
+    private CaseStatus status = CaseStatus.OPEN;
 
-    @Column(name = "case_number")
     private String caseNumber;
 
-    @Column(name = "case_type")
-    private String caseType;
-
-    @Column(name = "court_name")
-    private String courtName;
-
-    @Column(name = "is_insurance")
-    private boolean insurance;
+    @Column(nullable = false)
+    @Builder.Default
+    private Boolean isInsurance = false;
 
     @Column(columnDefinition = "TEXT")
     private String notes;
 
-    @Column(name = "status_court")
-    private String statusCourt;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "createdByUserId", nullable = false)
+    private User createdBy;
 
-    @Column(name = "status_deadline")
-    private LocalDateTime statusDeadline;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "updatedByUserId")
+    private User updatedBy;
 
-    @Column(name = "trial_date")
-    private LocalDateTime trialDate;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "deletedByUserId")
+    private User deletedBy;
 
-    @Column(name = "created_at", updatable = false)
-    private LocalDateTime createdAt = LocalDateTime.now();
+    @CreationTimestamp
+    @Column(nullable = false, updatable = false)
+    private OffsetDateTime openedAt;
 
-    @Column(name = "deletedAt")
-    private LocalDateTime deletedAt;
+    private OffsetDateTime closedAt;
+
+    @CreationTimestamp
+    @Column(nullable = false, updatable = false)
+    private OffsetDateTime createdAt;
+
+    @UpdateTimestamp
+    @Column(nullable = false)
+    private OffsetDateTime updatedAt;
+
+    private OffsetDateTime deletedAt;
 }
-
