@@ -33,17 +33,15 @@ const StatusBadge = ({ status }) => {
 export function MatterTable() {
   const [sorting, setSorting] = useState([]);
   const [globalFilter, setGlobalFilter] = useState('');
+  const navigate = useNavigate();
 
-  // Backend'den gerçek verileri çekiyoruz
   const { data: matters = [], isLoading, error } = useQuery({
     queryKey: ['matters'],
     queryFn: async () => {
-      // Not: orgId normalde auth context'ten gelmeli, şu an test verisini kullanıyoruz
       const TEST_ORG_ID = '11111111-1111-1111-1111-111111111111';
       const response = await api.get('/matters', {
         params: { orgId: TEST_ORG_ID }
       });
-      // Spring Data Page yapısı gereği veriler 'content' içinde gelir
       return response.data.content || [];
     }
   });
@@ -87,7 +85,21 @@ export function MatterTable() {
       header: () => <div className="w-[140px]">SONRAKİ DURUŞMA</div>,
       cell: info => {
         const val = info.getValue();
-        return <div className="w-[140px]">{val ? <span className="text-sm">{val}</span> : <span className="text-muted-foreground/50">-</span>}</div>;
+        if (!val) return <div className="w-[140px] text-muted-foreground/50">-</div>;
+        
+        try {
+          const date = new Date(val);
+          if (isNaN(date.getTime())) return <div className="w-[140px] text-muted-foreground/50">-</div>;
+          
+          return (
+            <div className="w-[140px] flex flex-col">
+              <span className="text-sm font-medium">{date.toLocaleDateString('tr-TR')}</span>
+              <span className="text-[10px] text-muted-foreground uppercase">{date.toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' })}</span>
+            </div>
+          );
+        } catch (e) {
+          return <div className="w-[140px] text-muted-foreground/50">-</div>;
+        }
       },
     },
     {
@@ -101,8 +113,6 @@ export function MatterTable() {
       ),
     }
   ];
-
-  const navigate = useNavigate();
 
   const table = useReactTable({
     data: matters,

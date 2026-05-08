@@ -26,7 +26,10 @@ public class GlobalSearchService {
      * Enforces Tenant Isolation and maps massive DB entries to lightweight UI snippets.
      */
     @Transactional(readOnly = true)
-    public Page<SearchResultDto> searchGlobally(UUID orgId, String keyword, Pageable pageable) {
+    public Page<SearchResultDto> searchGlobally(
+            @org.springframework.lang.NonNull UUID orgId, 
+            String keyword, 
+            @org.springframework.lang.NonNull Pageable pageable) {
         // Enforce strict Tenant isolation boundary
         authorizationGuard.requireOrg(orgId);
         

@@ -19,17 +19,48 @@ public class MatterService {
     
     private final MatterRepository matterRepository;
     private final MatterPartyRepository matterPartyRepository;
+    private final com.lawauto.backend.org.OrgRepository orgRepository;
     private final AuthorizationGuard authorizationGuard;
     private final OperationAccessGuard operationAccessGuard;
 
     public MatterService(MatterRepository matterRepository, 
                          MatterPartyRepository matterPartyRepository,
+                         com.lawauto.backend.org.OrgRepository orgRepository,
                          AuthorizationGuard authorizationGuard, 
                          OperationAccessGuard operationAccessGuard) {
         this.matterRepository = matterRepository;
         this.matterPartyRepository = matterPartyRepository;
+        this.orgRepository = orgRepository;
         this.authorizationGuard = authorizationGuard;
         this.operationAccessGuard = operationAccessGuard;
+    }
+
+    /**
+     * Creates a new Matter record.
+     */
+    @Transactional
+    @SuppressWarnings("null")
+    public UUID createMatter(@org.springframework.lang.NonNull UUID orgId, com.lawauto.backend.matter.dto.CreateMatterRequest request) {
+        java.util.Objects.requireNonNull(orgId, "orgId must not be null");
+        
+        // 1. Fetch organization
+        com.lawauto.backend.org.Org org = orgRepository.findById(orgId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Organization not found"));
+
+        // 2. Map DTO to Entity
+        Matter matter = Matter.builder()
+                .org(org)
+                .title(request.title())
+                .referenceNumber(request.referenceNumber())
+                .summary(request.summary())
+                .description(request.description())
+                .tags(request.tags())
+                .openedAt(request.openedAt() != null ? request.openedAt() : java.time.OffsetDateTime.now())
+                .status(MatterStatus.ACTIVE)
+                .build();
+
+        // 3. Persist
+        return matterRepository.save(matter).getId();
     }
 
     /**

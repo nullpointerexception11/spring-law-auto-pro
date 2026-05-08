@@ -25,7 +25,7 @@ public class MatterController {
      * Returns a paginated, optimized list of matters for the requesting organization.
      */
     @GetMapping
-    public Page<MatterListDto> listMatters(@RequestParam UUID orgId, Pageable pageable) {
+    public Page<MatterListDto> listMatters(@RequestParam @org.springframework.lang.NonNull UUID orgId, Pageable pageable) {
         return matterService.listMatters(orgId, pageable);
     }
 
@@ -35,8 +35,15 @@ public class MatterController {
      */
     @org.springframework.web.bind.annotation.GetMapping("/{matterId}")
     public com.lawauto.backend.matter.dto.MatterDetailDto getMatterDetail(
-            @org.springframework.web.bind.annotation.PathVariable UUID matterId,
-            @RequestParam UUID orgId) {
+            @org.springframework.web.bind.annotation.PathVariable @org.springframework.lang.NonNull UUID matterId,
+            @RequestParam @org.springframework.lang.NonNull UUID orgId) {
         return matterService.getMatterDetail(orgId, matterId);
+    }
+
+    @org.springframework.web.bind.annotation.PostMapping
+    public java.util.UUID createMatter(
+            @org.springframework.web.bind.annotation.RequestBody com.lawauto.backend.matter.dto.CreateMatterRequest request,
+            @org.springframework.web.bind.annotation.RequestParam @org.springframework.lang.NonNull java.util.UUID orgId) {
+        return matterService.createMatter(orgId, request);
     }
 }
