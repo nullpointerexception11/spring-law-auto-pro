@@ -67,7 +67,7 @@ public class AuthService {
         user.setCreatedAt(OffsetDateTime.now());
         user.setUpdatedAt(OffsetDateTime.now());
 
-        Role role = roleRepository.findByOrgIdAndKey(request.orgId(), request.role())
+        Role role = roleRepository.findByOrgIdAndRoleKey(request.orgId(), request.role())
                 .orElseGet(() -> {
                     Role newRole = new Role();
                     newRole.setId(UUID.randomUUID());

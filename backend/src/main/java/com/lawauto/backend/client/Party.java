@@ -33,7 +33,7 @@ public class Party {
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     @Builder.Default
-    private com.lawauto.backend.client.ClientType type = com.lawauto.backend.client.ClientType.PERSON;
+    private PartyType type = PartyType.PERSON;
 
     @Column(nullable = false)
     private String fullName;

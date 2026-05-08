@@ -4,10 +4,11 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
-import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
+import com.lawauto.backend.org.Org;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -20,33 +21,36 @@ class UserAdminServiceTest {
 
     @Mock private UserRepository userRepository;
     @Mock private RoleRepository roleRepository;
-    @Mock private UserRoleRepository userRoleRepository;
 
     private UserAdminService userAdminService;
 
     @BeforeEach
     void setUp() {
-        userAdminService = new UserAdminService(userRepository, roleRepository, userRoleRepository);
+        userAdminService = new UserAdminService(userRepository, roleRepository);
     }
 
     @Test
     void getUserDetailReturnsCorrectData() {
         UUID orgId = UUID.randomUUID();
         UUID userId = UUID.randomUUID();
-        UserEntity user = new UserEntity();
+        
+        Org org = new Org();
+        org.setId(orgId);
+        
+        User user = new User();
         user.setId(userId);
-        user.setOrgId(orgId);
+        user.setOrg(org);
         user.setEmail("admin@law.com");
         user.setFullName("Admin User");
-        user.setStatus("ACTIVE");
-        user.setCreatedAt(LocalDateTime.now());
+        user.setStatus(UserStatus.ACTIVE);
+        user.setCreatedAt(OffsetDateTime.now());
 
         when(userRepository.findById(Objects.requireNonNull(userId))).thenReturn(Optional.of(user));
 
         UserAdminService.UserDetail detail = userAdminService.getUserDetail(orgId, userId);
 
         assertEquals("admin@law.com", detail.email());
-        assertEquals("ACTIVE", detail.status());
+        assertEquals(UserStatus.ACTIVE, detail.status());
     }
 
     @Test
@@ -54,9 +58,13 @@ class UserAdminServiceTest {
         UUID correctOrgId = UUID.randomUUID();
         UUID wrongOrgId = UUID.randomUUID();
         UUID userId = UUID.randomUUID();
-        UserEntity user = new UserEntity();
+        
+        Org org = new Org();
+        org.setId(correctOrgId);
+        
+        User user = new User();
         user.setId(userId);
-        user.setOrgId(correctOrgId);
+        user.setOrg(org);
 
         when(userRepository.findById(Objects.requireNonNull(userId))).thenReturn(Optional.of(user));
 
@@ -66,20 +74,23 @@ class UserAdminServiceTest {
     }
 
     @Test
-    @SuppressWarnings("null")
     void updateUserStatusUpdatesSuccessfully() {
         UUID orgId = UUID.randomUUID();
         UUID userId = UUID.randomUUID();
-        UserEntity user = new UserEntity();
+        
+        Org org = new Org();
+        org.setId(orgId);
+        
+        User user = new User();
         user.setId(userId);
-        user.setOrgId(orgId);
-        user.setStatus("ACTIVE");
+        user.setOrg(org);
+        user.setStatus(UserStatus.ACTIVE);
 
         when(userRepository.findById(Objects.requireNonNull(userId))).thenReturn(Optional.of(user));
 
-        userAdminService.updateUserStatus(orgId, userId, "INACTIVE");
+        userAdminService.updateUserStatus(orgId, userId, UserStatus.INACTIVE);
 
-        assertEquals("INACTIVE", user.getStatus());
+        assertEquals(UserStatus.INACTIVE, user.getStatus());
         verify(userRepository, times(1)).save(any());
     }
 }

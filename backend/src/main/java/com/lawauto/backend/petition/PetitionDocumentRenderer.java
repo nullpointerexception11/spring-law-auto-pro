@@ -3,7 +3,7 @@ package com.lawauto.backend.petition;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.UncheckedIOException;
-import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 import java.time.format.DateTimeFormatter;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
@@ -27,8 +27,8 @@ public class PetitionDocumentRenderer {
     public byte[] renderDocx(PetitionDraftExportService.ExportPayload payload) {
         try (XWPFDocument document = new XWPFDocument(); ByteArrayOutputStream out = new ByteArrayOutputStream()) {
             addParagraph(document, payload.title(), true);
-            addParagraph(document, "Generated At: " + LocalDateTime.now().format(DateTimeFormatter.ISO_LOCAL_DATE_TIME), false);
-            addParagraph(document, "Case ID: " + payload.caseId(), false);
+            addParagraph(document, "Generated At: " + OffsetDateTime.now().format(DateTimeFormatter.ISO_OFFSET_DATE_TIME), false);
+            addParagraph(document, "Matter ID: " + payload.matterId(), false);
             addParagraph(document, "", false);
             for (PetitionDraftExportService.TemplateSection section : payload.sections()) {
                 addParagraph(document, section.title(), true);
@@ -56,9 +56,9 @@ public class PetitionDocumentRenderer {
                 stream.setFont(new PDType1Font(Standard14Fonts.FontName.HELVETICA), 10);
                 stream.beginText();
                 stream.newLineAtOffset(50, 760);
-                stream.showText("Case ID: " + payload.caseId());
+                stream.showText("Matter ID: " + payload.matterId());
                 stream.newLineAtOffset(0, -16);
-                stream.showText("Generated At: " + LocalDateTime.now().format(DateTimeFormatter.ISO_LOCAL_DATE_TIME));
+                stream.showText("Generated At: " + OffsetDateTime.now().format(DateTimeFormatter.ISO_OFFSET_DATE_TIME));
                 for (PetitionDraftExportService.TemplateSection section : payload.sections()) {
                     stream.newLineAtOffset(0, -24);
                     stream.showText(safeTruncated(section.title(), 140));

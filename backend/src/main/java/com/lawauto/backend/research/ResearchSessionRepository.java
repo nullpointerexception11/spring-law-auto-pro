@@ -5,7 +5,7 @@ import java.util.Optional;
 import java.util.UUID;
 import org.springframework.data.jpa.repository.JpaRepository;
 
-public interface ResearchSessionRepository extends JpaRepository<ResearchSessionEntity, UUID> {
-    List<ResearchSessionEntity> findByOrgIdOrderByCreatedAtDesc(UUID orgId);
-    Optional<ResearchSessionEntity> findByIdAndOrgId(UUID id, UUID orgId);
+public interface ResearchSessionRepository extends JpaRepository<ResearchSession, UUID> {
+    List<ResearchSession> findByOrgIdOrderByCreatedAtDesc(UUID orgId);
+    Optional<ResearchSession> findByIdAndOrgId(UUID id, UUID orgId);
 }

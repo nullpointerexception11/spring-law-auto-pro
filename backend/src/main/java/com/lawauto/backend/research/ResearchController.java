@@ -7,7 +7,7 @@ import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import java.math.BigDecimal;
-import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.UUID;
 import lombok.extern.slf4j.Slf4j;
@@ -23,7 +23,7 @@ import org.springframework.web.bind.annotation.RestController;
 @Slf4j
 @Validated
 @RestController
-@RequestMapping("/api/research-sessions")
+@RequestMapping("/api/v1/research-sessions")
 public class ResearchController {
     private final AuthorizationGuard authorizationGuard;
     private final ResearchService researchService;
@@ -84,14 +84,14 @@ public class ResearchController {
             String topic,
             String notes,
             @NotBlank String scopeType,
-            UUID caseId,
+            UUID matterId,
             UUID petitionId
     ) {}
 
     public record AddResearchResultRequest(
             @NotBlank String sourceType,
             @NotBlank String title,
-            LocalDateTime decisionDate,
+            OffsetDateTime decisionDate,
             String referenceNo,
             String url,
             String snippet,

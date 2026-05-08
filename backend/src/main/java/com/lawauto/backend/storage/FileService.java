@@ -4,6 +4,7 @@ import com.lawauto.backend.audit.ActivityEvent;
 import com.lawauto.backend.audit.ActivityEventRepository;
 import com.lawauto.backend.org.OrgRepository;
 import com.lawauto.backend.user.UserRepository;
+import com.lawauto.backend.cases.Matter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -17,6 +18,8 @@ public class FileService {
     private final FileObjectRepository fileObjectRepository;
     private final AttachmentRepository attachmentRepository;
     private final FileFolderRepository fileFolderRepository;
+    private final OrgRepository orgRepository;
+    private final UserRepository userRepository;
     private final ActivityEventRepository activityEventRepository;
 
     /**
@@ -26,20 +29,21 @@ public class FileService {
     public Attachment uploadAndAttach(FileAttachRequest request, UUID orgId, UUID userId) {
         // 1. Create FileObject (Metadata for the actual storage)
         FileObject file = FileObject.builder()
-                .org(OrgRepository.getReference(orgId))
+                .org(orgRepository.getReferenceById(orgId))
                 .folder(request.getFolderId() != null ? fileFolderRepository.getReferenceById(request.getFolderId()) : null)
                 .storageKey(request.getStorageKey())
                 .fileName(request.getFileName())
                 .mimeType(request.getMimeType())
                 .sizeBytes(request.getSizeBytes())
-                .createdBy(UserRepository.getReference(userId))
-                .ocrStatus("PENDING")
+                .createdBy(userRepository.getReferenceById(userId))
+                .ocrStatus(OCRStatus.PENDING)
                 .build();
         
         FileObject savedFile = fileObjectRepository.save(file);
 
-        // 2. Link as Attachment (Generic Linking)
+        // 2. Link as Attachment (Generic Linking with Org Isolation)
         Attachment attachment = Attachment.builder()
+                .org(orgRepository.getReferenceById(orgId))
                 .file(savedFile)
                 .entityType(request.getEntityType())
                 .entityId(request.getEntityId())
@@ -51,9 +55,9 @@ public class FileService {
         // 3. Workflow Log: Add to Matter Timeline if linked to a Matter
         if ("MATTER".equalsIgnoreCase(request.getEntityType())) {
             ActivityEvent event = ActivityEvent.builder()
-                    .org(OrgRepository.getReference(orgId))
-                    .user(UserRepository.getReference(userId))
-                    .matter(com.lawauto.backend.cases.Matter.builder().id(request.getEntityId()).build())
+                    .org(orgRepository.getReferenceById(orgId))
+                    .user(userRepository.getReferenceById(userId))
+                    .matter(Matter.builder().id(request.getEntityId()).build())
                     .action("FILE_ATTACHED")
                     .entityType("FILE")
                     .entityId(savedFile.getId())

@@ -7,7 +7,7 @@ import java.util.UUID;
 @Data
 public class EventRequest {
     private UUID matterId;
-    private String type; // HEARING, DEADLINE, etc.
+    private UniversalEventType type;
     private String title;
     private String descriptionHtml;
     private OffsetDateTime startAt;

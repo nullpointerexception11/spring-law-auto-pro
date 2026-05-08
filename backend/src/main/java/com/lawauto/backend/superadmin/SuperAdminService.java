@@ -70,10 +70,4 @@ public class SuperAdminService {
         return roleRepository.save(role);
     }
 
-    public record CreateOrgRequest(
-            String orgName,
-            String adminEmail,
-            String adminFullName,
-            String adminPassword
-    ) {}
 }

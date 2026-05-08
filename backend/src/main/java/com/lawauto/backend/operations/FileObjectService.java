@@ -16,13 +16,18 @@ public class FileObjectService {
 
     public List<FileObjectDto> listByOrg(UUID orgId) {
         String sql = """
-                select id, orgId, storageKey, fileName, mimeType, sizeBytes, sha256, createdAt
-                from FileObject where orgId=:orgId order by createdAt desc
+                select "id", "orgId", "storageKey", "fileName", "mimeType", "sizeBytes", "sha256", "createdAt"
+                from "FileObject" where "orgId" = :orgId order by "createdAt" desc
                 """;
         return jdbc.query(sql, new MapSqlParameterSource("orgId", orgId), (rs, n) -> new FileObjectDto(
-                rs.getObject("id", UUID.class), rs.getObject("orgId", UUID.class), rs.getString("storageKey"),
-                rs.getString("fileName"), rs.getString("mimeType"), (Integer) rs.getObject("sizeBytes"), rs.getString("sha256"),
-                rs.getTimestamp("createdAt").toLocalDateTime()
+                rs.getObject("id", UUID.class), 
+                rs.getObject("orgId", UUID.class), 
+                rs.getString("storageKey"),
+                rs.getString("fileName"), 
+                rs.getString("mimeType"), 
+                (Integer) rs.getObject("sizeBytes"), 
+                rs.getString("sha256"),
+                rs.getObject("createdAt", java.time.OffsetDateTime.class)
         ));
     }
 
@@ -30,18 +35,22 @@ public class FileObjectService {
     public UUID create(CreateFileObjectRequest req) {
         UUID id = UUID.randomUUID();
         String sql = """
-                insert into FileObject (id, orgId, storageKey, fileName, mimeType, sizeBytes, sha256)
+                insert into "FileObject" ("id", "orgId", "storageKey", "fileName", "mimeType", "sizeBytes", "sha256")
                 values (:id, :orgId, :storageKey, :fileName, :mimeType, :sizeBytes, :sha256)
                 """;
         jdbc.update(sql, new MapSqlParameterSource()
-                .addValue("id", id).addValue("orgId", req.orgId()).addValue("storageKey", req.storageKey())
-                .addValue("fileName", req.fileName()).addValue("mimeType", req.mimeType())
-                .addValue("sizeBytes", req.sizeBytes()).addValue("sha256", req.sha256()));
+                .addValue("id", id)
+                .addValue("orgId", req.orgId())
+                .addValue("storageKey", req.storageKey())
+                .addValue("fileName", req.fileName())
+                .addValue("mimeType", req.mimeType())
+                .addValue("sizeBytes", req.sizeBytes())
+                .addValue("sha256", req.sha256()));
         return id;
     }
 
     public String getStorageKey(UUID id) {
-        String sql = "select storageKey from FileObject where id=:id";
+        String sql = "select \"storageKey\" from \"FileObject\" where \"id\" = :id";
         return jdbc.queryForObject(sql, new MapSqlParameterSource("id", id), String.class);
     }
 }

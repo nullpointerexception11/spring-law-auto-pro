@@ -21,9 +21,15 @@ public class DeleteRequestService {
                 from "DeleteRequest" where "orgId"=:orgId order by "requestedAt" desc
                 """;
         return jdbc.query(sql, new MapSqlParameterSource("orgId", orgId), (rs, n) -> new DeleteRequestDto(
-                rs.getObject("id", UUID.class), rs.getObject("orgId", UUID.class), rs.getString("entityType"),
-                rs.getObject("entityId", UUID.class), rs.getString("mode"), rs.getString("status"), rs.getString("reason"),
-                rs.getObject("requestedByUserId", UUID.class), rs.getTimestamp("requestedAt").toLocalDateTime()
+                rs.getObject("id", UUID.class), 
+                rs.getObject("orgId", UUID.class), 
+                rs.getString("entityType"),
+                rs.getObject("entityId", UUID.class), 
+                rs.getString("mode"), 
+                rs.getString("status"), 
+                rs.getString("reason"),
+                rs.getObject("requestedByUserId", UUID.class), 
+                rs.getObject("requestedAt", java.time.OffsetDateTime.class)
         ));
     }
 
@@ -32,12 +38,16 @@ public class DeleteRequestService {
         UUID id = UUID.randomUUID();
         String sql = """
                 insert into "DeleteRequest" ("id", "orgId", "entityType", "entityId", "mode", "reason", "requestedByUserId")
-                values (:id, :orgId, :entityType::"DeleteEntityType", :entityId, :mode::"DeleteMode", :reason, :requestedByUserId)
+                values (:id, :orgId, :entityType, :entityId, :mode, :reason, :requestedByUserId)
                 """;
         jdbc.update(sql, new MapSqlParameterSource()
-                .addValue("id", id).addValue("orgId", req.orgId()).addValue("entityType", req.entityType())
-                .addValue("entityId", req.entityId()).addValue("mode", req.mode() == null ? "SOFT" : req.mode())
-                .addValue("reason", req.reason()).addValue("requestedByUserId", req.requestedByUserId()));
+                .addValue("id", id)
+                .addValue("orgId", req.orgId())
+                .addValue("entityType", req.entityType())
+                .addValue("entityId", req.entityId())
+                .addValue("mode", req.mode() == null ? "SOFT" : req.mode())
+                .addValue("reason", req.reason())
+                .addValue("requestedByUserId", req.requestedByUserId()));
         return id;
     }
 
@@ -103,38 +113,38 @@ public class DeleteRequestService {
 
     private void applySoftDelete(String entityType, UUID entityId, UUID byUserId) {
         String table = switch (entityType) {
-            case "CLIENT" -> "Client";
-            case "CASE" -> "Case";
+            case "PARTY" -> "Party";
+            case "MATTER" -> "Matter";
             case "PETITION" -> "Petition";
             case "EVIDENCE" -> "Evidence";
             case "HEARING" -> "Hearing";
             case "DEADLINE" -> "Deadline";
-            case "CASE_PAYMENT" -> "CasePayment";
+            case "PAYMENT" -> "Payment";
             case "CALENDAR_EVENT" -> "CalendarEvent";
-            case "CLIENT_NOTE" -> "ClientNote";
+            case "NOTE" -> "PartyNote";
             default -> throw new IllegalArgumentException("Soft delete not supported for entityType: " + entityType);
         };
 
-        String sql = "update \"" + table + " set deletedAt=now(), deletedByUserId=:byUserId where id\"=:id";
+        String sql = "update \"" + table + "\" set \"deletedAt\"=now(), \"deletedByUserId\"=:byUserId where \"id\"=:id";
         jdbc.update(sql, new MapSqlParameterSource().addValue("id", entityId).addValue("byUserId", byUserId));
     }
 
     private void applyHardDelete(String entityType, UUID entityId) {
         String table = switch (entityType) {
-            case "CLIENT" -> "Client";
-            case "CASE" -> "Case";
+            case "PARTY" -> "Party";
+            case "MATTER" -> "Matter";
             case "PETITION" -> "Petition";
             case "EVIDENCE" -> "Evidence";
             case "HEARING" -> "Hearing";
             case "DEADLINE" -> "Deadline";
-            case "CASE_PAYMENT" -> "CasePayment";
+            case "PAYMENT" -> "Payment";
             case "CALENDAR_EVENT" -> "CalendarEvent";
-            case "CLIENT_NOTE" -> "ClientNote";
+            case "NOTE" -> "PartyNote";
             case "FILE_OBJECT" -> "FileObject";
             default -> throw new IllegalArgumentException("Unknown entityType: " + entityType);
         };
 
-        String sql = "delete from \"" + table + " where id\"=:id";
+        String sql = "delete from \"" + table + "\" where \"id\"=:id";
         jdbc.update(sql, new MapSqlParameterSource().addValue("id", entityId));
     }
 }

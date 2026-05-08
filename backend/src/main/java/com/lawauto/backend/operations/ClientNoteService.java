@@ -16,13 +16,19 @@ public class ClientNoteService {
 
     public List<ClientNoteDto> listByOrg(UUID orgId) {
         String sql = """
-                select id, orgId, clientId, body, visibility, createdByUserId, createdAt
-                from ClientNote where orgId=:orgId and deletedAt is null order by createdAt desc
+                select "id", "orgId", "partyId", "body", "visibility", "createdByUserId", "createdAt"
+                from "PartyNote" 
+                where "orgId" = :orgId and "deletedAt" is null 
+                order by "createdAt" desc
                 """;
         return jdbc.query(sql, new MapSqlParameterSource("orgId", orgId), (rs, n) -> new ClientNoteDto(
-                rs.getObject("id", UUID.class), rs.getObject("orgId", UUID.class), rs.getObject("clientId", UUID.class),
-                rs.getString("body"), rs.getString("visibility"), rs.getObject("createdByUserId", UUID.class),
-                rs.getTimestamp("createdAt").toLocalDateTime()
+                rs.getObject("id", UUID.class), 
+                rs.getObject("orgId", UUID.class), 
+                rs.getObject("partyId", UUID.class),
+                rs.getString("body"), 
+                rs.getString("visibility"), 
+                rs.getObject("createdByUserId", UUID.class), 
+                rs.getObject("createdAt", java.time.OffsetDateTime.class)
         ));
     }
 
@@ -30,12 +36,15 @@ public class ClientNoteService {
     public UUID create(CreateClientNoteRequest req) {
         UUID id = UUID.randomUUID();
         String sql = """
-                insert into ClientNote (id, orgId, clientId, body, visibility, createdByUserId)
-                values (:id, :orgId, :clientId, :body, :visibility, :createdByUserId)
+                insert into "PartyNote" ("id", "orgId", "partyId", "body", "visibility", "createdByUserId")
+                values (:id, :orgId, :partyId, :body, :visibility, :createdByUserId)
                 """;
         jdbc.update(sql, new MapSqlParameterSource()
-                .addValue("id", id).addValue("orgId", req.orgId()).addValue("clientId", req.clientId())
-                .addValue("body", req.body()).addValue("visibility", req.visibility() == null ? "LAWYERS" : req.visibility())
+                .addValue("id", id)
+                .addValue("orgId", req.orgId())
+                .addValue("partyId", req.partyId())
+                .addValue("body", req.body())
+                .addValue("visibility", req.visibility() == null ? "LAWYERS" : req.visibility())
                 .addValue("createdByUserId", req.createdByUserId()));
         return id;
     }

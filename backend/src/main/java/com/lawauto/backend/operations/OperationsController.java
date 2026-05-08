@@ -20,7 +20,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
-@RequestMapping("/api/operations")
+@RequestMapping("/api/v1/operations")
 public class OperationsController {
     private final HearingService hearingService;
     private final DeadlineService deadlineService;
@@ -78,7 +78,7 @@ public class OperationsController {
     @PostMapping("/hearings")
     public Map<String, UUID> createHearing(@Valid @RequestBody CreateHearingRequest req) {
         authorizationGuard.requireOrg(req.orgId());
-        operationAccessGuard.requireCaseAccess(authorizationGuard.currentPrincipal(), req.caseId());
+        operationAccessGuard.requireMatterAccess(authorizationGuard.currentPrincipal(), req.matterId());
         return Map.of("id", hearingService.create(req));
     }
 
@@ -97,7 +97,7 @@ public class OperationsController {
     @PostMapping("/deadlines")
     public Map<String, UUID> createDeadline(@Valid @RequestBody CreateDeadlineRequest req) {
         authorizationGuard.requireOrg(req.orgId());
-        operationAccessGuard.requireCaseAccess(authorizationGuard.currentPrincipal(), req.caseId());
+        operationAccessGuard.requireMatterAccess(authorizationGuard.currentPrincipal(), req.matterId());
         return Map.of("id", deadlineService.create(req));
     }
 
@@ -117,8 +117,8 @@ public class OperationsController {
     public Map<String, UUID> createCalendarEvent(@Valid @RequestBody CreateCalendarEventRequest req) {
         authorizationGuard.requireOrg(req.orgId());
         AuthPrincipal principal = authorizationGuard.currentPrincipal();
-        if (req.relatedCaseId() != null) operationAccessGuard.requireCaseAccess(principal, req.relatedCaseId());
-        if (req.relatedClientId() != null) operationAccessGuard.requireClientAccess(principal, req.relatedClientId());
+        if (req.relatedMatterId() != null) operationAccessGuard.requireMatterAccess(principal, req.relatedMatterId());
+        if (req.relatedPartyId() != null) operationAccessGuard.requirePartyAccess(principal, req.relatedPartyId());
         return Map.of("id", calendarEventService.create(req));
     }
 
@@ -137,7 +137,7 @@ public class OperationsController {
     @PostMapping("/petitions")
     public Map<String, UUID> createPetition(@Valid @RequestBody CreatePetitionRequest req) {
         authorizationGuard.requireOrg(req.orgId());
-        operationAccessGuard.requireCaseAccess(authorizationGuard.currentPrincipal(), req.caseId());
+        operationAccessGuard.requireMatterAccess(authorizationGuard.currentPrincipal(), req.matterId());
         return Map.of("id", petitionService.create(req));
     }
 
@@ -156,12 +156,12 @@ public class OperationsController {
     @PostMapping("/evidences")
     public Map<String, UUID> createEvidence(@Valid @RequestBody CreateEvidenceRequest req) {
         authorizationGuard.requireOrg(req.orgId());
-        operationAccessGuard.requireCaseAccess(authorizationGuard.currentPrincipal(), req.caseId());
+        operationAccessGuard.requireMatterAccess(authorizationGuard.currentPrincipal(), req.matterId());
         return Map.of("id", evidenceService.create(req));
     }
 
-    @GetMapping("/client-notes")
-    public ApiResponse<List<ClientNoteDto>> listClientNotes(
+    @GetMapping("/party-notes")
+    public ApiResponse<List<ClientNoteDto>> listPartyNotes(
             @RequestParam UUID orgId,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size,
@@ -172,15 +172,15 @@ public class OperationsController {
         return paged(all, page, size, sort, Comparator.comparing(ClientNoteDto::createdAt));
     }
 
-    @PostMapping("/client-notes")
-    public Map<String, UUID> createClientNote(@Valid @RequestBody CreateClientNoteRequest req) {
+    @PostMapping("/party-notes")
+    public Map<String, UUID> createPartyNote(@Valid @RequestBody CreateClientNoteRequest req) {
         authorizationGuard.requireOrg(req.orgId());
-        operationAccessGuard.requireClientAccess(authorizationGuard.currentPrincipal(), req.clientId());
+        operationAccessGuard.requirePartyAccess(authorizationGuard.currentPrincipal(), req.partyId());
         return Map.of("id", clientNoteService.create(req));
     }
 
-    @GetMapping("/case-payments")
-    public ApiResponse<List<CasePaymentDto>> listCasePayments(
+    @GetMapping("/matter-payments")
+    public ApiResponse<List<CasePaymentDto>> listMatterPayments(
             @RequestParam UUID orgId,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size,
@@ -191,23 +191,23 @@ public class OperationsController {
         return paged(all, page, size, sort, Comparator.comparing(CasePaymentDto::paidAt));
     }
 
-    @PostMapping("/case-payments")
-    public Map<String, UUID> createCasePayment(@Valid @RequestBody CreateCasePaymentRequest req) {
+    @PostMapping("/matter-payments")
+    public Map<String, UUID> createMatterPayment(@Valid @RequestBody CreateCasePaymentRequest req) {
         authorizationGuard.requireOrg(req.orgId());
-        operationAccessGuard.requireCaseAccess(authorizationGuard.currentPrincipal(), req.caseId());
+        operationAccessGuard.requireMatterAccess(authorizationGuard.currentPrincipal(), req.matterId());
         return Map.of("id", casePaymentService.create(req));
     }
 
-    @GetMapping("/case-fee-terms")
-    public ApiResponse<Object> getCaseFeeTerms(@RequestParam UUID caseId) {
-        operationAccessGuard.requireCaseAccess(authorizationGuard.currentPrincipal(), caseId);
-        return ApiResponse.ok(caseFeeTermsService.findByCaseId(caseId).orElse(null));
+    @GetMapping("/matter-fee-terms")
+    public ApiResponse<Object> getMatterFeeTerms(@RequestParam UUID matterId) {
+        operationAccessGuard.requireMatterAccess(authorizationGuard.currentPrincipal(), matterId);
+        return ApiResponse.ok(caseFeeTermsService.findByCaseId(matterId).orElse(null));
     }
 
-    @PostMapping("/case-fee-terms")
-    public Map<String, String> upsertCaseFeeTerms(@Valid @RequestBody UpsertCaseFeeTermsRequest req) {
+    @PostMapping("/matter-fee-terms")
+    public Map<String, String> upsertMatterFeeTerms(@Valid @RequestBody UpsertCaseFeeTermsRequest req) {
         authorizationGuard.requireOrg(req.orgId());
-        operationAccessGuard.requireCaseAccess(authorizationGuard.currentPrincipal(), req.caseId());
+        operationAccessGuard.requireMatterAccess(authorizationGuard.currentPrincipal(), req.matterId());
         caseFeeTermsService.upsert(req);
         return Map.of("status", "ok");
     }
@@ -238,7 +238,7 @@ public class OperationsController {
             @RequestParam(defaultValue = "requestedAt,desc") String sort
     ) {
         authorizationGuard.requireOrg(orgId);
-        authorizationGuard.requireRole("ADMIN");
+        authorizationGuard.requireRole("ORG_ADMIN", "PLATFORM_ADMIN");
         List<DeleteRequestDto> all = deleteRequestService.listByOrg(orgId);
         return paged(all, page, size, sort, Comparator.comparing(DeleteRequestDto::requestedAt));
     }
@@ -246,14 +246,14 @@ public class OperationsController {
     @PostMapping("/delete-requests")
     public Map<String, UUID> createDeleteRequest(@Valid @RequestBody CreateDeleteRequestRequest req) {
         authorizationGuard.requireOrg(req.orgId());
-        authorizationGuard.requireRole("ADMIN");
+        authorizationGuard.requireRole("ORG_ADMIN", "PLATFORM_ADMIN");
         return Map.of("id", deleteRequestService.create(req));
     }
 
     @PostMapping("/delete-requests/{id}/approve")
     public Map<String, String> approveDeleteRequest(@PathVariable UUID id, @RequestBody DeleteRequestActions.ReviewDeleteRequestRequest req) {
         authorizationGuard.requireOrg(req.orgId());
-        authorizationGuard.requireRole("ADMIN");
+        authorizationGuard.requireRole("ORG_ADMIN", "PLATFORM_ADMIN");
         deleteRequestService.approve(id, req);
         return Map.of("status", "approved");
     }
@@ -261,7 +261,7 @@ public class OperationsController {
     @PostMapping("/delete-requests/{id}/reject")
     public Map<String, String> rejectDeleteRequest(@PathVariable UUID id, @RequestBody DeleteRequestActions.ReviewDeleteRequestRequest req) {
         authorizationGuard.requireOrg(req.orgId());
-        authorizationGuard.requireRole("ADMIN");
+        authorizationGuard.requireRole("ORG_ADMIN", "PLATFORM_ADMIN");
         deleteRequestService.reject(id, req);
         return Map.of("status", "rejected");
     }
@@ -269,7 +269,7 @@ public class OperationsController {
     @PostMapping("/delete-requests/{id}/execute")
     public Map<String, String> executeDeleteRequest(@PathVariable UUID id, @RequestBody DeleteRequestActions.ExecuteDeleteRequestRequest req) {
         authorizationGuard.requireOrg(req.orgId());
-        authorizationGuard.requireRole("ADMIN");
+        authorizationGuard.requireRole("ORG_ADMIN", "PLATFORM_ADMIN");
         deleteRequestService.execute(id, req);
         return Map.of("status", "executed");
     }

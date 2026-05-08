@@ -3,7 +3,7 @@ package com.lawauto.backend.org;
 import lombok.Builder;
 import lombok.Data;
 
-import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 import java.util.UUID;
 
 @Data
@@ -11,7 +11,7 @@ import java.util.UUID;
 public class OrgResponseDto {
     private UUID id;
     private String name;
-    private LocalDateTime createdAt;
+    private OffsetDateTime createdAt;
 
     public static OrgResponseDto fromEntity(Org org) {
         if (org == null) {

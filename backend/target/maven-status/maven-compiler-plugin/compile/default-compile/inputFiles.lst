@@ -40,7 +40,6 @@ C:\Users\Orhan's Comp\Desktop\spring-law-auto-pro\backend\src\main\java\com\lawa
 C:\Users\Orhan's Comp\Desktop\spring-law-auto-pro\backend\src\main\java\com\lawauto\backend\cases\MatterStatus.java
 C:\Users\Orhan's Comp\Desktop\spring-law-auto-pro\backend\src\main\java\com\lawauto\backend\cases\MatterStatusHistory.java
 C:\Users\Orhan's Comp\Desktop\spring-law-auto-pro\backend\src\main\java\com\lawauto\backend\cases\MatterType.java
-C:\Users\Orhan's Comp\Desktop\spring-law-auto-pro\backend\src\main\java\com\lawauto\backend\cases\PartyType.java
 C:\Users\Orhan's Comp\Desktop\spring-law-auto-pro\backend\src\main\java\com\lawauto\backend\cases\TimelineType.java
 C:\Users\Orhan's Comp\Desktop\spring-law-auto-pro\backend\src\main\java\com\lawauto\backend\cases\UniversalEvent.java
 C:\Users\Orhan's Comp\Desktop\spring-law-auto-pro\backend\src\main\java\com\lawauto\backend\cases\UniversalEventRepository.java
@@ -53,6 +52,7 @@ C:\Users\Orhan's Comp\Desktop\spring-law-auto-pro\backend\src\main\java\com\lawa
 C:\Users\Orhan's Comp\Desktop\spring-law-auto-pro\backend\src\main\java\com\lawauto\backend\client\Party.java
 C:\Users\Orhan's Comp\Desktop\spring-law-auto-pro\backend\src\main\java\com\lawauto\backend\client\PartyRepository.java
 C:\Users\Orhan's Comp\Desktop\spring-law-auto-pro\backend\src\main\java\com\lawauto\backend\client\PartyRole.java
+C:\Users\Orhan's Comp\Desktop\spring-law-auto-pro\backend\src\main\java\com\lawauto\backend\client\PartyType.java
 C:\Users\Orhan's Comp\Desktop\spring-law-auto-pro\backend\src\main\java\com\lawauto\backend\common\ApiErrorResponse.java
 C:\Users\Orhan's Comp\Desktop\spring-law-auto-pro\backend\src\main\java\com\lawauto\backend\common\ApiResponse.java
 C:\Users\Orhan's Comp\Desktop\spring-law-auto-pro\backend\src\main\java\com\lawauto\backend\common\Comment.java

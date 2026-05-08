@@ -9,7 +9,7 @@ import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.SqlTypes;
 
 import java.math.BigDecimal;
-import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 import java.util.UUID;
 
 @Entity
@@ -39,7 +39,7 @@ public class ResearchResult {
     @Column(nullable = false)
     private String title;
 
-    private LocalDateTime decisionDate;
+    private OffsetDateTime decisionDate;
     private String referenceNo;
     private String url;
 
@@ -57,5 +57,5 @@ public class ResearchResult {
 
     @CreationTimestamp
     @Column(nullable = false, updatable = false)
-    private LocalDateTime createdAt;
+    private OffsetDateTime createdAt;
 }

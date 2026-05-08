@@ -4,6 +4,6 @@ import java.util.List;
 import java.util.UUID;
 import org.springframework.data.jpa.repository.JpaRepository;
 
-public interface ResearchNoteRepository extends JpaRepository<ResearchNoteEntity, UUID> {
-    List<ResearchNoteEntity> findByResearchSessionIdOrderByCreatedAtDesc(UUID researchSessionId);
+public interface ResearchNoteRepository extends JpaRepository<ResearchNote, UUID> {
+    List<ResearchNote> findByResearchSessionIdOrderByCreatedAtDesc(UUID researchSessionId);
 }

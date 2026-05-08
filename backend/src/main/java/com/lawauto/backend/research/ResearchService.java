@@ -1,8 +1,12 @@
 package com.lawauto.backend.research;
 
 import com.lawauto.backend.auth.AuthPrincipal;
+import com.lawauto.backend.cases.MatterRepository;
+import com.lawauto.backend.org.OrgRepository;
+import com.lawauto.backend.petition.PetitionRepository;
+import com.lawauto.backend.user.UserRepository;
 import jakarta.transaction.Transactional;
-import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
 import java.util.UUID;
@@ -19,15 +23,27 @@ public class ResearchService {
     private final ResearchSessionRepository sessionRepository;
     private final ResearchResultRepository resultRepository;
     private final ResearchNoteRepository noteRepository;
+    private final OrgRepository orgRepository;
+    private final UserRepository userRepository;
+    private final MatterRepository matterRepository;
+    private final PetitionRepository petitionRepository;
 
     public ResearchService(
             ResearchSessionRepository sessionRepository,
             ResearchResultRepository resultRepository,
-            ResearchNoteRepository noteRepository
+            ResearchNoteRepository noteRepository,
+            OrgRepository orgRepository,
+            UserRepository userRepository,
+            MatterRepository matterRepository,
+            PetitionRepository petitionRepository
     ) {
         this.sessionRepository = sessionRepository;
         this.resultRepository = resultRepository;
         this.noteRepository = noteRepository;
+        this.orgRepository = orgRepository;
+        this.userRepository = userRepository;
+        this.matterRepository = matterRepository;
+        this.petitionRepository = petitionRepository;
     }
 
     @Cacheable(value = "researchSessions", key = "#orgId")
@@ -41,7 +57,7 @@ public class ResearchService {
     @Cacheable(value = "researchSessionDetails", key = "#sessionId")
     public ResearchDto.Bundle getSession(UUID orgId, UUID sessionId) {
         log.debug("Fetching research session details from DB for session [{}]", sessionId);
-        ResearchSessionEntity session = findSession(orgId, sessionId);
+        ResearchSession session = findSession(orgId, sessionId);
         return ResearchDto.Bundle.builder()
                 .session(ResearchDto.Session.fromEntity(session))
                 .results(resultRepository.findByResearchSessionIdOrderByCreatedAtDesc(sessionId).stream().map(ResearchDto.Result::fromEntity).collect(Collectors.toList()))
@@ -53,19 +69,25 @@ public class ResearchService {
     @CacheEvict(value = "researchSessions", key = "#req.orgId()")
     public UUID createSession(AuthPrincipal principal, ResearchController.CreateResearchSessionRequest req) {
         log.info("Saving new research session to DB for org [{}]", req.orgId());
-        ResearchSessionEntity entity = new ResearchSessionEntity();
+        ResearchSession entity = new ResearchSession();
         entity.setId(UUID.randomUUID());
-        entity.setOrgId(req.orgId());
-        entity.setCreatedByUserId(principal.userId());
+        entity.setOrg(orgRepository.getReferenceById(req.orgId()));
+        entity.setCreatedBy(userRepository.getReferenceById(principal.userId()));
         entity.setTitle(req.title());
         entity.setTopic(req.topic());
         entity.setNotes(req.notes());
         entity.setScopeType(req.scopeType().trim().toUpperCase());
-        entity.setStatus("ACTIVE");
-        entity.setCaseId(req.caseId());
-        entity.setPetitionId(req.petitionId());
-        entity.setCreatedAt(LocalDateTime.now());
-        entity.setUpdatedAt(LocalDateTime.now());
+        entity.setStatus(ResearchStatus.ACTIVE);
+        
+        if (req.matterId() != null) {
+            entity.setMatter(matterRepository.getReferenceById(req.matterId()));
+        }
+        if (req.petitionId() != null) {
+            entity.setPetition(petitionRepository.getReferenceById(req.petitionId()));
+        }
+        
+        entity.setCreatedAt(OffsetDateTime.now());
+        entity.setUpdatedAt(OffsetDateTime.now());
         sessionRepository.save(entity);
         return entity.getId();
     }
@@ -74,10 +96,11 @@ public class ResearchService {
     @CacheEvict(value = "researchSessionDetails", key = "#sessionId")
     public UUID addResult(UUID orgId, UUID sessionId, ResearchController.AddResearchResultRequest req) {
         log.info("Adding new result to session [{}] in DB", sessionId);
-        findSession(orgId, sessionId);
-        ResearchResultEntity entity = new ResearchResultEntity();
+        ResearchSession session = findSession(orgId, sessionId);
+        ResearchResult entity = new ResearchResult();
         entity.setId(UUID.randomUUID());
-        entity.setResearchSessionId(sessionId);
+        entity.setOrg(orgRepository.getReferenceById(orgId));
+        entity.setSession(session);
         entity.setSourceType(req.sourceType().trim().toUpperCase());
         entity.setTitle(req.title());
         entity.setDecisionDate(req.decisionDate());
@@ -85,7 +108,7 @@ public class ResearchService {
         entity.setUrl(req.url());
         entity.setSnippet(req.snippet());
         entity.setRelevanceScore(req.relevanceScore());
-        entity.setCreatedAt(LocalDateTime.now());
+        entity.setCreatedAt(OffsetDateTime.now());
         resultRepository.save(entity);
         return entity.getId();
     }
@@ -94,21 +117,20 @@ public class ResearchService {
     @CacheEvict(value = "researchSessionDetails", key = "#sessionId")
     public UUID addNote(AuthPrincipal principal, UUID orgId, UUID sessionId, ResearchController.AddResearchNoteRequest req) {
         log.info("Adding new note to session [{}] in DB", sessionId);
-        findSession(orgId, sessionId);
-        ResearchNoteEntity entity = new ResearchNoteEntity();
+        ResearchSession session = findSession(orgId, sessionId);
+        ResearchNote entity = new ResearchNote();
         entity.setId(UUID.randomUUID());
-        entity.setResearchSessionId(sessionId);
-        entity.setUserId(principal.userId());
+        entity.setOrg(orgRepository.getReferenceById(orgId));
+        entity.setSession(session);
+        entity.setUser(userRepository.getReferenceById(principal.userId()));
         entity.setNoteText(req.noteText());
-        entity.setCreatedAt(LocalDateTime.now());
+        entity.setCreatedAt(OffsetDateTime.now());
         noteRepository.save(entity);
         return entity.getId();
     }
 
-    private ResearchSessionEntity findSession(UUID orgId, UUID sessionId) {
+    private ResearchSession findSession(UUID orgId, UUID sessionId) {
         return sessionRepository.findByIdAndOrgId(sessionId, orgId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Research session not found"));
     }
-
-
 }

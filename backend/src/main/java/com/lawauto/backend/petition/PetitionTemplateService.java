@@ -1,6 +1,8 @@
 package com.lawauto.backend.petition;
 
 import com.lawauto.backend.auth.AuthPrincipal;
+import com.lawauto.backend.org.OrgRepository;
+import com.lawauto.backend.user.UserRepository;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.transaction.Transactional;
@@ -22,10 +24,19 @@ import org.springframework.web.server.ResponseStatusException;
 public class PetitionTemplateService {
     private static final Set<String> ALLOWED_SECTION_MODES = Set.of("INPUT", "BODY", "AUTO");
     private final PetitionTemplateRepository repository;
+    private final OrgRepository orgRepository;
+    private final UserRepository userRepository;
     private final ObjectMapper objectMapper;
 
-    public PetitionTemplateService(PetitionTemplateRepository repository, ObjectMapper objectMapper) {
+    public PetitionTemplateService(
+            PetitionTemplateRepository repository, 
+            OrgRepository orgRepository,
+            UserRepository userRepository,
+            ObjectMapper objectMapper
+    ) {
         this.repository = repository;
+        this.orgRepository = orgRepository;
+        this.userRepository = userRepository;
         this.objectMapper = objectMapper;
     }
 
@@ -44,12 +55,12 @@ public class PetitionTemplateService {
         validateStructureJson(req.structureJson());
         PetitionTemplate entity = new PetitionTemplate();
         entity.setId(UUID.randomUUID());
-        entity.setOrgId(req.orgId());
+        entity.setOrg(orgRepository.getReferenceById(req.orgId()));
         entity.setName(req.name());
         entity.setVersion(req.version() == null ? 1 : req.version());
-        entity.setActive(Boolean.TRUE.equals(req.isActive()));
+        entity.setIsActive(Boolean.TRUE.equals(req.isActive()));
         entity.setStructureJson(req.structureJson());
-        entity.setCreatedByUserId(principal.userId());
+        entity.setCreatedBy(userRepository.getReferenceById(principal.userId()));
         entity.setCreatedAt(OffsetDateTime.now());
         entity.setUpdatedAt(OffsetDateTime.now());
         repository.save(entity);
@@ -81,14 +92,14 @@ public class PetitionTemplateService {
         List<PetitionTemplate> all = repository.findByOrgIdOrderByNameAscVersionDesc(orgId);
         for (PetitionTemplate item : all) {
             boolean active = item.getId().equals(templateId);
-            if (item.isActive() != active) {
-                item.setActive(active);
+            if (Boolean.TRUE.equals(item.getIsActive()) != active) {
+                item.setIsActive(active);
                 item.setUpdatedAt(OffsetDateTime.now());
                 repository.save(item);
             }
         }
-        if (!selected.isActive()) {
-            selected.setActive(true);
+        if (!Boolean.TRUE.equals(selected.getIsActive())) {
+            selected.setIsActive(true);
             selected.setUpdatedAt(OffsetDateTime.now());
             repository.save(selected);
         }

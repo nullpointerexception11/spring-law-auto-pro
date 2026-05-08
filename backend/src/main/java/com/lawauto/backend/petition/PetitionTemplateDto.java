@@ -25,12 +25,12 @@ public class PetitionTemplateDto {
         }
         return PetitionTemplateDto.builder()
                 .id(entity.getId())
-                .orgId(entity.getOrgId())
+                .orgId(entity.getOrg() != null ? entity.getOrg().getId() : null)
                 .name(entity.getName())
                 .version(entity.getVersion())
-                .isActive(entity.isActive())
+                .isActive(entity.getIsActive() != null ? entity.getIsActive() : false)
                 .structureJson(entity.getStructureJson())
-                .createdByUserId(entity.getCreatedByUserId())
+                .createdByUserId(entity.getCreatedBy() != null ? entity.getCreatedBy().getId() : null)
                 .createdAt(entity.getCreatedAt())
                 .updatedAt(entity.getUpdatedAt())
                 .build();
