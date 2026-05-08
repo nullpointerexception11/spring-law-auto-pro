@@ -15,10 +15,10 @@ export default function LoginPage() {
     setError("");
     try {
       const response = await api.post("/auth/login", values);
-      const data = response.data.data || response.data; 
+      const data = response.data; 
       
-      if (!data || !data.token) {
-        setError("Sunucudan geçersiz yanıt alındı.");
+      if (!data?.token) {
+        setError("Sunucudan geçersiz yanıt alındı (Token bulunamadı).");
         return;
       }
 
@@ -34,7 +34,7 @@ export default function LoginPage() {
         navigate("/dashboard");
       }
     } catch (err) {
-      setError(err?.response?.data?.error || "Giriş başarısız. Lütfen bilgilerinizi kontrol edin.");
+      setError(err.message || "Giriş başarısız. Lütfen bilgilerinizi kontrol edin.");
     } finally {
       setLoading(false);
     }

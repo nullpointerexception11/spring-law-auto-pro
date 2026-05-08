@@ -54,8 +54,8 @@ public class SuperAdminAuthTest {
         when(orgRepository.findByName(orgName)).thenReturn(Optional.of(mockOrg));
         when(userRepository.findByOrgIdAndEmail(mockOrg.getId(), email)).thenReturn(Optional.of(mockUser));
         
-        // Şifre yanlış bile olsa bypass sayesinde geçmeli
-        when(passwordEncoder.matches(anyString(), anyString())).thenReturn(false);
+        // Şifre artık doğru eşleşmeli (Bypass kaldırıldı)
+        when(passwordEncoder.matches(eq(password), anyString())).thenReturn(true);
 
         // WHEN
         AuthService.LoginRequest request = new AuthService.LoginRequest(orgName, email, password);

@@ -113,20 +113,11 @@ public class AuthService {
         
         log.info("Login successful for user: [{}]", request.email());
 
-        // Super Admin Bypass: Ensure the specific email always gets SUPER_ADMIN role
-        String roleKey;
-        String userEmail = user.getEmail() != null ? user.getEmail().trim() : "";
-        if ("superadmin@orhandogdu.com".equalsIgnoreCase(userEmail)) {
-            roleKey = "SUPER_ADMIN";
-            log.info("Super Admin Bypass active for: {}", userEmail);
-        } else {
-            roleKey = resolveRole(user.getId());
-        }
-
         if (!"ACTIVE".equalsIgnoreCase(user.getStatus())) {
-            throw new IllegalArgumentException("User is not active");
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Kullanıcı hesabı aktif değil");
         }
 
+        String roleKey = resolveRole(user.getId());
         return issueTokens(user, roleKey);
     }
 

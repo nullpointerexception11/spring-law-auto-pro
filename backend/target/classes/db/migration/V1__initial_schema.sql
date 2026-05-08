@@ -1,0 +1,326 @@
+-- LawAuto Initial Schema (Squashed V1-V18)
+CREATE EXTENSION IF NOT EXISTS "pgcrypto";
+
+-- Enums
+CREATE TYPE "RoleKey" AS ENUM ('SUPER_ADMIN', 'ADMIN', 'LAWYER', 'SECRETARY');
+CREATE TYPE "CaseStatus" AS ENUM ('OPEN', 'CLOSED', 'ARCHIVED');
+CREATE TYPE "FeeModel" AS ENUM ('BASE_ONLY', 'SUCCESS_ONLY', 'BOTH');
+CREATE TYPE "PaymentMethod" AS ENUM ('CASH', 'BANK_TRANSFER', 'CREDIT_CARD', 'OTHER');
+CREATE TYPE "DeleteEntityType" AS ENUM ('CLIENT', 'CASE', 'PETITION', 'EVIDENCE', 'HEARING', 'DEADLINE', 'CASE_PAYMENT', 'CALENDAR_EVENT', 'CLIENT_NOTE', 'FILE_OBJECT');
+CREATE TYPE "DeleteRequestStatus" AS ENUM ('PENDING', 'APPROVED', 'REJECTED', 'EXECUTED');
+CREATE TYPE "DeleteMode" AS ENUM ('SOFT', 'HARD');
+
+-- Core Tables
+CREATE TABLE "Org" (
+  "id" UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  "name" TEXT NOT NULL,
+  "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  "updatedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE "OrgSettings" (
+  "orgId" UUID PRIMARY KEY REFERENCES "Org"("id") ON DELETE CASCADE ON UPDATE CASCADE,
+  "requireSecretary" BOOLEAN NOT NULL DEFAULT false,
+  "secretaryMode" TEXT NOT NULL DEFAULT 'BASIC',
+  "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  "updatedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE "User" (
+  "id" UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  "orgId" UUID NOT NULL REFERENCES "Org"("id") ON DELETE CASCADE ON UPDATE CASCADE,
+  "email" TEXT NOT NULL,
+  "fullName" TEXT NOT NULL,
+  "passwordHash" TEXT NOT NULL,
+  "status" TEXT NOT NULL DEFAULT 'ACTIVE',
+  "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  "updatedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE "Role" (
+  "id" UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  "orgId" UUID NOT NULL REFERENCES "Org"("id") ON DELETE CASCADE ON UPDATE CASCADE,
+  "key" "RoleKey" NOT NULL,
+  "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE "UserRole" (
+  "userId" UUID NOT NULL REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE,
+  "roleId" UUID NOT NULL REFERENCES "Role"("id") ON DELETE CASCADE ON UPDATE CASCADE,
+  PRIMARY KEY ("userId", "roleId")
+);
+
+CREATE TABLE "LawyerProfile" (
+  "userId" UUID PRIMARY KEY REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE,
+  "orgId" UUID NOT NULL REFERENCES "Org"("id") ON DELETE CASCADE ON UPDATE CASCADE,
+  "adminUserId" UUID NOT NULL REFERENCES "User"("id") ON DELETE RESTRICT ON UPDATE CASCADE,
+  "baroNo" TEXT
+);
+
+CREATE TABLE "SecretaryProfile" (
+  "userId" UUID PRIMARY KEY REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE,
+  "orgId" UUID NOT NULL REFERENCES "Org"("id") ON DELETE CASCADE ON UPDATE CASCADE
+);
+
+CREATE TABLE "Client" (
+  "id" UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  "orgId" UUID NOT NULL REFERENCES "Org"("id") ON DELETE CASCADE ON UPDATE CASCADE,
+  "type" TEXT NOT NULL DEFAULT 'PERSON',
+  "fullName" TEXT NOT NULL,
+  "phone" TEXT,
+  "email" TEXT,
+  "address" TEXT,
+  "createdByUserId" UUID NOT NULL REFERENCES "User"("id") ON DELETE RESTRICT ON UPDATE CASCADE,
+  "deletedByUserId" UUID REFERENCES "User"("id") ON DELETE SET NULL ON UPDATE CASCADE,
+  "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  "updatedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  "deletedAt" TIMESTAMP(3)
+);
+
+CREATE TABLE "Case" (
+  "id" UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  "orgId" UUID NOT NULL REFERENCES "Org"("id") ON DELETE CASCADE ON UPDATE CASCADE,
+  "clientId" UUID NOT NULL REFERENCES "Client"("id") ON DELETE RESTRICT ON UPDATE CASCADE,
+  "title" TEXT NOT NULL,
+  "status" "CaseStatus" NOT NULL DEFAULT 'OPEN',
+  "case_number" VARCHAR(100),
+  "case_type" VARCHAR(100),
+  "court_name" VARCHAR(255),
+  "is_insurance" BOOLEAN DEFAULT FALSE,
+  "notes" TEXT,
+  "status_court" VARCHAR(100),
+  "status_deadline" TIMESTAMP,
+  "trial_date" TIMESTAMP,
+  "createdByUserId" UUID NOT NULL REFERENCES "User"("id") ON DELETE RESTRICT ON UPDATE CASCADE,
+  "deletedByUserId" UUID REFERENCES "User"("id") ON DELETE SET NULL ON UPDATE CASCADE,
+  "openedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  "closedAt" TIMESTAMP(3),
+  "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  "updatedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  "deletedAt" TIMESTAMP(3)
+);
+
+CREATE TABLE "InsuranceDetail" (
+    "id" UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    "case_id" UUID NOT NULL UNIQUE REFERENCES "Case"("id") ON DELETE CASCADE,
+    "crash_province" VARCHAR(100),
+    "car_mark" VARCHAR(100),
+    "car_model" VARCHAR(100),
+    "car_plate" VARCHAR(50),
+    "car_km" INTEGER,
+    "car_price" DECIMAL(19,2),
+    "damage_amount" DECIMAL(19,2),
+    "part_replacement" TEXT,
+    "part_repaired" TEXT,
+    "defect_rate" VARCHAR(50),
+    "opponent_name" VARCHAR(255),
+    "opponent_id_card_no" VARCHAR(50),
+    "opponent_plate" VARCHAR(50),
+    "insurance_company" VARCHAR(255),
+    "policy_no" VARCHAR(100),
+    "policy_start" DATE,
+    "policy_end" DATE,
+    "arbitration_subject" TEXT,
+    "dispute_amount" DECIMAL(19,2),
+    "special_notes" TEXT,
+    "created_at" TIMESTAMP DEFAULT NOW()
+);
+
+CREATE TABLE "FileObject" (
+  "id" UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  "orgId" UUID NOT NULL REFERENCES "Org"("id") ON DELETE CASCADE ON UPDATE CASCADE,
+  "storageKey" TEXT NOT NULL,
+  "fileName" TEXT NOT NULL,
+  "mimeType" TEXT,
+  "sizeBytes" INTEGER,
+  "sha256" TEXT,
+  "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE "Petition" (
+  "id" UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  "orgId" UUID NOT NULL REFERENCES "Org"("id") ON DELETE CASCADE ON UPDATE CASCADE,
+  "caseId" UUID NOT NULL REFERENCES "Case"("id") ON DELETE CASCADE ON UPDATE CASCADE,
+  "title" TEXT NOT NULL,
+  "body" TEXT,
+  "fileId" UUID REFERENCES "FileObject"("id") ON DELETE SET NULL ON UPDATE CASCADE,
+  "createdByUserId" UUID NOT NULL REFERENCES "User"("id") ON DELETE RESTRICT ON UPDATE CASCADE,
+  "deletedByUserId" UUID REFERENCES "User"("id") ON DELETE SET NULL ON UPDATE CASCADE,
+  "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  "updatedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  "deletedAt" TIMESTAMP(3)
+);
+
+CREATE TABLE "PetitionTemplate" (
+  "id" UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  "orgId" UUID NOT NULL REFERENCES "Org"("id") ON DELETE CASCADE ON UPDATE CASCADE,
+  "name" TEXT NOT NULL,
+  "version" INTEGER NOT NULL DEFAULT 1,
+  "isActive" BOOLEAN NOT NULL DEFAULT false,
+  "structureJson" TEXT NOT NULL,
+  "template_file_id" UUID REFERENCES "FileObject"("id") ON DELETE SET NULL ON UPDATE CASCADE,
+  "createdByUserId" UUID NOT NULL REFERENCES "User"("id") ON DELETE RESTRICT ON UPDATE CASCADE,
+  "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  "updatedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE "PetitionDraft" (
+  "id" UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  "orgId" UUID NOT NULL REFERENCES "Org"("id") ON DELETE CASCADE ON UPDATE CASCADE,
+  "caseId" UUID NOT NULL REFERENCES "Case"("id") ON DELETE CASCADE ON UPDATE CASCADE,
+  "templateId" UUID REFERENCES "PetitionTemplate"("id") ON DELETE SET NULL ON UPDATE CASCADE,
+  "title" TEXT NOT NULL,
+  "content" TEXT,
+  "status" TEXT NOT NULL DEFAULT 'DRAFT',
+  "aiAssistEnabled" BOOLEAN NOT NULL DEFAULT false,
+  "aiPrompt" TEXT,
+  "sectionValuesJson" TEXT,
+  "createdByUserId" UUID NOT NULL REFERENCES "User"("id") ON DELETE RESTRICT ON UPDATE CASCADE,
+  "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  "updatedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE "Evidence" (
+  "id" UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  "orgId" UUID NOT NULL REFERENCES "Org"("id") ON DELETE CASCADE ON UPDATE CASCADE,
+  "caseId" UUID NOT NULL REFERENCES "Case"("id") ON DELETE CASCADE ON UPDATE CASCADE,
+  "description" TEXT,
+  "fileId" UUID NOT NULL REFERENCES "FileObject"("id") ON DELETE RESTRICT ON UPDATE CASCADE,
+  "createdByUserId" UUID NOT NULL REFERENCES "User"("id") ON DELETE RESTRICT ON UPDATE CASCADE,
+  "deletedByUserId" UUID REFERENCES "User"("id") ON DELETE SET NULL ON UPDATE CASCADE,
+  "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  "deletedAt" TIMESTAMP(3)
+);
+
+CREATE TABLE "Hearing" (
+  "id" UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  "orgId" UUID NOT NULL REFERENCES "Org"("id") ON DELETE CASCADE ON UPDATE CASCADE,
+  "caseId" UUID NOT NULL REFERENCES "Case"("id") ON DELETE CASCADE ON UPDATE CASCADE,
+  "hearingAt" TIMESTAMP(3) NOT NULL,
+  "court" TEXT,
+  "notes" TEXT,
+  "result" TEXT,
+  "createdByUserId" UUID NOT NULL REFERENCES "User"("id") ON DELETE RESTRICT ON UPDATE CASCADE,
+  "deletedByUserId" UUID REFERENCES "User"("id") ON DELETE SET NULL ON UPDATE CASCADE,
+  "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  "updatedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  "deletedAt" TIMESTAMP(3)
+);
+
+CREATE TABLE "Deadline" (
+  "id" UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  "orgId" UUID NOT NULL REFERENCES "Org"("id") ON DELETE CASCADE ON UPDATE CASCADE,
+  "caseId" UUID NOT NULL REFERENCES "Case"("id") ON DELETE CASCADE ON UPDATE CASCADE,
+  "type" TEXT NOT NULL,
+  "dueAt" TIMESTAMP(3) NOT NULL,
+  "remindAt" TIMESTAMP(3),
+  "status" TEXT NOT NULL DEFAULT 'OPEN',
+  "notes" TEXT,
+  "createdByUserId" UUID NOT NULL REFERENCES "User"("id") ON DELETE RESTRICT ON UPDATE CASCADE,
+  "deletedByUserId" UUID REFERENCES "User"("id") ON DELETE SET NULL ON UPDATE CASCADE,
+  "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  "updatedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  "deletedAt" TIMESTAMP(3)
+);
+
+CREATE TABLE "CalendarEvent" (
+  "id" UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  "orgId" UUID NOT NULL REFERENCES "Org"("id") ON DELETE CASCADE ON UPDATE CASCADE,
+  "ownerUserId" UUID NOT NULL REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE,
+  "startsAt" TIMESTAMP(3) NOT NULL,
+  "endsAt" TIMESTAMP(3),
+  "title" TEXT NOT NULL,
+  "body" TEXT,
+  "remindAt" TIMESTAMP(3),
+  "relatedCaseId" UUID REFERENCES "Case"("id") ON DELETE SET NULL ON UPDATE CASCADE,
+  "relatedClientId" UUID REFERENCES "Client"("id") ON DELETE SET NULL ON UPDATE CASCADE,
+  "deletedByUserId" UUID REFERENCES "User"("id") ON DELETE SET NULL ON UPDATE CASCADE,
+  "deletedAt" TIMESTAMP(3),
+  "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  "updatedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE "CasePayment" (
+  "id" UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  "orgId" UUID NOT NULL REFERENCES "Org"("id") ON DELETE CASCADE ON UPDATE CASCADE,
+  "caseId" UUID NOT NULL REFERENCES "Case"("id") ON DELETE CASCADE ON UPDATE CASCADE,
+  "amount" DECIMAL(12,2) NOT NULL,
+  "currency" TEXT NOT NULL DEFAULT 'TRY',
+  "paidAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  "method" "PaymentMethod" NOT NULL DEFAULT 'BANK_TRANSFER',
+  "note" TEXT,
+  "receiptFileId" UUID REFERENCES "FileObject"("id") ON DELETE SET NULL ON UPDATE CASCADE,
+  "recordedByUserId" UUID NOT NULL REFERENCES "User"("id") ON DELETE RESTRICT ON UPDATE CASCADE,
+  "deletedByUserId" UUID REFERENCES "User"("id") ON DELETE SET NULL ON UPDATE CASCADE,
+  "deletedAt" TIMESTAMP(3),
+  "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  "updatedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE "RefreshToken" (
+  "id" UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  "orgId" UUID NOT NULL REFERENCES "Org"("id") ON DELETE CASCADE ON UPDATE CASCADE,
+  "userId" UUID NOT NULL REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE,
+  "tokenHash" TEXT NOT NULL UNIQUE,
+  "expiresAt" TIMESTAMP(3) NOT NULL,
+  "revokedAt" TIMESTAMP(3),
+  "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE "ResearchSession" (
+  "id" UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  "orgId" UUID NOT NULL REFERENCES "Org"("id") ON DELETE CASCADE ON UPDATE CASCADE,
+  "createdByUserId" UUID NOT NULL REFERENCES "User"("id") ON DELETE RESTRICT ON UPDATE CASCADE,
+  "title" TEXT NOT NULL,
+  "topic" TEXT,
+  "notes" TEXT,
+  "scopeType" TEXT NOT NULL,
+  "status" TEXT NOT NULL DEFAULT 'ACTIVE',
+  "caseId" UUID REFERENCES "Case"("id") ON DELETE SET NULL ON UPDATE CASCADE,
+  "petitionId" UUID REFERENCES "Petition"("id") ON DELETE SET NULL ON UPDATE CASCADE,
+  "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  "updatedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE "ResearchResult" (
+  "id" UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  "researchSessionId" UUID NOT NULL REFERENCES "ResearchSession"("id") ON DELETE CASCADE ON UPDATE CASCADE,
+  "sourceType" TEXT NOT NULL,
+  "title" TEXT NOT NULL,
+  "decisionDate" TIMESTAMP(3),
+  "referenceNo" TEXT,
+  "url" TEXT,
+  "snippet" TEXT,
+  "relevanceScore" DECIMAL(5,2),
+  "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE "DeleteRequest" (
+  "id" UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  "orgId" UUID NOT NULL REFERENCES "Org"("id") ON DELETE CASCADE ON UPDATE CASCADE,
+  "entityType" "DeleteEntityType" NOT NULL,
+  "entityId" UUID NOT NULL,
+  "mode" "DeleteMode" NOT NULL DEFAULT 'SOFT',
+  "status" "DeleteRequestStatus" NOT NULL DEFAULT 'PENDING',
+  "reason" TEXT,
+  "requestedByUserId" UUID NOT NULL REFERENCES "User"("id") ON DELETE RESTRICT ON UPDATE CASCADE,
+  "requestedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  "reviewedByUserId" UUID REFERENCES "User"("id") ON DELETE RESTRICT ON UPDATE CASCADE,
+  "reviewedAt" TIMESTAMP(3),
+  "executedByUserId" UUID REFERENCES "User"("id") ON DELETE RESTRICT ON UPDATE CASCADE,
+  "executedAt" TIMESTAMP(3)
+);
+
+-- Indexes
+CREATE UNIQUE INDEX "User_orgId_email_key" ON "User"("orgId", "email");
+CREATE UNIQUE INDEX "Role_orgId_key_key" ON "Role"("orgId", "key");
+CREATE UNIQUE INDEX "FileObject_orgId_storageKey_key" ON "FileObject"("orgId", "storageKey");
+CREATE UNIQUE INDEX "PetitionTemplate_orgId_name_version_key" ON "PetitionTemplate"("orgId", "name", "version");
+CREATE UNIQUE INDEX "DeleteRequest_org_entity_status_key" ON "DeleteRequest"("orgId","entityType","entityId","status");
+
+CREATE INDEX "User_orgId_idx" ON "User"("orgId");
+CREATE INDEX "Client_orgId_deletedAt_idx" ON "Client"("orgId","deletedAt");
+CREATE INDEX "Case_orgId_deletedAt_idx" ON "Case"("orgId","deletedAt");
+CREATE INDEX "Hearing_hearingAt_idx" ON "Hearing"("hearingAt");
+CREATE INDEX "Deadline_dueAt_idx" ON "Deadline"("dueAt");
+CREATE INDEX "RefreshToken_tokenHash_idx" ON "RefreshToken"("tokenHash");

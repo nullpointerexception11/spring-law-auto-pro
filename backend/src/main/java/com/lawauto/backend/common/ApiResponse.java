@@ -12,4 +12,8 @@ public record ApiResponse<T>(
     public static <T> ApiResponse<T> ok(T data, Object meta) {
         return new ApiResponse<>("ok", data, meta);
     }
+
+    public static <T> ApiResponse<Void> error(String message) {
+        return new ApiResponse<>("error", null, message);
+    }
 }
