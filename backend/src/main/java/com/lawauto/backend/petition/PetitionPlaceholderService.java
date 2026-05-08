@@ -6,6 +6,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 
 @Slf4j
@@ -20,8 +21,10 @@ public class PetitionPlaceholderService {
         this.insuranceRepository = insuranceRepository;
     }
 
-    @SuppressWarnings("null")
+    @Cacheable(value = "petitionPlaceholders", key = "#caseId")
     public Map<String, String> getPlaceholders(UUID caseId) {
+        java.util.Objects.requireNonNull(caseId);
+        log.info("Fetching placeholders for case [{}]", caseId);
         Map<String, String> placeholders = new HashMap<>();
         
         caseRepository.findById(caseId).ifPresent(caseEntity -> {

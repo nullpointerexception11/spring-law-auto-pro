@@ -13,10 +13,12 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.UUID;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.stereotype.Service;
 
+@Slf4j
 @Service
 public class PetitionDraftExportService {
     private final NamedParameterJdbcTemplate jdbc;
@@ -43,6 +45,7 @@ public class PetitionDraftExportService {
     }
 
     public ExportResult export(UUID orgId, UUID draftId, String format) {
+        log.info("Starting petition export for draft [{}] in format [{}]", draftId, format);
         String normalized = normalizeFormat(format);
         DraftProjection draft = findDraft(orgId, draftId);
         if (draft == null) throw new IllegalArgumentException("Petition draft not found");
@@ -94,7 +97,6 @@ public class PetitionDraftExportService {
         return new ExportResult(fileId, fileName, mimeType, storageKey, normalized);
     }
 
-    @SuppressWarnings("null")
     private DraftProjection findDraft(UUID orgId, UUID draftId) {
         String sql = """
                 select d."id",d."orgId",d."caseId",d."title",d."content",d."sectionValuesJson",
@@ -106,9 +108,9 @@ public class PetitionDraftExportService {
         return jdbc.query(sql, new MapSqlParameterSource().addValue("id", draftId).addValue("orgId", orgId), rs -> {
             if (!rs.next()) return null;
             return new DraftProjection(
-                    rs.getObject("id", UUID.class),
-                    rs.getObject("orgId", UUID.class),
-                    rs.getObject("caseId", UUID.class),
+                    java.util.Objects.requireNonNull(rs.getObject("id", UUID.class)),
+                    java.util.Objects.requireNonNull(rs.getObject("orgId", UUID.class)),
+                    java.util.Objects.requireNonNull(rs.getObject("caseId", UUID.class)),
                     rs.getString("title"),
                     rs.getString("content"),
                     rs.getString("sectionValuesJson"),
