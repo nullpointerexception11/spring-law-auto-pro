@@ -14,12 +14,21 @@ export default function LoginPage() {
     setLoading(true);
     setError("");
     try {
-      const { data } = await api.post("/auth/login", values);
+      const response = await api.post("/auth/login", values);
+      const data = response.data.data || response.data; 
+      
+      if (!data || !data.token) {
+        setError("Sunucudan geçersiz yanıt alındı.");
+        return;
+      }
+
       localStorage.setItem("token", data.token);
       localStorage.setItem("role", data.role);
       localStorage.setItem("orgId", data.orgId);
       
-      if (data.role === "SUPER_ADMIN") {
+      const userRole = (data.role || "").toString().trim().toUpperCase();
+
+      if (userRole === "SUPER_ADMIN") {
         navigate("/super-admin");
       } else {
         navigate("/dashboard");

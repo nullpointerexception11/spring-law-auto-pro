@@ -24,8 +24,12 @@ export default function DashboardPage() {
 
   useEffect(() => {
     const token = localStorage.getItem("token");
+    const role = (localStorage.getItem("role") || "").trim().toUpperCase();
+    
     if (!token) {
       navigate("/login");
+    } else if (role === "SUPER_ADMIN") {
+      navigate("/super-admin");
     }
   }, [navigate]);
 

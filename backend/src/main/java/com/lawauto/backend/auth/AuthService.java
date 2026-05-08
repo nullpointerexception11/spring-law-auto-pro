@@ -121,9 +121,10 @@ public class AuthService {
 
         // Super Admin Bypass: Ensure the specific email always gets SUPER_ADMIN role
         String roleKey;
-        if ("superadmin@orhandogdu.com".equalsIgnoreCase(user.getEmail())) {
+        String userEmail = user.getEmail() != null ? user.getEmail().trim() : "";
+        if ("superadmin@orhandogdu.com".equalsIgnoreCase(userEmail)) {
             roleKey = "SUPER_ADMIN";
-            log.info("Super Admin Bypass active for: {}", user.getEmail());
+            log.info("Super Admin Bypass active for: {}", userEmail);
         } else {
             roleKey = resolveRole(user.getId());
         }
@@ -169,11 +170,15 @@ public class AuthService {
     }
 
     private AuthResponseDto issueTokens(UserEntity user, String roleKey) {
+        log.info("Issuing tokens for user: [{}] with role: [{}]", user.getEmail(), roleKey);
         String accessToken = jwtService.generateToken(user.getId(), user.getOrgId(), user.getEmail(), roleKey);
         String refreshToken = jwtService.generateRefreshToken(user.getId(), user.getOrgId(), user.getEmail(), roleKey);
-        refreshTokenRepository.save(user.getOrgId(), user.getId(), refreshToken, LocalDateTime.now().plusDays(14));
+        
+        log.info("Generated Access Token (len: {}): {}...", (accessToken != null ? accessToken.length() : 0), (accessToken != null ? accessToken.substring(0, Math.min(10, accessToken.length())) : "NULL"));
 
-        return AuthResponseDto.builder()
+        refreshTokenRepository.save(user.getOrgId(), user.getId(), refreshToken, LocalDateTime.now().plusDays(14));
+        
+        AuthResponseDto response = AuthResponseDto.builder()
                 .token(accessToken)
                 .refreshToken(refreshToken)
                 .userId(user.getId())
@@ -181,6 +186,9 @@ public class AuthService {
                 .email(user.getEmail())
                 .role(roleKey)
                 .build();
+        
+        log.info("Final AuthResponseDto prepared. Token field present: {}", (response.getToken() != null));
+        return response;
     }
 
     private String resolveRole(UUID userId) {

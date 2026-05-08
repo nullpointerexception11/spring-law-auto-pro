@@ -45,7 +45,7 @@ export default function SuperAdminPage() {
   });
 
   useEffect(() => {
-    const role = localStorage.getItem("role");
+    const role = (localStorage.getItem("role") || "").trim().toUpperCase();
     if (role !== "SUPER_ADMIN") {
       navigate("/dashboard");
     }
