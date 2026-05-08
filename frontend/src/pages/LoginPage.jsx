@@ -4,10 +4,8 @@ import { useNavigate } from "react-router-dom";
 import { Card, CardContent } from "@/components/ui/card";
 import { AuthInfoPanel } from "@/components/auth/AuthInfoPanel";
 import { LoginForm } from "@/components/auth/LoginForm";
-import { RegisterForm } from "@/components/auth/RegisterForm";
 
 export default function LoginPage() {
-  const [isLogin, setIsLogin] = useState(true);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const navigate = useNavigate();
@@ -16,12 +14,11 @@ export default function LoginPage() {
     setLoading(true);
     setError("");
     try {
-      const endpoint = isLogin ? "/auth/login" : "/auth/register";
-      const { data } = await api.post(endpoint, values);
+      const { data } = await api.post("/auth/login", values);
       localStorage.setItem("token", data.token);
       navigate("/dashboard");
     } catch (err) {
-      setError(err?.response?.data?.error || "Kimlik doğrulama başarısız. Lütfen bilgilerinizi kontrol edin.");
+      setError(err?.response?.data?.error || "Giriş başarısız. Lütfen bilgilerinizi kontrol edin.");
     } finally {
       setLoading(false);
     }
@@ -37,14 +34,8 @@ export default function LoginPage() {
         {/* Right Side: Form Content */}
         <CardContent className="p-8 md:p-16 flex flex-col justify-center bg-white">
           <div className="mb-10 text-center md:text-left">
-            <h2 className="text-3xl font-bold text-slate-900 mb-2">
-              {isLogin ? "Hoş Geldiniz" : "Hesap Oluşturun"}
-            </h2>
-            <p className="text-slate-500 font-medium">
-              {isLogin 
-                ? "Devam etmek için giriş yapın." 
-                : "Sisteme dahil olmak için formu doldurun."}
-            </p>
+            <h2 className="text-3xl font-bold text-slate-900 mb-2">Hoş Geldiniz</h2>
+            <p className="text-slate-500 font-medium">Devam etmek için giriş yapın.</p>
           </div>
 
           {error && (
@@ -53,24 +44,16 @@ export default function LoginPage() {
             </div>
           )}
 
-          {isLogin ? (
-            <LoginForm onSubmit={handleAuth} isLoading={loading} />
-          ) : (
-            <RegisterForm onSubmit={handleAuth} isLoading={loading} />
-          )}
+          <LoginForm onSubmit={handleAuth} isLoading={loading} />
 
           <div className="mt-8 text-center">
-            <button 
-              onClick={() => setIsLogin(!isLogin)}
-              className="text-slate-600 hover:text-primary transition-colors text-sm font-semibold"
-            >
-              {isLogin 
-                ? "Henüz hesabınız yok mu? Kayıt olun" 
-                : "Zaten hesabınız var mı? Giriş yapın"}
-            </button>
+            <p className="text-slate-400 text-sm">
+              Giriş yapamıyorsanız lütfen sistem yöneticinizle iletişime geçin.
+            </p>
           </div>
         </CardContent>
       </Card>
     </div>
   );
 }
+
