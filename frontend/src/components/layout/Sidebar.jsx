@@ -18,7 +18,6 @@ export function Sidebar({ isCollapsed, setIsCollapsed }) {
   const { t } = useTranslation();
   const [isHovered, setIsHovered] = React.useState(false);
 
-  // Compute actual state: it's open if it's NOT collapsed, OR if it's hovered.
   const isEffectivelyOpen = !isCollapsed || isHovered;
 
   const navigation = [

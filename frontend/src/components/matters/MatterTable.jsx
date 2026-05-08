@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
   flexRender,
   getCoreRowModel,
@@ -65,13 +66,14 @@ const StatusBadge = ({ status }) => {
 };
 
 export function MatterTable() {
+  const { t } = useTranslation();
   const [sorting, setSorting] = useState([]);
   const [globalFilter, setGlobalFilter] = useState('');
 
   const columns = [
     {
       accessorKey: 'displayId',
-      header: 'ID',
+      header: t('table.id'),
       cell: info => <span className="font-mono text-xs text-muted-foreground">{info.getValue()}</span>,
     },
     {
@@ -81,7 +83,7 @@ export function MatterTable() {
           onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
           className="flex items-center gap-1 hover:text-foreground transition-colors -ml-2 p-2 rounded-md hover:bg-secondary/50"
         >
-          Matter Title
+          {t('table.matter_title')}
           <ArrowUpDown className="h-3 w-3" />
         </button>
       ),
@@ -89,22 +91,22 @@ export function MatterTable() {
     },
     {
       accessorKey: 'clientName',
-      header: 'Client',
+      header: t('table.client'),
       cell: info => <span className="text-muted-foreground">{info.getValue()}</span>,
     },
     {
       accessorKey: 'assignedLawyerName',
-      header: 'Lead Counsel',
+      header: t('table.lead_counsel'),
       cell: info => <span className="text-muted-foreground">{info.getValue()}</span>,
     },
     {
       accessorKey: 'status',
-      header: 'Status',
+      header: t('table.status'),
       cell: info => <StatusBadge status={info.getValue()} />,
     },
     {
       accessorKey: 'nextHearingDate',
-      header: 'Next Hearing',
+      header: t('table.next_hearing'),
       cell: info => {
         const val = info.getValue();
         return val ? <span className="text-sm">{val}</span> : <span className="text-muted-foreground/50">-</span>;
@@ -141,7 +143,7 @@ export function MatterTable() {
         <input
           value={globalFilter ?? ''}
           onChange={e => setGlobalFilter(e.target.value)}
-          placeholder="Filter matters..."
+          placeholder={t('matter.filter_placeholder')}
           className="h-9 w-72 rounded-md border border-input bg-card px-3 py-1 text-sm shadow-sm transition-colors placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
         />
       </div>
@@ -182,7 +184,7 @@ export function MatterTable() {
             ) : (
               <tr>
                 <td colSpan={columns.length} className="h-24 text-center text-muted-foreground">
-                  No matters found matching your filter.
+                  {t('matter.no_results')}
                 </td>
               </tr>
             )}
