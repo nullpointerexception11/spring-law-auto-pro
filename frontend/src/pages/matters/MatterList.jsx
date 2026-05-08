@@ -1,4 +1,5 @@
 import React from 'react';
+import { MatterTable } from '../../components/matters/MatterTable';
 
 export default function MatterList() {
   return (
@@ -15,10 +16,9 @@ export default function MatterList() {
         </button>
       </div>
       
-      {/* TanStack Table Container Placeholder */}
-      <div className="table-container p-12 text-center text-sm font-medium text-muted-foreground flex items-center justify-center border-dashed border-2 bg-transparent">
-        TanStack Table with MatterListDto will be rendered here.
-      </div>
+      {/* TanStack Table Integration */}
+      <MatterTable />
+      
     </div>
   );
 }
