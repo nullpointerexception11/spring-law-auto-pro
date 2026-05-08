@@ -1,7 +1,18 @@
 import { useState } from "react";
-import { api } from "../api/client";
+import { api } from "@/api/client";
 import { useNavigate } from "react-router-dom";
 import { Scale, ShieldCheck, Mail, Lock, Building2, User } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Card, CardContent } from "@/components/ui/card";
+import { 
+  Select, 
+  SelectContent, 
+  SelectItem, 
+  SelectTrigger, 
+  SelectValue 
+} from "@/components/ui/select";
 
 export default function LoginPage() {
   const [isLogin, setIsLogin] = useState(true);
@@ -25,7 +36,6 @@ export default function LoginPage() {
       const endpoint = isLogin ? "/auth/login" : "/auth/register";
       const { data } = await api.post(endpoint, formData);
       localStorage.setItem("token", data.token);
-      localStorage.setItem("user", JSON.minifiy ? JSON.stringify(data.user) : "{}"); // Placeholder if data.user exists
       navigate("/dashboard");
     } catch (err) {
       setError(err?.response?.data?.error || "Bir hata oluştu. Lütfen bilgilerinizi kontrol edin.");
@@ -35,8 +45,8 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-[#f8fafc] p-4 font-sans">
-      <div className="max-w-5xl w-full grid md:grid-cols-2 bg-white rounded-3xl shadow-2xl overflow-hidden animate-in">
+    <div className="min-h-screen flex items-center justify-center bg-slate-50 p-4 font-sans">
+      <Card className="max-w-5xl w-full grid md:grid-cols-2 shadow-2xl border-none overflow-hidden animate-in p-0">
         
         {/* Left Side: Design & Info */}
         <div className="relative hidden md:flex flex-col justify-between p-12 bg-primary text-white overflow-hidden">
@@ -79,7 +89,7 @@ export default function LoginPage() {
         </div>
 
         {/* Right Side: Form */}
-        <div className="p-8 md:p-16 flex flex-col justify-center">
+        <CardContent className="p-8 md:p-16 flex flex-col justify-center">
           <div className="mb-10 text-center md:text-left">
             <h2 className="text-3xl font-bold text-slate-900 mb-2">
               {isLogin ? "Hoş Geldiniz" : "Hesap Oluşturun"}
@@ -97,80 +107,95 @@ export default function LoginPage() {
             </div>
           )}
 
-          <form onSubmit={handleSubmit} className="space-y-5">
+          <form onSubmit={handleSubmit} className="space-y-6">
             <div className="space-y-4">
-              <div className="relative group">
-                <Building2 className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400 group-focus-within:text-primary transition-colors" />
-                <input
-                  type="text"
-                  placeholder="Organizasyon ID (UUID)"
-                  className="w-full pl-12 pr-4 py-4 bg-slate-50 border border-slate-200 rounded-2xl focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
-                  value={formData.orgId}
-                  onChange={(e) => setFormData({ ...formData, orgId: e.target.value })}
-                  required
-                />
-              </div>
-
-              {!isLogin && (
-                <div className="relative group animate-in">
-                  <User className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400 group-focus-within:text-primary transition-colors" />
-                  <input
-                    type="text"
-                    placeholder="Ad Soyad"
-                    className="w-full pl-12 pr-4 py-4 bg-slate-50 border border-slate-200 rounded-2xl focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
-                    value={formData.fullName}
-                    onChange={(e) => setFormData({ ...formData, fullName: e.target.value })}
+              <div className="space-y-2">
+                <Label>Organizasyon ID</Label>
+                <div className="relative group">
+                  <Building2 className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 group-focus-within:text-primary transition-colors" />
+                  <Input
+                    placeholder="Organizasyon UUID"
+                    className="pl-10 h-12 rounded-xl"
+                    value={formData.orgId}
+                    onChange={(e) => setFormData({ ...formData, orgId: e.target.value })}
                     required
                   />
                 </div>
-              )}
-
-              <div className="relative group">
-                <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400 group-focus-within:text-primary transition-colors" />
-                <input
-                  type="email"
-                  placeholder="E-posta Adresi"
-                  className="w-full pl-12 pr-4 py-4 bg-slate-50 border border-slate-200 rounded-2xl focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
-                  value={formData.email}
-                  onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                  required
-                />
-              </div>
-
-              <div className="relative group">
-                <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400 group-focus-within:text-primary transition-colors" />
-                <input
-                  type="password"
-                  placeholder="Şifre"
-                  className="w-full pl-12 pr-4 py-4 bg-slate-50 border border-slate-200 rounded-2xl focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
-                  value={formData.password}
-                  onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                  required
-                />
               </div>
 
               {!isLogin && (
-                <div className="relative animate-in">
-                  <select
-                    className="w-full px-4 py-4 bg-slate-50 border border-slate-200 rounded-2xl focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all appearance-none"
+                <div className="space-y-2 animate-in">
+                  <Label>Ad Soyad</Label>
+                  <div className="relative group">
+                    <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 group-focus-within:text-primary transition-colors" />
+                    <Input
+                      placeholder="Ad Soyad"
+                      className="pl-10 h-12 rounded-xl"
+                      value={formData.fullName}
+                      onChange={(e) => setFormData({ ...formData, fullName: e.target.value })}
+                      required
+                    />
+                  </div>
+                </div>
+              )}
+
+              <div className="space-y-2">
+                <Label>E-posta</Label>
+                <div className="relative group">
+                  <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 group-focus-within:text-primary transition-colors" />
+                  <Input
+                    type="email"
+                    placeholder="ornek@hukuk.com"
+                    className="pl-10 h-12 rounded-xl"
+                    value={formData.email}
+                    onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                    required
+                  />
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <Label>Şifre</Label>
+                <div className="relative group">
+                  <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 group-focus-within:text-primary transition-colors" />
+                  <Input
+                    type="password"
+                    placeholder="••••••••"
+                    className="pl-10 h-12 rounded-xl"
+                    value={formData.password}
+                    onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                    required
+                  />
+                </div>
+              </div>
+
+              {!isLogin && (
+                <div className="space-y-2 animate-in">
+                  <Label>Rol</Label>
+                  <Select
                     value={formData.role}
-                    onChange={(e) => setFormData({ ...formData, role: e.target.value })}
+                    onValueChange={(val) => setFormData({ ...formData, role: val })}
                   >
-                    <option value="LAWYER">Avukat</option>
-                    <option value="ADMIN">Yönetici</option>
-                    <option value="SECRETARY">Sekreter</option>
-                  </select>
+                    <SelectTrigger className="h-12 rounded-xl">
+                      <SelectValue placeholder="Rol Seçin" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="LAWYER">Avukat</SelectItem>
+                      <SelectItem value="ADMIN">Yönetici</SelectItem>
+                      <SelectItem value="SECRETARY">Sekreter</SelectItem>
+                    </SelectContent>
+                  </Select>
                 </div>
               )}
             </div>
 
-            <button
+            <Button
               type="submit"
               disabled={loading}
-              className="w-full py-4 bg-primary text-white font-bold rounded-2xl shadow-lg shadow-primary/20 hover:bg-primary/90 hover:scale-[1.01] active:scale-[0.98] transition-all disabled:opacity-50 disabled:hover:scale-100"
+              className="w-full h-12 rounded-xl text-md font-bold shadow-lg shadow-primary/20 transition-all hover:scale-[1.01] active:scale-[0.98]"
             >
               {loading ? "İşleniyor..." : (isLogin ? "Giriş Yap" : "Kayıt Ol")}
-            </button>
+            </Button>
           </form>
 
           <div className="mt-8 text-center">
@@ -183,8 +208,8 @@ export default function LoginPage() {
                 : "Zaten hesabınız var mı? Giriş yapın"}
             </button>
           </div>
-        </div>
-      </div>
+        </CardContent>
+      </Card>
     </div>
   );
 }
