@@ -1,6 +1,7 @@
 package com.lawauto.backend.client;
 
 import com.lawauto.backend.auth.AuthPrincipal;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.security.access.AccessDeniedException;
@@ -9,6 +10,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.UUID;
 
+@Slf4j
 @Service
 @Transactional(readOnly = true)
 public class ClientService {
@@ -20,6 +22,7 @@ public class ClientService {
     }
 
     public Page<ClientResponseDto> listClients(UUID orgId, AuthPrincipal principal, Pageable pageable) {
+        log.info("Listing clients for org [{}] with role [{}], user [{}]", orgId, principal.role(), principal.userId());
         Page<Client> clientsPage;
 
         switch (principal.role()) {

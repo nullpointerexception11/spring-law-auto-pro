@@ -3,12 +3,18 @@ spring:
     url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/law_auto}
     username: ${SPRING_DATASOURCE_USERNAME:postgres}
     password: ${SPRING_DATASOURCE_PASSWORD:postgres}
+    hikari:
+      connection-timeout: 30000
+      maximum-pool-size: 10
+      minimum-idle: 5
+      idle-timeout: 600000
+      max-lifetime: 1800000
   jpa:
     hibernate:
       ddl-auto: validate
     properties:
       hibernate:
-        format_sql: true
+        format_sql: false
         globally_quoted_identifiers: true
     open-in-view: false
   flyway:
@@ -18,6 +24,16 @@ spring:
   web:
     resources:
       add-mappings: false
+  lifecycle:
+    timeout-per-shutdown-phase: 20s
+
+server:
+  port: 8080
+  shutdown: graceful
+  compression:
+    enabled: true
+    mime-types: application/json,text/plain,text/css,application/javascript
+    min-response-size: 1024
 
 management:
   endpoints:
@@ -34,9 +50,6 @@ logging:
   pattern:
     console: "%d{yyyy-MM-dd HH:mm:ss.SSS} %-5level [%X{requestId}] %logger{36} - %msg%n"
 
-server:
-  port: 8080
-
 app:
   jwt:
     secret: ${APP_JWT_SECRET:replace-this-with-at-least-32-characters-secret-key}
@@ -44,3 +57,4 @@ app:
     refresh-expiration-days: ${APP_JWT_REFRESH_EXPIRATION_DAYS:14}
   exports:
     root: ${APP_EXPORTS_ROOT:C:/tmp/law-auto-exports}
+

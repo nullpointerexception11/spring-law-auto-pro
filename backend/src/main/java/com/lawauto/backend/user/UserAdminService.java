@@ -4,12 +4,16 @@ import jakarta.transaction.Transactional;
 import java.util.Objects;
 import java.util.Set;
 import java.util.UUID;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
+@Slf4j
 @Service
 public class UserAdminService {
     private static final Set<String> ALLOWED_USER_STATUSES = Set.of("ACTIVE", "INACTIVE");
@@ -28,10 +32,13 @@ public class UserAdminService {
     }
 
     public Page<UserEntity> listUsers(UUID orgId, Pageable pageable) {
+        log.info("Listing users for org [{}]", orgId);
         return userRepository.findByOrgId(orgId, pageable);
     }
 
+    @Cacheable(value = "userDetails", key = "#userId")
     public UserDetail getUserDetail(UUID orgId, UUID userId) {
+        log.info("Getting user detail for user [{}] in org [{}]", userId, orgId);
         UserEntity user = userRepository.findById(Objects.requireNonNull(userId))
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found"));
         if (!orgId.equals(user.getOrgId())) {
@@ -57,7 +64,9 @@ public class UserAdminService {
     }
 
     @Transactional
+    @CacheEvict(value = "userDetails", key = "#userId")
     public void updateUserRole(UUID orgId, UUID userId, RoleKey roleKey) {
+        log.info("Updating role for user [{}] to [{}] in org [{}]", userId, roleKey, orgId);
         UserEntity user = userRepository.findById(Objects.requireNonNull(userId))
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found"));
         if (!orgId.equals(user.getOrgId())) {
@@ -75,7 +84,9 @@ public class UserAdminService {
     }
 
     @Transactional
+    @CacheEvict(value = "userDetails", key = "#userId")
     public void updateUserStatus(UUID orgId, UUID userId, String status) {
+        log.info("Updating status for user [{}] to [{}] in org [{}]", userId, status, orgId);
         String normalizedStatus = status == null ? null : status.trim().toUpperCase();
         if (normalizedStatus == null || !ALLOWED_USER_STATUSES.contains(normalizedStatus)) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Unsupported user status");

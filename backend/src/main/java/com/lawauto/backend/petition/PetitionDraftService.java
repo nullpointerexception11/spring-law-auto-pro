@@ -4,11 +4,15 @@ import static com.lawauto.backend.petition.PetitionDraftDtos.*;
 
 import java.util.List;
 import java.util.UUID;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+@Slf4j
 @Service
 public class PetitionDraftService {
     private final NamedParameterJdbcTemplate jdbc;
@@ -17,7 +21,9 @@ public class PetitionDraftService {
         this.jdbc = jdbc;
     }
 
+    @Cacheable(value = "petitionDrafts", key = "#caseId")
     public List<PetitionDraftDto> listByCase(UUID orgId, UUID caseId) {
+        log.info("Listing petition drafts for case [{}] in org [{}]", caseId, orgId);
         String sql = """
                 select "id","orgId","caseId","templateId","title","content","sectionValuesJson","status","aiAssistEnabled","aiPrompt","createdByUserId","createdAt","updatedAt"
                 from "PetitionDraft"
@@ -43,7 +49,9 @@ public class PetitionDraftService {
     }
 
     @Transactional
+    @CacheEvict(value = "petitionDrafts", key = "#req.caseId()")
     public UUID create(CreatePetitionDraftRequest req) {
+        log.info("Creating new petition draft [{}] for case [{}]", req.title(), req.caseId());
         UUID id = UUID.randomUUID();
         String sql = """
                 insert into "PetitionDraft" ("id","orgId","caseId","templateId","title","content","sectionValuesJson","status","aiAssistEnabled","aiPrompt","createdByUserId","updatedAt")
@@ -64,7 +72,9 @@ public class PetitionDraftService {
     }
 
     @Transactional
+    @CacheEvict(value = "petitionDrafts", key = "#caseId")
     public void update(UUID orgId, UUID caseId, UUID draftId, UpdatePetitionDraftRequest req) {
+        log.info("Updating petition draft [{}] for case [{}]", draftId, caseId);
         String sql = """
                 update "PetitionDraft"
                 set "title"=coalesce(:title,"title"),

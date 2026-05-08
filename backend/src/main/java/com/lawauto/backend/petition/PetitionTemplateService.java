@@ -10,10 +10,14 @@ import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
+@Slf4j
 @Service
 public class PetitionTemplateService {
     private static final Set<String> ALLOWED_SECTION_MODES = Set.of("INPUT", "BODY", "AUTO");
@@ -25,14 +29,18 @@ public class PetitionTemplateService {
         this.objectMapper = objectMapper;
     }
 
+    @Cacheable(value = "petitionTemplates", key = "#orgId")
     public List<PetitionTemplateDto> listByOrg(UUID orgId) {
+        log.info("Listing petition templates for org [{}]", orgId);
         return repository.findByOrgIdOrderByNameAscVersionDesc(orgId).stream()
                 .map(PetitionTemplateDto::fromEntity)
                 .collect(Collectors.toList());
     }
 
     @Transactional
+    @CacheEvict(value = "petitionTemplates", key = "#req.orgId()")
     public UUID create(AuthPrincipal principal, PetitionTemplateController.CreatePetitionTemplateRequest req) {
+        log.info("Creating new petition template [{}] for org [{}]", req.name(), req.orgId());
         validateStructureJson(req.structureJson());
         PetitionTemplateEntity entity = new PetitionTemplateEntity();
         entity.setId(UUID.randomUUID());
@@ -49,7 +57,9 @@ public class PetitionTemplateService {
     }
 
     @Transactional
+    @CacheEvict(value = "petitionTemplates", key = "#orgId")
     public void update(UUID orgId, UUID templateId, PetitionTemplateController.UpdatePetitionTemplateRequest req) {
+        log.info("Updating petition template [{}] for org [{}]", templateId, orgId);
         PetitionTemplateEntity entity = repository.findByIdAndOrgId(templateId, orgId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Petition template not found"));
         if (req.name() != null && !req.name().isBlank()) entity.setName(req.name().trim());
@@ -63,7 +73,9 @@ public class PetitionTemplateService {
     }
 
     @Transactional
+    @CacheEvict(value = "petitionTemplates", key = "#orgId")
     public void activate(UUID orgId, UUID templateId) {
+        log.info("Activating petition template [{}] for org [{}]", templateId, orgId);
         PetitionTemplateEntity selected = repository.findByIdAndOrgId(templateId, orgId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Petition template not found"));
         List<PetitionTemplateEntity> all = repository.findByOrgIdOrderByNameAscVersionDesc(orgId);

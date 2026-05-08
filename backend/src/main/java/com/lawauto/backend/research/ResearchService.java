@@ -7,9 +7,14 @@ import java.util.List;
 import java.util.stream.Collectors;
 import java.util.UUID;
 import org.springframework.http.HttpStatus;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
+@Slf4j
 @Service
 public class ResearchService {
     private final ResearchSessionRepository sessionRepository;
@@ -26,13 +31,17 @@ public class ResearchService {
         this.noteRepository = noteRepository;
     }
 
+    @Cacheable(value = "researchSessions", key = "#orgId")
     public List<ResearchDto.Session> listSessions(UUID orgId) {
+        log.debug("Fetching research sessions from DB for org [{}]", orgId);
         return sessionRepository.findByOrgIdOrderByCreatedAtDesc(orgId).stream()
                 .map(ResearchDto.Session::fromEntity)
                 .collect(Collectors.toList());
     }
 
+    @Cacheable(value = "researchSessionDetails", key = "#sessionId")
     public ResearchDto.Bundle getSession(UUID orgId, UUID sessionId) {
+        log.debug("Fetching research session details from DB for session [{}]", sessionId);
         ResearchSessionEntity session = findSession(orgId, sessionId);
         return ResearchDto.Bundle.builder()
                 .session(ResearchDto.Session.fromEntity(session))
@@ -42,7 +51,9 @@ public class ResearchService {
     }
 
     @Transactional
+    @CacheEvict(value = "researchSessions", key = "#req.orgId()")
     public UUID createSession(AuthPrincipal principal, ResearchController.CreateResearchSessionRequest req) {
+        log.info("Saving new research session to DB for org [{}]", req.orgId());
         ResearchSessionEntity entity = new ResearchSessionEntity();
         entity.setId(UUID.randomUUID());
         entity.setOrgId(req.orgId());
@@ -61,7 +72,9 @@ public class ResearchService {
     }
 
     @Transactional
+    @CacheEvict(value = "researchSessionDetails", key = "#sessionId")
     public UUID addResult(UUID orgId, UUID sessionId, ResearchController.AddResearchResultRequest req) {
+        log.info("Adding new result to session [{}] in DB", sessionId);
         findSession(orgId, sessionId);
         ResearchResultEntity entity = new ResearchResultEntity();
         entity.setId(UUID.randomUUID());
@@ -79,7 +92,9 @@ public class ResearchService {
     }
 
     @Transactional
+    @CacheEvict(value = "researchSessionDetails", key = "#sessionId")
     public UUID addNote(AuthPrincipal principal, UUID orgId, UUID sessionId, ResearchController.AddResearchNoteRequest req) {
+        log.info("Adding new note to session [{}] in DB", sessionId);
         findSession(orgId, sessionId);
         ResearchNoteEntity entity = new ResearchNoteEntity();
         entity.setId(UUID.randomUUID());
