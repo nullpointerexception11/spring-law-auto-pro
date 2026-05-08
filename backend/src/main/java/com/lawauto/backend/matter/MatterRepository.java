@@ -17,7 +17,9 @@ public interface MatterRepository extends JpaRepository<Matter, UUID> {
      */
     @Query("""
         SELECT new com.lawauto.backend.matter.dto.MatterListDto(
-            m.id, m.title, m.referenceNumber, m.status, m.openedAt
+            m.id, m.title, m.referenceNumber, m.status, m.openedAt,
+            (SELECT p.fullName FROM MatterParty mp JOIN mp.party p JOIN mp.role r WHERE mp.matter = m AND r.category = 'CLIENT' ORDER BY p.createdAt ASC LIMIT 1),
+            (SELECT p.fullName FROM MatterParty mp JOIN mp.party p JOIN mp.role r WHERE mp.matter = m AND r.category = 'LAWYER' ORDER BY p.createdAt ASC LIMIT 1)
         )
         FROM Matter m
         WHERE m.org.id = :orgId

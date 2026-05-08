@@ -14,5 +14,6 @@ public record MatterListDto(
     MatterStatus status,
     OffsetDateTime openedAt,
     String clientName,
-    String assignedLawyerName
+    String assignedLawyerName,
+    OffsetDateTime nextHearingDate
 ) {}
