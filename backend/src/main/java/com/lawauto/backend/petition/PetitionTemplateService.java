@@ -4,7 +4,7 @@ import com.lawauto.backend.auth.AuthPrincipal;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.transaction.Transactional;
-import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -42,7 +42,7 @@ public class PetitionTemplateService {
     public UUID create(AuthPrincipal principal, PetitionTemplateController.CreatePetitionTemplateRequest req) {
         log.info("Creating new petition template [{}] for org [{}]", req.name(), req.orgId());
         validateStructureJson(req.structureJson());
-        PetitionTemplateEntity entity = new PetitionTemplateEntity();
+        PetitionTemplate entity = new PetitionTemplate();
         entity.setId(UUID.randomUUID());
         entity.setOrgId(req.orgId());
         entity.setName(req.name());
@@ -50,8 +50,8 @@ public class PetitionTemplateService {
         entity.setActive(Boolean.TRUE.equals(req.isActive()));
         entity.setStructureJson(req.structureJson());
         entity.setCreatedByUserId(principal.userId());
-        entity.setCreatedAt(LocalDateTime.now());
-        entity.setUpdatedAt(LocalDateTime.now());
+        entity.setCreatedAt(OffsetDateTime.now());
+        entity.setUpdatedAt(OffsetDateTime.now());
         repository.save(entity);
         return entity.getId();
     }
@@ -60,7 +60,7 @@ public class PetitionTemplateService {
     @CacheEvict(value = "petitionTemplates", key = "#orgId")
     public void update(UUID orgId, UUID templateId, PetitionTemplateController.UpdatePetitionTemplateRequest req) {
         log.info("Updating petition template [{}] for org [{}]", templateId, orgId);
-        PetitionTemplateEntity entity = repository.findByIdAndOrgId(templateId, orgId)
+        PetitionTemplate entity = repository.findByIdAndOrgId(templateId, orgId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Petition template not found"));
         if (req.name() != null && !req.name().isBlank()) entity.setName(req.name().trim());
         if (req.structureJson() != null && !req.structureJson().isBlank()) {
@@ -68,7 +68,7 @@ public class PetitionTemplateService {
             entity.setStructureJson(req.structureJson());
         }
         if (req.version() != null && req.version() > 0) entity.setVersion(req.version());
-        entity.setUpdatedAt(LocalDateTime.now());
+        entity.setUpdatedAt(OffsetDateTime.now());
         repository.save(entity);
     }
 
@@ -76,20 +76,20 @@ public class PetitionTemplateService {
     @CacheEvict(value = "petitionTemplates", key = "#orgId")
     public void activate(UUID orgId, UUID templateId) {
         log.info("Activating petition template [{}] for org [{}]", templateId, orgId);
-        PetitionTemplateEntity selected = repository.findByIdAndOrgId(templateId, orgId)
+        PetitionTemplate selected = repository.findByIdAndOrgId(templateId, orgId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Petition template not found"));
-        List<PetitionTemplateEntity> all = repository.findByOrgIdOrderByNameAscVersionDesc(orgId);
-        for (PetitionTemplateEntity item : all) {
+        List<PetitionTemplate> all = repository.findByOrgIdOrderByNameAscVersionDesc(orgId);
+        for (PetitionTemplate item : all) {
             boolean active = item.getId().equals(templateId);
             if (item.isActive() != active) {
                 item.setActive(active);
-                item.setUpdatedAt(LocalDateTime.now());
+                item.setUpdatedAt(OffsetDateTime.now());
                 repository.save(item);
             }
         }
         if (!selected.isActive()) {
             selected.setActive(true);
-            selected.setUpdatedAt(LocalDateTime.now());
+            selected.setUpdatedAt(OffsetDateTime.now());
             repository.save(selected);
         }
     }

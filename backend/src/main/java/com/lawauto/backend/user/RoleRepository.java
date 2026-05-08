@@ -4,6 +4,6 @@ import java.util.Optional;
 import java.util.UUID;
 import org.springframework.data.jpa.repository.JpaRepository;
 
-public interface RoleRepository extends JpaRepository<RoleEntity, UUID> {
-    Optional<RoleEntity> findByOrgIdAndKey(UUID orgId, RoleKey key);
+public interface RoleRepository extends JpaRepository<Role, UUID> {
+    Optional<Role> findByOrgIdAndKey(UUID orgId, RoleKey key);
 }

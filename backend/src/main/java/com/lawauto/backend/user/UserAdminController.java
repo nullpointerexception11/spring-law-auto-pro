@@ -6,6 +6,7 @@ import com.lawauto.backend.common.PageMeta;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
+import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.UUID;
 import org.springframework.data.domain.Page;
@@ -41,10 +42,17 @@ public class UserAdminController {
         authorizationGuard.requireOrg(orgId);
         authorizationGuard.requireRole("ADMIN");
         
-        Page<UserEntity> usersPage = userAdminService.listUsers(orgId, pageable);
+        Page<User> usersPage = userAdminService.listUsers(orgId, pageable);
         
         List<UserSummary> users = usersPage.stream()
-                .map(u -> new UserSummary(u.getId(), u.getOrgId(), u.getEmail(), u.getFullName(), u.getStatus(), u.getCreatedAt(), u.getUpdatedAt()))
+                .map(u -> new UserSummary(
+                        u.getId(), 
+                        u.getOrg() != null ? u.getOrg().getId() : null, 
+                        u.getEmail(), 
+                        u.getFullName(), 
+                        u.getStatus().name(), 
+                        u.getCreatedAt(), 
+                        u.getUpdatedAt()))
                 .toList();
                 
         String sortString = pageable.getSort().isSorted() 
@@ -96,7 +104,7 @@ public class UserAdminController {
             String email,
             String fullName,
             String status,
-            java.time.LocalDateTime createdAt,
-            java.time.LocalDateTime updatedAt
+            OffsetDateTime createdAt,
+            OffsetDateTime updatedAt
     ) {}
 }

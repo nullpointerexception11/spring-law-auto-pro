@@ -34,6 +34,7 @@ CREATE TABLE "Org" (
 
 CREATE TABLE "User" (
   "id" UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  "orgId" UUID REFERENCES "Org"("id") ON DELETE RESTRICT,
   "email" TEXT NOT NULL UNIQUE,
   "fullName" TEXT NOT NULL,
   "passwordHash" TEXT,
@@ -41,14 +42,6 @@ CREATE TABLE "User" (
   "consentGivenAt" TIMESTAMPTZ,
   "createdAt" TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
   "updatedAt" TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
-);
-
-CREATE TABLE "UserOrg" (
-  "userId" UUID NOT NULL REFERENCES "User"("id") ON DELETE RESTRICT,
-  "orgId" UUID NOT NULL REFERENCES "Org"("id") ON DELETE RESTRICT,
-  "isOwner" BOOLEAN NOT NULL DEFAULT false,
-  "joinedAt" TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  PRIMARY KEY ("userId", "orgId")
 );
 
 -- ---------------------------------------------------------

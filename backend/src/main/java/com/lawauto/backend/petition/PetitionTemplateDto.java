@@ -3,7 +3,7 @@ package com.lawauto.backend.petition;
 import lombok.Builder;
 import lombok.Data;
 
-import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 import java.util.UUID;
 
 @Data
@@ -16,10 +16,10 @@ public class PetitionTemplateDto {
     private boolean isActive;
     private String structureJson;
     private UUID createdByUserId;
-    private LocalDateTime createdAt;
-    private LocalDateTime updatedAt;
+    private OffsetDateTime createdAt;
+    private OffsetDateTime updatedAt;
 
-    public static PetitionTemplateDto fromEntity(PetitionTemplateEntity entity) {
+    public static PetitionTemplateDto fromEntity(PetitionTemplate entity) {
         if (entity == null) {
             return null;
         }
