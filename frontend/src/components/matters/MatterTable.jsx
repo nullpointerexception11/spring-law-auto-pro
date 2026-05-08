@@ -37,9 +37,13 @@ export function MatterTable() {
   const { data: matters = [], isLoading, error } = useQuery({
     queryKey: ['matters'],
     queryFn: async () => {
-      const response = await api.get('/matters');
-      // Backend ApiResponse yapısı gereği data.data içerisinde gerçek liste bulunur
-      return response.data.data || [];
+      // Not: orgId normalde auth context'ten gelmeli, şu an test verisini kullanıyoruz
+      const TEST_ORG_ID = '11111111-1111-1111-1111-111111111111';
+      const response = await api.get('/matters', {
+        params: { orgId: TEST_ORG_ID }
+      });
+      // Spring Data Page yapısı gereği veriler 'content' içinde gelir
+      return response.data.content || [];
     }
   });
 

@@ -11,7 +11,7 @@ public class WebConfig implements WebMvcConfigurer {
     public void addCorsMappings(CorsRegistry registry) {
         // API istekleri için CORS izni veriyoruz
         registry.addMapping("/api/**")
-                .allowedOrigins("http://localhost:5173") // Vite adresimiz
+                .allowedOrigins("http://localhost:5173", "http://localhost:5174", "http://localhost:5175") // Vite adreslerimiz
                 .allowedMethods("GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS")
                 .allowedHeaders("*")
                 .allowCredentials(true);

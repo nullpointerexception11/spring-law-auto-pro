@@ -19,7 +19,7 @@ public class MatterParty {
     @ManyToOne(fetch = FetchType.LAZY)
     @MapsId("matterId")
     @JoinColumn(name = "matterId", nullable = false)
-    private Matter Matter;
+    private Matter matter;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @MapsId("partyId")
