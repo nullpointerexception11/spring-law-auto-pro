@@ -2,6 +2,7 @@ package com.lawauto.backend.petition;
 
 import static com.lawauto.backend.petition.PetitionDraftDtos.*;
 
+import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.UUID;
 import lombok.extern.slf4j.Slf4j;
@@ -21,20 +22,20 @@ public class PetitionDraftService {
         this.jdbc = jdbc;
     }
 
-    @Cacheable(value = "petitionDrafts", key = "#caseId")
-    public List<PetitionDraftDto> listByCase(UUID orgId, UUID caseId) {
-        log.info("Listing petition drafts for case [{}] in org [{}]", caseId, orgId);
+    @Cacheable(value = "petitionDrafts", key = "#matterId")
+    public List<PetitionDraftDto> listByMatter(UUID orgId, UUID matterId) {
+        log.info("Listing petition drafts for matter [{}] in org [{}]", matterId, orgId);
         String sql = """
-                select "id","orgId","caseId","templateId","title","content","sectionValuesJson","status","aiAssistEnabled","aiPrompt","createdByUserId","createdAt","updatedAt"
+                select "id","orgId","matterId","templateId","title","content","sectionValuesJson","status","aiAssistEnabled","aiPrompt","createdByUserId","createdAt","updatedAt"
                 from "PetitionDraft"
-                where "orgId"=:orgId and "caseId"=:caseId
+                where "orgId"=:orgId and "matterId"=:matterId
                 order by "createdAt" desc
                 """;
-        return jdbc.query(sql, new MapSqlParameterSource().addValue("orgId", orgId).addValue("caseId", caseId), (rs, n) ->
+        return jdbc.query(sql, new MapSqlParameterSource().addValue("orgId", orgId).addValue("matterId", matterId), (rs, n) ->
                 new PetitionDraftDto(
                         rs.getObject("id", UUID.class),
                         rs.getObject("orgId", UUID.class),
-                        rs.getObject("caseId", UUID.class),
+                        rs.getObject("matterId", UUID.class),
                         rs.getObject("templateId", UUID.class),
                         rs.getString("title"),
                         rs.getString("content"),
@@ -43,24 +44,24 @@ public class PetitionDraftService {
                         rs.getBoolean("aiAssistEnabled"),
                         rs.getString("aiPrompt"),
                         rs.getObject("createdByUserId", UUID.class),
-                        rs.getTimestamp("createdAt").toLocalDateTime(),
-                        rs.getTimestamp("updatedAt").toLocalDateTime()
+                        rs.getObject("createdAt", OffsetDateTime.class),
+                        rs.getObject("updatedAt", OffsetDateTime.class)
                 ));
     }
 
     @Transactional
-    @CacheEvict(value = "petitionDrafts", key = "#req.caseId()")
+    @CacheEvict(value = "petitionDrafts", key = "#req.matterId()")
     public UUID create(CreatePetitionDraftRequest req) {
-        log.info("Creating new petition draft [{}] for case [{}]", req.title(), req.caseId());
+        log.info("Creating new petition draft [{}] for matter [{}]", req.title(), req.matterId());
         UUID id = UUID.randomUUID();
         String sql = """
-                insert into "PetitionDraft" ("id","orgId","caseId","templateId","title","content","sectionValuesJson","status","aiAssistEnabled","aiPrompt","createdByUserId","updatedAt")
-                values (:id,:orgId,:caseId,:templateId,:title,:content,:sectionValuesJson,'DRAFT',:aiAssistEnabled,:aiPrompt,:createdByUserId,now())
+                insert into "PetitionDraft" ("id","orgId","matterId","templateId","title","content","sectionValuesJson","status","aiAssistEnabled","aiPrompt","createdByUserId","updatedAt")
+                values (:id,:orgId,:matterId,:templateId,:title,:content,:sectionValuesJson,'DRAFT',:aiAssistEnabled,:aiPrompt,:createdByUserId,now())
                 """;
         jdbc.update(sql, new MapSqlParameterSource()
                 .addValue("id", id)
                 .addValue("orgId", req.orgId())
-                .addValue("caseId", req.caseId())
+                .addValue("matterId", req.matterId())
                 .addValue("templateId", req.templateId())
                 .addValue("title", req.title())
                 .addValue("content", req.content())
@@ -72,9 +73,9 @@ public class PetitionDraftService {
     }
 
     @Transactional
-    @CacheEvict(value = "petitionDrafts", key = "#caseId")
-    public void update(UUID orgId, UUID caseId, UUID draftId, UpdatePetitionDraftRequest req) {
-        log.info("Updating petition draft [{}] for case [{}]", draftId, caseId);
+    @CacheEvict(value = "petitionDrafts", key = "#matterId")
+    public void update(UUID orgId, UUID matterId, UUID draftId, UpdatePetitionDraftRequest req) {
+        log.info("Updating petition draft [{}] for matter [{}]", draftId, matterId);
         String sql = """
                 update "PetitionDraft"
                 set "title"=coalesce(:title,"title"),
@@ -84,12 +85,12 @@ public class PetitionDraftService {
                     "aiAssistEnabled"=coalesce(:aiAssistEnabled,"aiAssistEnabled"),
                     "aiPrompt"=coalesce(:aiPrompt,"aiPrompt"),
                     "updatedAt"=now()
-                where "id"=:id and "orgId"=:orgId and "caseId"=:caseId
+                where "id"=:id and "orgId"=:orgId and "matterId"=:matterId
                 """;
         int updated = jdbc.update(sql, new MapSqlParameterSource()
                 .addValue("id", draftId)
                 .addValue("orgId", orgId)
-                .addValue("caseId", caseId)
+                .addValue("matterId", matterId)
                 .addValue("title", req.title())
                 .addValue("content", req.content())
                 .addValue("sectionValuesJson", req.sectionValuesJson())

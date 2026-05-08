@@ -1,6 +1,6 @@
 package com.lawauto.backend.operations;
 
-import com.lawauto.backend.cases.CaseEntity;
+import com.lawauto.backend.cases.Matter;
 import com.lawauto.backend.org.Org;
 import com.lawauto.backend.user.User;
 import jakarta.persistence.*;

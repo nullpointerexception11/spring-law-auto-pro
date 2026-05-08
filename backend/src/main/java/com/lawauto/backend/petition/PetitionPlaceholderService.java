@@ -1,7 +1,6 @@
 package com.lawauto.backend.petition;
 
-import com.lawauto.backend.cases.InsuranceDetailRepository;
-import com.lawauto.backend.cases.CaseRepository;
+import com.lawauto.backend.cases.MatterRepository;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
@@ -13,44 +12,30 @@ import org.springframework.stereotype.Service;
 @Service
 public class PetitionPlaceholderService {
 
-    private final CaseRepository caseRepository;
-    private final InsuranceDetailRepository insuranceRepository;
+    private final MatterRepository matterRepository;
 
-    public PetitionPlaceholderService(CaseRepository caseRepository, InsuranceDetailRepository insuranceRepository) {
-        this.caseRepository = caseRepository;
-        this.insuranceRepository = insuranceRepository;
+    public PetitionPlaceholderService(MatterRepository matterRepository) {
+        this.matterRepository = matterRepository;
     }
 
-    @Cacheable(value = "petitionPlaceholders", key = "#caseId")
-    public Map<String, String> getPlaceholders(UUID caseId) {
-        java.util.Objects.requireNonNull(caseId);
-        log.info("Fetching placeholders for case [{}]", caseId);
+    /**
+     * PRESTIGE LMMS: Fetch dynamic placeholders for a Matter.
+     * Integrates with the Matter-Centric architecture.
+     */
+    @Cacheable(value = "petitionPlaceholders", key = "#matterId")
+    public Map<String, String> getPlaceholders(UUID matterId) {
+        java.util.Objects.requireNonNull(matterId);
+        log.info("Fetching placeholders for matter [{}]", matterId);
         Map<String, String> placeholders = new HashMap<>();
         
-        caseRepository.findById(caseId).ifPresent(caseEntity -> {
-            placeholders.put("case_title", caseEntity.getTitle());
-            placeholders.put("case_number", caseEntity.getCaseNumber());
-            placeholders.put("court_name", caseEntity.getCourtName());
-            placeholders.put("case_type", caseEntity.getCaseType());
-            placeholders.put("status", caseEntity.getStatus().name());
-        });
-
-        insuranceRepository.findByCaseId(caseId).ifPresent(ins -> {
-            placeholders.put("crash_province", ins.getCrashProvince());
-            placeholders.put("car_plate", ins.getCarPlate());
-            placeholders.put("car_mark", ins.getCarMark());
-            placeholders.put("car_model", ins.getCarModel());
-            placeholders.put("car_km", String.valueOf(ins.getCarKm()));
-            placeholders.put("car_price", ins.getCarPrice() != null ? ins.getCarPrice().toString() : "");
-            placeholders.put("damage_amount", ins.getDamageAmount() != null ? ins.getDamageAmount().toString() : "");
-            placeholders.put("opponent_name", ins.getOpponentName());
-            placeholders.put("opponent_plate", ins.getOpponentPlate());
-            placeholders.put("insurance_company", ins.getInsuranceCompany());
-            placeholders.put("policy_no", ins.getPolicyNo());
-            placeholders.put("policy_start", ins.getPolicyStart() != null ? ins.getPolicyStart().toString() : "");
-            placeholders.put("policy_end", ins.getPolicyEnd() != null ? ins.getPolicyEnd().toString() : "");
-            placeholders.put("arbitration_subject", ins.getArbitrationSubject());
-            placeholders.put("dispute_amount", ins.getDisputeAmount() != null ? ins.getDisputeAmount().toString() : "");
+        matterRepository.findById(matterId).ifPresent(matter -> {
+            placeholders.put("matter_title", matter.getTitle());
+            placeholders.put("matter_type", matter.getType().name());
+            placeholders.put("reference_number", matter.getReferenceNumber());
+            placeholders.put("status", matter.getStatus().name());
+            placeholders.put("opened_at", matter.getOpenedAt().toString());
+            
+            // Future: Extract more placeholders from LitigationDetail or dataJson
         });
 
         return placeholders;

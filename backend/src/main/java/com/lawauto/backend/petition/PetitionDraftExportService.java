@@ -6,7 +6,7 @@ import com.lawauto.backend.operations.FileObjectService;
 import com.lawauto.backend.operations.OperationDtos.CreateFileObjectRequest;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
-import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
@@ -59,23 +59,23 @@ public class PetitionDraftExportService {
 
         String safeTitle = draft.title().replaceAll("[^a-zA-Z0-9_-]+", "_");
         if (safeTitle.isBlank()) safeTitle = "petition_draft";
-        String timestamp = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMdd_HHmmss"));
+        String timestamp = OffsetDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMdd_HHmmss"));
         String fileName = safeTitle + "_" + timestamp + "." + extension;
         String storageKey = "exports/" + orgId + "/petition-drafts/" + draft.id() + "/" + fileName;
 
         ExportPayload payload = new ExportPayload(
                 draft.id(),
-                draft.caseId(),
+                draft.matterId(),
                 draft.title(),
                 draft.content(),
-                parseSections(draft.caseId(), draft.templateStructureJson(), draft.content(), draft.sectionValuesJson())
+                parseSections(draft.matterId(), draft.templateStructureJson(), draft.content(), draft.sectionValuesJson())
         );
 
         byte[] bytes;
         if (draft.templateFileId() != null) {
             String templateKey = fileObjectService.getStorageKey(draft.templateFileId());
             byte[] templateBytes = storageService.read(templateKey);
-            Map<String, String> placeholders = placeholderService.getPlaceholders(draft.caseId());
+            Map<String, String> placeholders = placeholderService.getPlaceholders(draft.matterId());
             bytes = renderer.renderDocxFromTemplate(templateBytes, placeholders);
         } else {
             bytes = normalized.equals("docx") ? renderer.renderDocx(payload) : renderer.renderPdf(payload);
@@ -99,7 +99,7 @@ public class PetitionDraftExportService {
 
     private DraftProjection findDraft(UUID orgId, UUID draftId) {
         String sql = """
-                select d."id",d."orgId",d."caseId",d."title",d."content",d."sectionValuesJson",
+                select d."id",d."orgId",d."matterId",d."title",d."content",d."sectionValuesJson",
                        t."structureJson" as "templateStructureJson", t."template_file_id"
                 from "PetitionDraft" d
                 left join "PetitionTemplate" t on t."id" = d."templateId"
@@ -110,7 +110,7 @@ public class PetitionDraftExportService {
             return new DraftProjection(
                     java.util.Objects.requireNonNull(rs.getObject("id", UUID.class)),
                     java.util.Objects.requireNonNull(rs.getObject("orgId", UUID.class)),
-                    java.util.Objects.requireNonNull(rs.getObject("caseId", UUID.class)),
+                    java.util.Objects.requireNonNull(rs.getObject("matterId", UUID.class)),
                     rs.getString("title"),
                     rs.getString("content"),
                     rs.getString("sectionValuesJson"),
@@ -120,9 +120,9 @@ public class PetitionDraftExportService {
         });
     }
 
-    private List<TemplateSection> parseSections(UUID caseId, String structureJson, String draftContent, String sectionValuesJson) {
+    private List<TemplateSection> parseSections(UUID matterId, String structureJson, String draftContent, String sectionValuesJson) {
         List<TemplateSection> sections = new ArrayList<>();
-        Map<String, String> placeholders = placeholderService.getPlaceholders(caseId);
+        Map<String, String> placeholders = placeholderService.getPlaceholders(matterId);
 
         if (structureJson == null || structureJson.isBlank()) {
             String finalContent = placeholderService.replace(draftContent, placeholders);
@@ -146,9 +146,7 @@ public class PetitionDraftExportService {
                         body = body.replace("{{body}}", draftContent == null ? "" : draftContent);
                     }
                     
-                    // Apply dynamic placeholders from Insurance/Case/Client
                     body = placeholderService.replace(body, placeholders);
-                    
                     sections.add(new TemplateSection(title, body));
                 }
             }
@@ -163,10 +161,10 @@ public class PetitionDraftExportService {
         return sections;
     }
 
-    public UUID findCaseId(UUID orgId, UUID draftId) {
+    public UUID findMatterId(UUID orgId, UUID draftId) {
         DraftProjection draft = findDraft(orgId, draftId);
         if (draft == null) throw new IllegalArgumentException("Petition draft not found");
-        return draft.caseId();
+        return draft.matterId();
     }
 
     private String normalizeFormat(String format) {
@@ -193,7 +191,7 @@ public class PetitionDraftExportService {
     private record DraftProjection(
             UUID id,
             UUID orgId,
-            UUID caseId,
+            UUID matterId,
             String title,
             String content,
             String sectionValuesJson,
@@ -201,7 +199,7 @@ public class PetitionDraftExportService {
             UUID templateFileId
     ) {}
 
-    public record ExportPayload(UUID draftId, UUID caseId, String title, String content, List<TemplateSection> sections) {}
+    public record ExportPayload(UUID draftId, UUID matterId, String title, String content, List<TemplateSection> sections) {}
     public record TemplateSection(String title, String content) {}
     public record ExportResult(UUID fileId, String fileName, String mimeType, String storageKey, String format) {}
 }

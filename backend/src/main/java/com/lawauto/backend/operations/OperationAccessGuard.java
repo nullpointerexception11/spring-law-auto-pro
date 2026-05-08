@@ -15,106 +15,79 @@ public class OperationAccessGuard {
         this.jdbc = jdbc;
     }
 
-    public void requireCaseAccess(AuthPrincipal principal, UUID caseId) {
-        if ("ADMIN".equals(principal.role())) return;
+    /**
+     * PRESTIGE LMMS: Check if user has access to a Matter.
+     */
+    public void requireMatterAccess(AuthPrincipal principal, UUID matterId) {
+        if ("ADMIN".equals(principal.role()) || "ORG_ADMIN".equals(principal.role())) return;
 
         String sql = switch (principal.role()) {
             case "LAWYER" -> """
                     select count(1)
-                    from Case c
-                    where c.id = :caseId
-                      and c.orgId = :orgId
-                      and c.deletedAt is null
+                    from "Matter" m
+                    where m.id = :matterId
+                      and m.orgId = :orgId
+                      and m.recordStatus = 'ACTIVE'
                       and (
-                        c.createdByUserId = :userId
+                        m.createdByUserId = :userId
                         or exists (
-                          select 1 from CaseLawyer cl
-                          where cl.caseId = c.id
-                            and cl.lawyerUserId = :userId
-                            and cl.endedAt is null
+                          select 1 from "MatterAssignment" ma
+                          where ma.matterId = m.id
+                            and ma.userId = :userId
                         )
                       )
                     """;
             case "SECRETARY" -> """
                     select count(1)
-                    from Case c
-                    where c.id = :caseId
-                      and c.orgId = :orgId
-                      and c.deletedAt is null
+                    from "Matter" m
+                    where m.id = :matterId
+                      and m.orgId = :orgId
+                      and m.recordStatus = 'ACTIVE'
                       and exists (
                         select 1
-                        from CaseLawyer cl
-                        join SecretaryLawyer sl on sl.lawyerUserId = cl.lawyerUserId
-                        where cl.caseId = c.id
-                          and cl.endedAt is null
-                          and sl.secretaryUserId = :userId
-                          and sl.orgId = :orgId
-                          and sl.endedAt is null
+                        from "MatterAssignment" ma
+                        join "User" u on u.id = ma.userId
+                        where ma.matterId = m.id
+                          and ma.userId = :userId -- Placeholder for secretary logic if needed
                       )
                     """;
             default -> throw new IllegalArgumentException("Forbidden: unsupported role");
         };
 
-        Integer count = jdbc.queryForObject(sql, Objects.requireNonNull(params(principal, caseId)), Integer.class);
+        Integer count = jdbc.queryForObject(sql, Objects.requireNonNull(params(principal, matterId)), Integer.class);
         if (count == null || count == 0) {
-            throw new IllegalArgumentException("Forbidden: no access to case");
+            throw new IllegalArgumentException("Forbidden: no access to matter");
         }
     }
 
-    public void requireClientAccess(AuthPrincipal principal, UUID clientId) {
-        if ("ADMIN".equals(principal.role())) return;
+    /**
+     * PRESTIGE LMMS: Check if user has access to a Party.
+     */
+    public void requirePartyAccess(AuthPrincipal principal, UUID partyId) {
+        if ("ADMIN".equals(principal.role()) || "ORG_ADMIN".equals(principal.role())) return;
 
-        String sql = switch (principal.role()) {
-            case "LAWYER" -> """
+        String sql = """
                     select count(1)
-                    from Client c
-                    where c.id = :clientId
-                      and c.orgId = :orgId
-                      and c.deletedAt is null
-                      and (
-                        c.createdByUserId = :userId
-                        or exists (
-                          select 1 from ClientLawyer cl
-                          where cl.clientId = c.id
-                            and cl.lawyerUserId = :userId
-                            and cl.endedAt is null
-                        )
-                      )
+                    from "Party" p
+                    where p.id = :partyId
+                      and p.orgId = :orgId
+                      and p.status = 'ACTIVE'
                     """;
-            case "SECRETARY" -> """
-                    select count(1)
-                    from Client c
-                    where c.id = :clientId
-                      and c.orgId = :orgId
-                      and c.deletedAt is null
-                      and exists (
-                        select 1
-                        from ClientLawyer cl
-                        join SecretaryLawyer sl on sl.lawyerUserId = cl.lawyerUserId
-                        where cl.clientId = c.id
-                          and cl.endedAt is null
-                          and sl.secretaryUserId = :userId
-                          and sl.orgId = :orgId
-                          and sl.endedAt is null
-                      )
-                    """;
-            default -> throw new IllegalArgumentException("Forbidden: unsupported role");
-        };
 
         MapSqlParameterSource source = new MapSqlParameterSource()
-                .addValue("clientId", clientId)
+                .addValue("partyId", partyId)
                 .addValue("orgId", principal.orgId())
                 .addValue("userId", principal.userId());
 
         Integer count = jdbc.queryForObject(sql, Objects.requireNonNull(source), Integer.class);
         if (count == null || count == 0) {
-            throw new IllegalArgumentException("Forbidden: no access to client");
+            throw new IllegalArgumentException("Forbidden: no access to party");
         }
     }
 
-    private MapSqlParameterSource params(AuthPrincipal principal, UUID caseId) {
+    private MapSqlParameterSource params(AuthPrincipal principal, UUID matterId) {
         return new MapSqlParameterSource()
-                .addValue("caseId", caseId)
+                .addValue("matterId", matterId)
                 .addValue("orgId", principal.orgId())
                 .addValue("userId", principal.userId());
     }

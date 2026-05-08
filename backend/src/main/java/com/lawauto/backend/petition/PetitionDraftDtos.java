@@ -3,7 +3,7 @@ package com.lawauto.backend.petition;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Pattern;
-import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 import java.util.UUID;
 
 public final class PetitionDraftDtos {
@@ -12,7 +12,7 @@ public final class PetitionDraftDtos {
     public record PetitionDraftDto(
             UUID id,
             UUID orgId,
-            UUID caseId,
+            UUID matterId,
             UUID templateId,
             String title,
             String content,
@@ -21,13 +21,13 @@ public final class PetitionDraftDtos {
             boolean aiAssistEnabled,
             String aiPrompt,
             UUID createdByUserId,
-            LocalDateTime createdAt,
-            LocalDateTime updatedAt
+            OffsetDateTime createdAt,
+            OffsetDateTime updatedAt
     ) {}
 
     public record CreatePetitionDraftRequest(
             @NotNull UUID orgId,
-            @NotNull UUID caseId,
+            @NotNull UUID matterId,
             UUID templateId,
             @NotBlank String title,
             String content,

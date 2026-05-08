@@ -19,13 +19,13 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
-@RequestMapping("/api/cases/{caseId}/petition-drafts")
-public class CasePetitionDraftController {
+@RequestMapping("/api/matters/{matterId}/petition-drafts")
+public class MatterPetitionDraftController {
     private final AuthorizationGuard authorizationGuard;
     private final OperationAccessGuard operationAccessGuard;
     private final PetitionDraftService service;
 
-    public CasePetitionDraftController(
+    public MatterPetitionDraftController(
             AuthorizationGuard authorizationGuard,
             OperationAccessGuard operationAccessGuard,
             PetitionDraftService service
@@ -36,30 +36,30 @@ public class CasePetitionDraftController {
     }
 
     @GetMapping
-    public ApiResponse<List<PetitionDraftDto>> list(@PathVariable UUID caseId, @RequestParam UUID orgId) {
+    public ApiResponse<List<PetitionDraftDto>> list(@PathVariable UUID matterId, @RequestParam UUID orgId) {
         authorizationGuard.requireOrg(orgId);
-        operationAccessGuard.requireCaseAccess(authorizationGuard.currentPrincipal(), caseId);
-        return ApiResponse.ok(service.listByCase(orgId, caseId));
+        operationAccessGuard.requireMatterAccess(authorizationGuard.currentPrincipal(), matterId);
+        return ApiResponse.ok(service.listByMatter(orgId, matterId));
     }
 
     @PostMapping
-    public Map<String, UUID> create(@PathVariable UUID caseId, @Valid @RequestBody CreatePetitionDraftRequest req) {
+    public Map<String, UUID> create(@PathVariable UUID matterId, @Valid @RequestBody CreatePetitionDraftRequest req) {
         authorizationGuard.requireOrg(req.orgId());
-        if (!caseId.equals(req.caseId())) throw new IllegalArgumentException("caseId path/body mismatch");
-        operationAccessGuard.requireCaseAccess(authorizationGuard.currentPrincipal(), caseId);
+        if (!matterId.equals(req.matterId())) throw new IllegalArgumentException("matterId path/body mismatch");
+        operationAccessGuard.requireMatterAccess(authorizationGuard.currentPrincipal(), matterId);
         return Map.of("id", service.create(req));
     }
 
     @PatchMapping("/{draftId}")
     public ApiResponse<String> update(
-            @PathVariable UUID caseId,
+            @PathVariable UUID matterId,
             @PathVariable UUID draftId,
             @RequestParam UUID orgId,
             @Valid @RequestBody UpdatePetitionDraftRequest req
     ) {
         authorizationGuard.requireOrg(orgId);
-        operationAccessGuard.requireCaseAccess(authorizationGuard.currentPrincipal(), caseId);
-        service.update(orgId, caseId, draftId, req);
+        operationAccessGuard.requireMatterAccess(authorizationGuard.currentPrincipal(), matterId);
+        service.update(orgId, matterId, draftId, req);
         return ApiResponse.ok("petition-draft-updated");
     }
 }

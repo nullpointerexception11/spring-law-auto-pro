@@ -1,6 +1,6 @@
 package com.lawauto.backend.client;
 
-import com.lawauto.backend.cases.CaseEntity;
+import com.lawauto.backend.cases.Matter;
 import com.lawauto.backend.org.Org;
 import com.lawauto.backend.user.User;
 import jakarta.persistence.*;
@@ -28,12 +28,12 @@ public class CommunicationLog {
     private Org org;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "clientId", nullable = false)
-    private Client client;
+    @JoinColumn(name = "partyId", nullable = false)
+    private Party party;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "caseId")
-    private CaseEntity caseEntity;
+    @JoinColumn(name = "matterId")
+    private Matter matter;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "userId", nullable = false)

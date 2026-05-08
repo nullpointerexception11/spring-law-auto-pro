@@ -34,8 +34,8 @@ public class PetitionDraftExportController {
             @RequestParam String format
     ) {
         authorizationGuard.requireOrg(orgId);
-        UUID caseId = exportService.findCaseId(orgId, draftId);
-        operationAccessGuard.requireCaseAccess(authorizationGuard.currentPrincipal(), caseId);
+        UUID matterId = exportService.findMatterId(orgId, draftId);
+        operationAccessGuard.requireMatterAccess(authorizationGuard.currentPrincipal(), matterId);
         return ApiResponse.ok(exportService.export(orgId, draftId, format));
     }
 }
