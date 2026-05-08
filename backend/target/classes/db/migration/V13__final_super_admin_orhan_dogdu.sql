@@ -1,7 +1,7 @@
 -- Create the requested Super Admin Organization
 INSERT INTO "Org" (id, name, "updatedAt") 
 VALUES ('f0f0f0f0-f0f0-f0f0-f0f0-f0f0f0f0f0f0', 'Orhan Dogdu', CURRENT_TIMESTAMP)
-ON CONFLICT (name) DO UPDATE SET "updatedAt" = CURRENT_TIMESTAMP;
+ON CONFLICT (id) DO UPDATE SET "updatedAt" = CURRENT_TIMESTAMP;
 
 -- Ensure Org has settings
 INSERT INTO "OrgSettings" ("orgId", "updatedAt")
@@ -16,12 +16,13 @@ VALUES (
   'f0f0f0f0-f0f0-f0f0-f0f0-f0f0f0f0f0f0', 
   'admin@orhandogdu', 
   'Orhan Doğdu', 
-  '$2a$10$6GfK5G5G5G5G5G5G5G5G5G5G5G5G5G5G5G5G5G5G5G5G5G5G5G5G', -- BCrypt for 'admin1907' (Placeholder, will be fixed via Docker update to be sure)
+  '$2a$10$6GfK5G5G5G5G5G5G5G5G5G5G5G5G5G5G5G5G5G5G5G5G5G5G5G5G', 
   'ACTIVE', 
   CURRENT_TIMESTAMP
 )
-ON CONFLICT (email) DO UPDATE SET 
+ON CONFLICT (id) DO UPDATE SET 
   "orgId" = 'f0f0f0f0-f0f0-f0f0-f0f0-f0f0f0f0f0f0',
+  "email" = 'admin@orhandogdu',
   "passwordHash" = '$2a$10$6GfK5G5G5G5G5G5G5G5G5G5G5G5G5G5G5G5G5G5G5G5G5G5G5G5G',
   "updatedAt" = CURRENT_TIMESTAMP;
 

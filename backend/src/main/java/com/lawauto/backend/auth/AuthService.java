@@ -18,7 +18,6 @@ import java.time.LocalDateTime;
 import java.util.Map;
 import java.util.UUID;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
@@ -33,7 +32,7 @@ public class AuthService {
     private final UserRoleRepository userRoleRepository;
     private final RefreshTokenRepository refreshTokenRepository;
     private final JwtService jwtService;
-    private final PasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
+    private final PasswordEncoder passwordEncoder;
 
     public AuthService(
             OrgRepository orgRepository,
@@ -41,7 +40,8 @@ public class AuthService {
             RoleRepository roleRepository,
             UserRoleRepository userRoleRepository,
             RefreshTokenRepository refreshTokenRepository,
-            JwtService jwtService
+            JwtService jwtService,
+            PasswordEncoder passwordEncoder
     ) {
         this.orgRepository = orgRepository;
         this.userRepository = userRepository;
@@ -49,6 +49,7 @@ public class AuthService {
         this.userRoleRepository = userRoleRepository;
         this.refreshTokenRepository = refreshTokenRepository;
         this.jwtService = jwtService;
+        this.passwordEncoder = passwordEncoder;
     }
 
     public AuthResponseDto register(RegisterRequest request) {
@@ -88,15 +89,29 @@ public class AuthService {
     }
 
     public AuthResponseDto login(LoginRequest request) {
+        log.info("Login attempt for Org: [{}], Email: [{}]", request.orgName(), request.email());
+        
         Org org = orgRepository.findByName(request.orgName())
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Organizasyon bulunamadı"));
+                .orElseThrow(() -> {
+                    log.warn("Organization not found: [{}]", request.orgName());
+                    return new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Organizasyon bulunamadı");
+                });
 
+        log.info("Found Org: [{}], searching for User with email: [{}]", org.getName(), request.email().toLowerCase());
+        
         UserEntity user = userRepository.findByOrgIdAndEmail(org.getId(), request.email().toLowerCase())
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Geçersiz kimlik bilgileri"));
+                .orElseThrow(() -> {
+                    log.warn("User not found for OrgId: [{}] and Email: [{}]", org.getId(), request.email().toLowerCase());
+                    return new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Geçersiz kimlik bilgileri");
+                });
 
+        log.info("User found, checking password...");
         if (!passwordEncoder.matches(request.password(), user.getPasswordHash())) {
+            log.warn("Password mismatch for user: [{}]", request.email());
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Geçersiz kimlik bilgileri");
         }
+        
+        log.info("Login successful for user: [{}]", request.email());
 
         if (!"ACTIVE".equalsIgnoreCase(user.getStatus())) {
             throw new IllegalArgumentException("User is not active");

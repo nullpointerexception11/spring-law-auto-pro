@@ -38,7 +38,8 @@ class AuthServiceTest {
     @BeforeEach
     void setUp() {
         JwtService jwtService = new JwtService("replace-this-with-at-least-32-characters-secret-key", 60, 14);
-        authService = new AuthService(orgRepository, userRepository, roleRepository, userRoleRepository, refreshTokenRepository, jwtService);
+        org.springframework.security.crypto.password.PasswordEncoder passwordEncoder = new org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder();
+        authService = new AuthService(orgRepository, userRepository, roleRepository, userRoleRepository, refreshTokenRepository, jwtService, passwordEncoder);
     }
 
     @Test

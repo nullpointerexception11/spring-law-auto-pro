@@ -5,6 +5,13 @@
     "version": "0.2.0",
     "configurations": [
         {
+            "type": "java",
+            "name": "LawAutoApplication",
+            "request": "launch",
+            "mainClass": "com.lawauto.backend.LawAutoApplication",
+            "projectName": "backend"
+        },
+        {
             "type": "chrome",
             "request": "launch",
             "name": "Launch Chrome against localhost",
