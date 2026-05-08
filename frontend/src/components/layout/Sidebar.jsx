@@ -1,6 +1,5 @@
 import React from 'react';
 import { NavLink } from 'react-router-dom';
-import { useTranslation } from 'react-i18next';
 import { 
   Scale, 
   Briefcase, 
@@ -15,23 +14,22 @@ import {
 } from 'lucide-react';
 
 export function Sidebar({ isCollapsed, setIsCollapsed }) {
-  const { t } = useTranslation();
   const [isHovered, setIsHovered] = React.useState(false);
 
   const isEffectivelyOpen = !isCollapsed || isHovered;
 
   const navigation = [
-    { name: t('sidebar.dashboard'), href: '/', icon: Scale },
-    { name: t('sidebar.matters'), href: '/matters', icon: Briefcase },
-    { name: t('sidebar.calendar'), href: '/calendar', icon: Calendar },
-    { name: t('sidebar.documents'), href: '/documents', icon: FileText },
-    { name: t('sidebar.billing'), href: '/billing', icon: CreditCard },
-    { name: t('sidebar.ai'), href: '/ai', icon: Bot },
+    { name: 'Gösterge Paneli', href: '/', icon: Scale },
+    { name: 'Davalar', href: '/matters', icon: Briefcase },
+    { name: 'Takvim', href: '/calendar', icon: Calendar },
+    { name: 'Belgeler', href: '/documents', icon: FileText },
+    { name: 'Faturalandırma', href: '/billing', icon: CreditCard },
+    { name: 'AI Araştırma', href: '/ai', icon: Bot },
   ];
 
   const bottomNavigation = [
-    { name: t('sidebar.notifications'), href: '/notifications', icon: Bell },
-    { name: t('sidebar.settings'), href: '/settings', icon: Settings },
+    { name: 'Bildirimler', href: '/notifications', icon: Bell },
+    { name: 'Ayarlar', href: '/settings', icon: Settings },
   ];
 
   return (
@@ -55,7 +53,7 @@ export function Sidebar({ isCollapsed, setIsCollapsed }) {
         
         <button
           onClick={() => setIsCollapsed(!isCollapsed)}
-          title={isCollapsed ? t('sidebar.expand') : t('sidebar.collapse')}
+          title={isCollapsed ? 'Genişlet' : 'Daralt'}
           className="p-1.5 rounded-md text-muted-foreground hover:bg-secondary hover:text-foreground transition-colors shrink-0"
         >
           {isCollapsed ? <PanelLeft className="h-5 w-5" /> : <PanelLeftClose className="h-5 w-5" />}

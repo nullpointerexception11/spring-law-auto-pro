@@ -1,10 +1,7 @@
 import React, { useState } from 'react';
-import { Search, Plus, Building2, PanelLeft, Moon, Sun, Globe } from 'lucide-react';
-import { useTranslation } from 'react-i18next';
+import { Search, Plus, Building2, PanelLeft, Moon, Sun } from 'lucide-react';
 
 export function Topbar({ isSidebarCollapsed, setIsSidebarCollapsed }) {
-  const { t, i18n } = useTranslation();
-  
   // Initialize dark mode state
   const [isDarkMode, setIsDarkMode] = useState(() => {
     return document.documentElement.classList.contains('dark');
@@ -15,11 +12,6 @@ export function Topbar({ isSidebarCollapsed, setIsSidebarCollapsed }) {
     setIsDarkMode(isDark);
   };
 
-  const toggleLanguage = () => {
-    const newLang = i18n.language === 'tr' ? 'en' : 'tr';
-    i18n.changeLanguage(newLang);
-  };
-
   return (
     <header className="flex h-16 w-full items-center justify-between border-b border-border bg-background px-4 md:px-6 transition-colors duration-300">
       
@@ -28,7 +20,7 @@ export function Topbar({ isSidebarCollapsed, setIsSidebarCollapsed }) {
         <button 
           onClick={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
           className="md:hidden p-2 -ml-2 rounded-md hover:bg-secondary text-muted-foreground hover:text-foreground transition-colors"
-          title={t('sidebar.expand')}
+          title="Menüyü Aç/Kapa"
         >
           <PanelLeft className="h-5 w-5" />
         </button>
@@ -38,7 +30,7 @@ export function Topbar({ isSidebarCollapsed, setIsSidebarCollapsed }) {
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground group-focus-within:text-primary transition-colors" />
           <input
             type="search"
-            placeholder={t('topbar.search_placeholder')}
+            placeholder="Dava, belge, taraf ara..."
             className="flex h-9 w-full rounded-md border border-input bg-card px-3 py-1 text-sm shadow-sm transition-colors placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring pl-9"
           />
           <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-1 pointer-events-none">
@@ -51,21 +43,11 @@ export function Topbar({ isSidebarCollapsed, setIsSidebarCollapsed }) {
 
       {/* Right Side Actions */}
       <div className="flex items-center gap-3">
-        {/* Language Switcher */}
-        <button 
-          onClick={toggleLanguage}
-          className="flex items-center gap-1.5 p-2 rounded-md hover:bg-secondary text-muted-foreground hover:text-foreground transition-colors font-medium text-[11px] uppercase tracking-wider"
-          title="Toggle Language"
-        >
-          <Globe className="h-4 w-4" />
-          {i18n.language}
-        </button>
-
         {/* Dark Mode Toggle */}
         <button 
           onClick={toggleDarkMode}
           className="p-2 rounded-md hover:bg-secondary text-muted-foreground hover:text-foreground transition-colors"
-          title="Toggle Dark Mode"
+          title="Karanlık Mod Değiştir"
         >
           {isDarkMode ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
         </button>
@@ -73,13 +55,13 @@ export function Topbar({ isSidebarCollapsed, setIsSidebarCollapsed }) {
         {/* Org Switcher */}
         <button className="hidden sm:flex items-center gap-2 h-9 px-3 rounded-md border border-input bg-background hover:bg-accent hover:text-accent-foreground text-sm font-medium transition-colors">
           <Building2 className="h-4 w-4 text-muted-foreground" />
-          <span>{t('topbar.org_name')}</span>
+          <span>Prestij Hukuk Bürosu</span>
         </button>
 
         {/* Quick Add */}
         <button className="flex items-center gap-2 h-9 px-3 rounded-md bg-primary text-primary-foreground hover:bg-primary/90 text-sm font-medium transition-colors shadow-sm ml-2">
           <Plus className="h-4 w-4" />
-          <span className="hidden sm:block">{t('topbar.quick_add')}</span>
+          <span className="hidden sm:block">Hızlı Ekle</span>
         </button>
 
         {/* User Avatar */}
