@@ -1,36 +1,37 @@
--- LawAuto Prestige Seed (V2 LMMS)
--- Populates the Prestige Matter-Centric Schema
+-- LawAuto Prestige Seed (V2 Platinum) - FIXED UUIDs
+-- Populates the Prestige Matter-Centric Schema with valid relations
 
 -- 1. Organizations
-INSERT INTO "Org" ("id", "name", "subdomain") VALUES
-('11111111-1111-1111-1111-111111111111', 'Prestige Legal Partners', 'prestige');
+INSERT INTO "Org" ("id", "name", "displayName") VALUES
+('11111111-1111-1111-1111-111111111111', 'Prestige Legal Partners', 'Prestige Legal');
 
 -- 2. Global Users
-INSERT INTO "User" ("id", "email", "fullName", "passwordHash", "status") VALUES
-('f1111111-1111-1111-1111-111111111111', 'senior@prestige.com', 'Senior Partner', '$2a$10$8.UnVuG9HHgffUDAlk8q6uy.Y6Apt661L94GZ.nC11mX8aK2p9j/6', 'ACTIVE');
+INSERT INTO "User" ("id", "orgId", "email", "fullName", "passwordHash", "status") VALUES
+('f1111111-1111-1111-1111-111111111111', '11111111-1111-1111-1111-111111111111', 'senior@prestige.com', 'Senior Partner', '$2a$10$8.UnVuG9HHgffUDAlk8q6uy.Y6Apt661L94GZ.nC11mX8aK2p9j/6', 'ACTIVE');
 
--- 3. User-Org Junction
-INSERT INTO "UserOrg" ("userId", "orgId", "isOwner") VALUES
-('f1111111-1111-1111-1111-111111111111', '11111111-1111-1111-1111-111111111111', true);
+-- 3. Matter Party Roles (Required for MatterParty)
+INSERT INTO "MatterPartyRole" ("id", "orgId", "name", "category") VALUES
+('10000000-1111-1111-1111-111111111111', '11111111-1111-1111-1111-111111111111', 'MÜVEKKİL', 'CLIENT'),
+('20000000-2222-2222-2222-222222222222', '11111111-1111-1111-1111-111111111111', 'KARŞI TARAF', 'OPPOSING');
 
--- 4. Sample Parties (Client and Opponent)
-INSERT INTO "Party" ("id", "orgId", "fullName", "type", "createdByUserId") VALUES
-('c1111111-1111-1111-1111-111111111111', '11111111-1111-1111-1111-111111111111', 'Global Tech Corp', 'COMPANY', 'f1111111-1111-1111-1111-111111111111'),
-('c2222222-2222-2222-2222-222222222222', '11111111-1111-1111-1111-111111111111', 'Mehmet Yılmaz', 'PERSON', 'f1111111-1111-1111-1111-111111111111');
+-- 4. Sample Parties
+INSERT INTO "Party" ("id", "orgId", "fullName", "createdByUserId") VALUES
+('30000000-1111-1111-1111-111111111111', '11111111-1111-1111-1111-111111111111', 'Global Tech Corp', 'f1111111-1111-1111-1111-111111111111'),
+('40000000-2222-2222-2222-222222222222', '11111111-1111-1111-1111-111111111111', 'Mehmet Yılmaz', 'f1111111-1111-1111-1111-111111111111');
 
--- 5. A Litigation Matter (A Case)
-INSERT INTO "Matter" ("id", "orgId", "type", "title", "referenceNumber", "createdByUserId") VALUES
-('m1111111-1111-1111-1111-111111111111', '11111111-1111-1111-1111-111111111111', 'LITIGATION', 'Commercial Breach vs Yılmaz', '2024/452 E.', 'f1111111-1111-1111-1111-111111111111');
+-- 5. A Litigation Matter
+INSERT INTO "Matter" ("id", "orgId", "title", "referenceNumber", "status", "createdByUserId") VALUES
+('50000000-1111-1111-1111-111111111111', '11111111-1111-1111-1111-111111111111', 'Yılmaz vs Ticaret Davası', '2024/452 E.', 'ACTIVE', 'f1111111-1111-1111-1111-111111111111');
 
 -- 6. Attach Parties to Matter
-INSERT INTO "MatterParty" ("matterId", "partyId", "role", "isPrimary") VALUES
-('m1111111-1111-1111-1111-111111111111', 'c1111111-1111-1111-1111-111111111111', 'CLIENT', true),
-('m1111111-1111-1111-1111-111111111111', 'c2222222-2222-2222-2222-222222222222', 'OPPONENT', false);
+INSERT INTO "MatterParty" ("matterId", "partyId", "roleId") VALUES
+('50000000-1111-1111-1111-111111111111', '30000000-1111-1111-1111-111111111111', '10000000-1111-1111-1111-111111111111'),
+('50000000-1111-1111-1111-111111111111', '40000000-2222-2222-2222-222222222222', '20000000-2222-2222-2222-222222222222');
 
 -- 7. Add a Legal Detail
-INSERT INTO "LitigationDetail" ("matterId", "courtName", "courtCity", "degree") VALUES
-('m1111111-1111-1111-1111-111111111111', 'İstanbul 5. Asliye Ticaret Mahkemesi', 'İstanbul', 'First Degree');
+INSERT INTO "LitigationDetail" ("matterId", "courtName", "caseNumber") VALUES
+('50000000-1111-1111-1111-111111111111', 'İstanbul 5. Asliye Ticaret Mahkemesi', '2024/452 E.');
 
--- 8. Activity Event (Timeline)
-INSERT INTO "ActivityEvent" ("orgId", "userId", "matterId", "action", "entityType", "entityId", "summary") VALUES
-('11111111-1111-1111-1111-111111111111', 'f1111111-1111-1111-1111-111111111111', 'm1111111-1111-1111-1111-111111111111', 'CREATED', 'MATTER', 'm1111111-1111-1111-1111-111111111111', 'Matter initiated by Senior Partner');
+-- 8. Activity Event
+INSERT INTO "ActivityEvent" ("id", "orgId", "userId", "matterId", "action", "summary") VALUES
+(gen_random_uuid(), '11111111-1111-1111-1111-111111111111', 'f1111111-1111-1111-1111-111111111111', '50000000-1111-1111-1111-111111111111', 'CREATED', 'Dava Senior Partner tarafından başlatıldı');

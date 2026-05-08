@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import {
   flexRender,
   getCoreRowModel,
@@ -6,59 +7,24 @@ import {
   getSortedRowModel,
   getFilteredRowModel,
 } from '@tanstack/react-table';
-import { ArrowUpDown, MoreHorizontal } from 'lucide-react';
-
-const mockData = [
-  {
-    id: "MAT-2026-001",
-    displayId: "2026/114",
-    title: "Stark Industries Birleşme ve Devralma",
-    status: "AKTİF",
-    clientName: "Stark Industries",
-    assignedLawyerName: "Harvey Specter",
-    nextHearingDate: "2026-05-15",
-  },
-  {
-    id: "MAT-2026-002",
-    displayId: "2026/089",
-    title: "Wayne Enterprises vs. Gotham City",
-    status: "BEKLEMEDE",
-    clientName: "Wayne Enterprises",
-    assignedLawyerName: "Bruce Wayne",
-    nextHearingDate: "2026-06-02",
-  },
-  {
-    id: "MAT-2026-003",
-    displayId: "2025/442",
-    title: "Pied Piper Telif Hakkı İhlali Davası",
-    status: "KAPALI",
-    clientName: "Pied Piper",
-    assignedLawyerName: "Jared Dunn",
-    nextHearingDate: null,
-  },
-  {
-    id: "MAT-2026-004",
-    displayId: "2026/210",
-    title: "Los Pollos Hermanos Vergi Denetimi",
-    status: "AKTİF",
-    clientName: "Los Pollos Hermanos",
-    assignedLawyerName: "Saul Goodman",
-    nextHearingDate: "2026-05-10",
-  }
-];
+import { ArrowUpDown, MoreHorizontal, Loader2 } from 'lucide-react';
+import api from '../../lib/api';
 
 const StatusBadge = ({ status }) => {
   const getStyles = () => {
-    switch (status) {
+    switch (status?.toUpperCase()) {
+      case 'ACTIVE': 
       case 'AKTİF': return 'bg-success/10 text-success border-success/20';
+      case 'PENDING': 
       case 'BEKLEMEDE': return 'bg-warning/10 text-warning border-warning/20';
+      case 'CLOSED': 
       case 'KAPALI': return 'bg-muted text-muted-foreground border-border';
       default: return 'bg-secondary text-secondary-foreground border-border';
     }
   };
   return (
     <span className={`inline-flex items-center px-2 py-0.5 rounded text-[11px] font-medium border uppercase tracking-wider ${getStyles()}`}>
-      {status}
+      {status || 'Bilinmiyor'}
     </span>
   );
 };
@@ -66,6 +32,16 @@ const StatusBadge = ({ status }) => {
 export function MatterTable() {
   const [sorting, setSorting] = useState([]);
   const [globalFilter, setGlobalFilter] = useState('');
+
+  // Backend'den gerçek verileri çekiyoruz
+  const { data: matters = [], isLoading, error } = useQuery({
+    queryKey: ['matters'],
+    queryFn: async () => {
+      const response = await api.get('/matters');
+      // Backend ApiResponse yapısı gereği data.data içerisinde gerçek liste bulunur
+      return response.data.data || [];
+    }
+  });
 
   const columns = [
     {
@@ -89,12 +65,12 @@ export function MatterTable() {
     {
       accessorKey: 'clientName',
       header: () => <div className="w-[150px]">MÜVEKKİL</div>,
-      cell: info => <span className="text-muted-foreground truncate block max-w-[150px]">{info.getValue()}</span>,
+      cell: info => <span className="text-muted-foreground truncate block max-w-[150px]">{info.getValue() || '-'}</span>,
     },
     {
       accessorKey: 'assignedLawyerName',
       header: () => <div className="w-[150px]">SORUMLU AVUKAT</div>,
-      cell: info => <span className="text-muted-foreground truncate block max-w-[150px]">{info.getValue()}</span>,
+      cell: info => <span className="text-muted-foreground truncate block max-w-[150px]">{info.getValue() || '-'}</span>,
     },
     {
       accessorKey: 'status',
@@ -122,7 +98,7 @@ export function MatterTable() {
   ];
 
   const table = useReactTable({
-    data: mockData,
+    data: matters,
     columns,
     state: {
       sorting,
@@ -134,6 +110,24 @@ export function MatterTable() {
     getSortedRowModel: getSortedRowModel(),
     getFilteredRowModel: getFilteredRowModel(),
   });
+
+  if (isLoading) {
+    return (
+      <div className="flex flex-col items-center justify-center h-64 space-y-4 text-muted-foreground">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        <p className="text-sm font-medium animate-pulse">Davalar yükleniyor...</p>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="flex flex-col items-center justify-center h-64 space-y-2 border-2 border-dashed border-destructive/20 rounded-md bg-destructive/5">
+        <p className="text-destructive font-semibold">Veriler çekilemedi</p>
+        <p className="text-xs text-muted-foreground">Lütfen backend sunucusunun çalıştığından emin olun.</p>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-4">
