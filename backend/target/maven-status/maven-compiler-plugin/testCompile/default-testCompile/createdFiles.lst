@@ -10,7 +10,6 @@ com\lawauto\backend\integration\BasePostgresIntegrationTest.class
 com\lawauto\backend\integration\TransactionIntegrationTest.class
 com\lawauto\backend\research\ResearchControllerTest.class
 com\lawauto\backend\petition\PetitionTemplateControllerTest.class
-HashGen.class
 com\lawauto\backend\integration\AuthenticationSystemIntegrationTest.class
 com\lawauto\backend\auth\JwtServiceTest.class
 com\lawauto\backend\integration\InsuranceModuleIntegrationTest.class

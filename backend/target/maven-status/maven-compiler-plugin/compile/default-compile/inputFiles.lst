@@ -30,6 +30,7 @@ C:\Users\Orhan's Comp\Desktop\spring-law-auto-pro\backend\src\main\java\com\lawa
 C:\Users\Orhan's Comp\Desktop\spring-law-auto-pro\backend\src\main\java\com\lawauto\backend\config\RestAuthenticationEntryPoint.java
 C:\Users\Orhan's Comp\Desktop\spring-law-auto-pro\backend\src\main\java\com\lawauto\backend\config\SecurityConfig.java
 C:\Users\Orhan's Comp\Desktop\spring-law-auto-pro\backend\src\main\java\com\lawauto\backend\config\WebConfig.java
+C:\Users\Orhan's Comp\Desktop\spring-law-auto-pro\backend\src\main\java\com\lawauto\backend\exception\GlobalExceptionHandler.java
 C:\Users\Orhan's Comp\Desktop\spring-law-auto-pro\backend\src\main\java\com\lawauto\backend\HealthController.java
 C:\Users\Orhan's Comp\Desktop\spring-law-auto-pro\backend\src\main\java\com\lawauto\backend\LawAutoApplication.java
 C:\Users\Orhan's Comp\Desktop\spring-law-auto-pro\backend\src\main\java\com\lawauto\backend\observability\RequestIdFilter.java
