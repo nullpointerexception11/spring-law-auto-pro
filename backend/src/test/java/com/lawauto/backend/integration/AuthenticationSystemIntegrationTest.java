@@ -7,6 +7,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import com.lawauto.backend.org.Org;
 import com.lawauto.backend.org.OrgRepository;
 import java.time.LocalDateTime;
+import java.util.Objects;
 import java.util.UUID;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -48,8 +49,8 @@ class AuthenticationSystemIntegrationTest extends BasePostgresIntegrationTest {
                 """.formatted(orgId);
 
         mockMvc.perform(post("/api/auth/register")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(registerBody))
+                        .contentType(Objects.requireNonNull(MediaType.APPLICATION_JSON))
+                        .content(Objects.requireNonNull(registerBody)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.data.email").value("test-admin@law.com"))
                 .andExpect(jsonPath("$.data.token").exists());
@@ -64,8 +65,8 @@ class AuthenticationSystemIntegrationTest extends BasePostgresIntegrationTest {
                 """.formatted(orgId);
 
         mockMvc.perform(post("/api/auth/login")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(loginBody))
+                        .contentType(Objects.requireNonNull(MediaType.APPLICATION_JSON))
+                        .content(Objects.requireNonNull(loginBody)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.data.token").exists());
     }
@@ -90,7 +91,7 @@ class AuthenticationSystemIntegrationTest extends BasePostgresIntegrationTest {
                   "role": "LAWYER"
                 }
                 """.formatted(orgId);
-        mockMvc.perform(post("/api/auth/register").contentType(MediaType.APPLICATION_JSON).content(registerBody));
+        mockMvc.perform(post("/api/auth/register").contentType(Objects.requireNonNull(MediaType.APPLICATION_JSON)).content(Objects.requireNonNull(registerBody)));
 
         // Login with wrong pass
         String loginBody = """
@@ -102,8 +103,8 @@ class AuthenticationSystemIntegrationTest extends BasePostgresIntegrationTest {
                 """.formatted(orgId);
 
         mockMvc.perform(post("/api/auth/login")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(loginBody))
+                        .contentType(Objects.requireNonNull(MediaType.APPLICATION_JSON))
+                        .content(Objects.requireNonNull(loginBody)))
                 .andExpect(status().isUnauthorized());
     }
 }

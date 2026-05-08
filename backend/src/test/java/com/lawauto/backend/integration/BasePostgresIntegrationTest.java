@@ -10,6 +10,7 @@ import org.testcontainers.junit.jupiter.Testcontainers;
 public abstract class BasePostgresIntegrationTest {
 
     @Container
+    @SuppressWarnings("resource")
     protected static final PostgreSQLContainer<?> POSTGRES = new PostgreSQLContainer<>("postgres:16-alpine")
             .withDatabaseName("law_auto_test")
             .withUsername("postgres")

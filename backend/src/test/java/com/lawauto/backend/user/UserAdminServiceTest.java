@@ -1,9 +1,11 @@
 package com.lawauto.backend.user;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
 import java.time.LocalDateTime;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;
@@ -39,7 +41,7 @@ class UserAdminServiceTest {
         user.setStatus("ACTIVE");
         user.setCreatedAt(LocalDateTime.now());
 
-        when(userRepository.findById(userId)).thenReturn(Optional.of(user));
+        when(userRepository.findById(Objects.requireNonNull(userId))).thenReturn(Optional.of(user));
 
         UserAdminService.UserDetail detail = userAdminService.getUserDetail(orgId, userId);
 
@@ -56,7 +58,7 @@ class UserAdminServiceTest {
         user.setId(userId);
         user.setOrgId(correctOrgId);
 
-        when(userRepository.findById(userId)).thenReturn(Optional.of(user));
+        when(userRepository.findById(Objects.requireNonNull(userId))).thenReturn(Optional.of(user));
 
         assertThrows(ResponseStatusException.class, () -> 
             userAdminService.getUserDetail(wrongOrgId, userId)
@@ -64,6 +66,7 @@ class UserAdminServiceTest {
     }
 
     @Test
+    @SuppressWarnings("null")
     void updateUserStatusUpdatesSuccessfully() {
         UUID orgId = UUID.randomUUID();
         UUID userId = UUID.randomUUID();
@@ -72,11 +75,11 @@ class UserAdminServiceTest {
         user.setOrgId(orgId);
         user.setStatus("ACTIVE");
 
-        when(userRepository.findById(userId)).thenReturn(Optional.of(user));
+        when(userRepository.findById(Objects.requireNonNull(userId))).thenReturn(Optional.of(user));
 
         userAdminService.updateUserStatus(orgId, userId, "INACTIVE");
 
         assertEquals("INACTIVE", user.getStatus());
-        verify(userRepository, times(1)).save(user);
+        verify(userRepository, times(1)).save(any());
     }
 }

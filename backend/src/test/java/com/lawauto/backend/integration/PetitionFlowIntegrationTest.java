@@ -13,6 +13,7 @@ import com.lawauto.backend.org.OrgRepository;
 import com.lawauto.backend.petition.PetitionTemplateEntity;
 import com.lawauto.backend.petition.PetitionTemplateRepository;
 import java.time.LocalDateTime;
+import java.util.Objects;
 import java.util.UUID;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -49,7 +50,7 @@ class PetitionFlowIntegrationTest extends BasePostgresIntegrationTest {
         caseEntity.setOrgId(orgId);
         caseEntity.setClientId(UUID.randomUUID());
         caseEntity.setTitle("Test Case for Petition");
-        caseEntity.setStatus(CaseStatus.ACTIVE);
+        caseEntity.setStatus(CaseStatus.OPEN);
         caseRepository.save(caseEntity);
 
         UUID templateId = UUID.randomUUID();
@@ -80,8 +81,8 @@ class PetitionFlowIntegrationTest extends BasePostgresIntegrationTest {
 
         mockMvc.perform(post("/api/cases/{caseId}/petition-drafts", caseId)
                         .param("orgId", orgId.toString())
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(createDraftBody))
+                        .contentType(Objects.requireNonNull(MediaType.APPLICATION_JSON))
+                        .content(Objects.requireNonNull(createDraftBody)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.data").exists());
 

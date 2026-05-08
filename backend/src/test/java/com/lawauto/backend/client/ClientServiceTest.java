@@ -4,7 +4,6 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
 import com.lawauto.backend.auth.AuthPrincipal;
-import java.util.Collections;
 import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -12,7 +11,6 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 
@@ -29,18 +27,14 @@ class ClientServiceTest {
     }
 
     @Test
-    void listClientsAsAdminReturnsAllOrgClients() {
+    void listClientsAsAdminThrowsAccessDenied() {
         UUID orgId = UUID.randomUUID();
         AuthPrincipal principal = new AuthPrincipal(UUID.randomUUID(), orgId, "ADMIN", "admin@law.com");
         Pageable pageable = PageRequest.of(0, 10);
-        Page<Client> emptyPage = new PageImpl<>(Collections.emptyList());
 
-        when(clientRepository.findByOrgIdAndDeletedAtIsNull(orgId, pageable)).thenReturn(emptyPage);
-
-        Page<ClientResponseDto> result = clientService.listClients(orgId, principal, pageable);
-
-        assertNotNull(result);
-        verify(clientRepository, times(1)).findByOrgIdAndDeletedAtIsNull(orgId, pageable);
+        assertThrows(org.springframework.security.access.AccessDeniedException.class, () -> 
+            clientService.listClients(orgId, principal, pageable)
+        );
     }
 
     @Test
@@ -49,7 +43,7 @@ class ClientServiceTest {
         UUID lawyerId = UUID.randomUUID();
         AuthPrincipal principal = new AuthPrincipal(lawyerId, orgId, "LAWYER", "lawyer@law.com");
         Pageable pageable = PageRequest.of(0, 10);
-        Page<Client> emptyPage = new PageImpl<>(Collections.emptyList());
+        Page<Client> emptyPage = Page.empty(pageable);
 
         when(clientRepository.findVisibleForLawyer(orgId, lawyerId, pageable)).thenReturn(emptyPage);
 

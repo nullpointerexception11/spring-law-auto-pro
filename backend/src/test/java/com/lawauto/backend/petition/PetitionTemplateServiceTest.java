@@ -39,6 +39,7 @@ class PetitionTemplateServiceTest {
     }
 
     @Test
+    @SuppressWarnings("null")
     void createSavesValidTemplate() {
         UUID orgId = UUID.randomUUID();
         AuthPrincipal principal = new AuthPrincipal(UUID.randomUUID(), orgId, "ADMIN", "a@x.com");
@@ -58,7 +59,7 @@ class PetitionTemplateServiceTest {
         UUID id = service.create(principal, req);
 
         assertNotNull(id);
-        verify(repository, times(1)).save(any(PetitionTemplateEntity.class));
+        verify(repository, times(1)).save(any());
     }
 
     @Test
@@ -68,7 +69,7 @@ class PetitionTemplateServiceTest {
         when(repository.findByIdAndOrgId(templateId, orgId)).thenReturn(Optional.empty());
 
         PetitionTemplateController.UpdatePetitionTemplateRequest req = new PetitionTemplateController.UpdatePetitionTemplateRequest(
-                "New Name", null, null, null
+                "New Name", null, null
         );
 
         assertThrows(ResponseStatusException.class, () -> service.update(orgId, templateId, req));

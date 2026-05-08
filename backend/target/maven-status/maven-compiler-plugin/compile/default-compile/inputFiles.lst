@@ -22,6 +22,7 @@ C:\Users\Orhan's Comp\Desktop\spring-law-auto-pro\backend\src\main\java\com\lawa
 C:\Users\Orhan's Comp\Desktop\spring-law-auto-pro\backend\src\main\java\com\lawauto\backend\common\ApiResponse.java
 C:\Users\Orhan's Comp\Desktop\spring-law-auto-pro\backend\src\main\java\com\lawauto\backend\common\GlobalExceptionHandler.java
 C:\Users\Orhan's Comp\Desktop\spring-law-auto-pro\backend\src\main\java\com\lawauto\backend\common\PageMeta.java
+C:\Users\Orhan's Comp\Desktop\spring-law-auto-pro\backend\src\main\java\com\lawauto\backend\config\CacheConfig.java
 C:\Users\Orhan's Comp\Desktop\spring-law-auto-pro\backend\src\main\java\com\lawauto\backend\config\RestAccessDeniedHandler.java
 C:\Users\Orhan's Comp\Desktop\spring-law-auto-pro\backend\src\main\java\com\lawauto\backend\config\RestAuthenticationEntryPoint.java
 C:\Users\Orhan's Comp\Desktop\spring-law-auto-pro\backend\src\main\java\com\lawauto\backend\config\SecurityConfig.java

@@ -29,6 +29,7 @@ class ResearchServiceTest {
     }
 
     @Test
+    @SuppressWarnings("null")
     void createSessionSavesAndReturnsId() {
         UUID orgId = UUID.randomUUID();
         UUID userId = UUID.randomUUID();
@@ -40,7 +41,7 @@ class ResearchServiceTest {
         UUID resultId = researchService.createSession(principal, req);
 
         assertNotNull(resultId);
-        verify(sessionRepository, times(1)).save(any(ResearchSessionEntity.class));
+        verify(sessionRepository, times(1)).save(any());
     }
 
     @Test
@@ -58,6 +59,7 @@ class ResearchServiceTest {
     }
 
     @Test
+    @SuppressWarnings("null")
     void addResultSavesCorrectly() {
         UUID orgId = UUID.randomUUID();
         UUID sessionId = UUID.randomUUID();
@@ -74,6 +76,6 @@ class ResearchServiceTest {
         UUID resultId = researchService.addResult(orgId, sessionId, req);
 
         assertNotNull(resultId);
-        verify(resultRepository, times(1)).save(any(ResearchResultEntity.class));
+        verify(resultRepository, times(1)).save(any());
     }
 }

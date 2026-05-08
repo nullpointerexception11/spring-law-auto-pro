@@ -1,6 +1,7 @@
 package com.lawauto.backend.config;
 
-import com.github.ben-manes.caffeine.cache.Caffeine;
+import com.github.benmanes.caffeine.cache.Caffeine;
+import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 import org.springframework.cache.CacheManager;
 import org.springframework.cache.caffeine.CaffeineCacheManager;
@@ -13,9 +14,9 @@ public class CacheConfig {
     @Bean
     public CacheManager cacheManager() {
         CaffeineCacheManager cacheManager = new CaffeineCacheManager();
-        cacheManager.setCaffeine(Caffeine.newBuilder()
+        cacheManager.setCaffeine(Objects.requireNonNull(Caffeine.newBuilder()
                 .expireAfterWrite(10, TimeUnit.MINUTES)
-                .maximumSize(500));
+                .maximumSize(500)));
         return cacheManager;
     }
 }

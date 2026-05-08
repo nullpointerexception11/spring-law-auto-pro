@@ -5,6 +5,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import java.util.Objects;
 import java.util.UUID;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -28,7 +29,6 @@ class AuthFlowIntegrationTest extends BasePostgresIntegrationTest {
 
         UUID orgId = UUID.randomUUID();
 
-        String createOrgSqlViaEndpointNotAvailable = "";
         // Org table requires existing org for FK-based user creation. Insert org with migration-compatible fields using test helper endpoint is absent,
         // so we use a temporary direct SQL-less workaround by registering against pre-created org UUID would fail without org row.
         // This integration test focuses startup+health and expects register to reject due to FK if org missing.
@@ -44,8 +44,8 @@ class AuthFlowIntegrationTest extends BasePostgresIntegrationTest {
                 """.formatted(orgId);
 
         mockMvc.perform(post("/api/auth/register")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(registerBody))
+                        .contentType(Objects.requireNonNull(MediaType.APPLICATION_JSON))
+                        .content(Objects.requireNonNull(registerBody)))
                 .andExpect(status().isBadRequest());
     }
 }

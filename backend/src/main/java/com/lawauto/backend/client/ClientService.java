@@ -27,8 +27,7 @@ public class ClientService {
 
         switch (principal.role()) {
             case "ADMIN":
-                clientsPage = clientRepository.findByOrgIdAndDeletedAtIsNull(orgId, pageable);
-                break;
+                throw new AccessDeniedException("Forbidden: Administrative role cannot access legal client data");
             case "LAWYER":
                 clientsPage = clientRepository.findVisibleForLawyer(orgId, principal.userId(), pageable);
                 break;

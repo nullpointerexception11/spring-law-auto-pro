@@ -27,8 +27,7 @@ public class CaseService {
 
         switch (principal.role()) {
             case "ADMIN":
-                casesPage = caseRepository.findByOrgIdAndDeletedAtIsNull(orgId, pageable);
-                break;
+                throw new AccessDeniedException("Forbidden: Administrative role cannot access legal cases");
             case "LAWYER":
                 casesPage = caseRepository.findVisibleForLawyer(orgId, principal.userId(), pageable);
                 break;
