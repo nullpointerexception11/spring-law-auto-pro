@@ -29,6 +29,9 @@ public class SuperAdminAuthTest {
     private UserRepository userRepository;
 
     @MockBean
+    private com.lawauto.backend.auth.RefreshTokenRepository refreshTokenRepository;
+
+    @MockBean
     private PasswordEncoder passwordEncoder;
 
     @Test
@@ -60,7 +63,7 @@ public class SuperAdminAuthTest {
 
         // THEN
         assertNotNull(response);
-        assertEquals("SUPER_ADMIN", response.role());
+        assertEquals("SUPER_ADMIN", response.getRole());
         System.out.println("TEST SUCCESS: Super Admin bypass verified for " + email);
     }
 }
