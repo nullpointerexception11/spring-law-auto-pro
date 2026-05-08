@@ -14,7 +14,7 @@ import {
 } from "@/components/ui/form";
 
 const loginSchema = z.object({
-  orgId: z.string().min(1, "Organizasyon ID gereklidir"),
+  orgName: z.string().min(1, "Şirket adı gereklidir"),
   email: z.string().email("Geçerli bir e-posta adresi girin"),
   password: z.string().min(6, "Şifre en az 6 karakter olmalıdır"),
 });
@@ -22,7 +22,7 @@ const loginSchema = z.object({
 export function LoginForm({ onSubmit, isLoading }) {
   const form = useForm({
     resolver: zodResolver(loginSchema),
-    defaultValues: { orgId: "", email: "", password: "" },
+    defaultValues: { orgName: "", email: "", password: "" },
   });
 
   return (
@@ -30,14 +30,14 @@ export function LoginForm({ onSubmit, isLoading }) {
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
         <FormField
           control={form.control}
-          name="orgId"
+          name="orgName"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Organizasyon ID</FormLabel>
+              <FormLabel>Şirket Adı</FormLabel>
               <FormControl>
                 <div className="relative group">
                   <Building2 className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 group-focus-within:text-primary transition-colors" />
-                  <Input {...field} placeholder="Organizasyon UUID" className="pl-10 h-12 rounded-xl" />
+                  <Input {...field} placeholder="Şirket isminiz" className="pl-10 h-12 rounded-xl" />
                 </div>
               </FormControl>
               <FormMessage />

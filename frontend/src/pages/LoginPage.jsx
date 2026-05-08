@@ -16,7 +16,14 @@ export default function LoginPage() {
     try {
       const { data } = await api.post("/auth/login", values);
       localStorage.setItem("token", data.token);
-      navigate("/dashboard");
+      localStorage.setItem("role", data.role);
+      localStorage.setItem("orgId", data.orgId);
+      
+      if (data.role === "SUPER_ADMIN") {
+        navigate("/super-admin");
+      } else {
+        navigate("/dashboard");
+      }
     } catch (err) {
       setError(err?.response?.data?.error || "Giriş başarısız. Lütfen bilgilerinizi kontrol edin.");
     } finally {

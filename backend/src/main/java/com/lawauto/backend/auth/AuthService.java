@@ -1,5 +1,8 @@
 package com.lawauto.backend.auth;
 
+import com.lawauto.backend.org.Org;
+import com.lawauto.backend.org.OrgRepository;
+
 import com.lawauto.backend.user.RoleEntity;
 import com.lawauto.backend.user.RoleKey;
 import com.lawauto.backend.user.RoleRepository;
@@ -24,6 +27,7 @@ import org.springframework.http.HttpStatus;
 @Slf4j
 @Service
 public class AuthService {
+    private final OrgRepository orgRepository;
     private final UserRepository userRepository;
     private final RoleRepository roleRepository;
     private final UserRoleRepository userRoleRepository;
@@ -32,12 +36,14 @@ public class AuthService {
     private final PasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
 
     public AuthService(
+            OrgRepository orgRepository,
             UserRepository userRepository,
             RoleRepository roleRepository,
             UserRoleRepository userRoleRepository,
             RefreshTokenRepository refreshTokenRepository,
             JwtService jwtService
     ) {
+        this.orgRepository = orgRepository;
         this.userRepository = userRepository;
         this.roleRepository = roleRepository;
         this.userRoleRepository = userRoleRepository;
@@ -82,11 +88,14 @@ public class AuthService {
     }
 
     public AuthResponseDto login(LoginRequest request) {
-        UserEntity user = userRepository.findByOrgIdAndEmail(request.orgId(), request.email().toLowerCase())
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid credentials"));
+        Org org = orgRepository.findByName(request.orgName())
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Organizasyon bulunamadı"));
+
+        UserEntity user = userRepository.findByOrgIdAndEmail(org.getId(), request.email().toLowerCase())
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Geçersiz kimlik bilgileri"));
 
         if (!passwordEncoder.matches(request.password(), user.getPasswordHash())) {
-            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid credentials");
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Geçersiz kimlik bilgileri");
         }
 
         if (!"ACTIVE".equalsIgnoreCase(user.getStatus())) {
@@ -176,7 +185,7 @@ public class AuthService {
     ) {}
 
     public record LoginRequest(
-            @NotNull UUID orgId,
+            @NotBlank String orgName,
             @Email @NotBlank String email,
             @NotBlank String password
     ) {}

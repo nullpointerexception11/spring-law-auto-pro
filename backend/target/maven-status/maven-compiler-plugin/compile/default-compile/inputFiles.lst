@@ -73,6 +73,9 @@ C:\Users\Orhan's Comp\Desktop\spring-law-auto-pro\backend\src\main\java\com\lawa
 C:\Users\Orhan's Comp\Desktop\spring-law-auto-pro\backend\src\main\java\com\lawauto\backend\research\ResearchService.java
 C:\Users\Orhan's Comp\Desktop\spring-law-auto-pro\backend\src\main\java\com\lawauto\backend\research\ResearchSessionEntity.java
 C:\Users\Orhan's Comp\Desktop\spring-law-auto-pro\backend\src\main\java\com\lawauto\backend\research\ResearchSessionRepository.java
+C:\Users\Orhan's Comp\Desktop\spring-law-auto-pro\backend\src\main\java\com\lawauto\backend\superadmin\CreateOrgRequest.java
+C:\Users\Orhan's Comp\Desktop\spring-law-auto-pro\backend\src\main\java\com\lawauto\backend\superadmin\SuperAdminController.java
+C:\Users\Orhan's Comp\Desktop\spring-law-auto-pro\backend\src\main\java\com\lawauto\backend\superadmin\SuperAdminService.java
 C:\Users\Orhan's Comp\Desktop\spring-law-auto-pro\backend\src\main\java\com\lawauto\backend\user\RoleEntity.java
 C:\Users\Orhan's Comp\Desktop\spring-law-auto-pro\backend\src\main\java\com\lawauto\backend\user\RoleKey.java
 C:\Users\Orhan's Comp\Desktop\spring-law-auto-pro\backend\src\main\java\com\lawauto\backend\user\RoleRepository.java

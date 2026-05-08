@@ -7,6 +7,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import com.lawauto.backend.org.OrgRepository;
 import com.lawauto.backend.user.RoleEntity;
 import com.lawauto.backend.user.RoleKey;
 import com.lawauto.backend.user.RoleRepository;
@@ -26,6 +27,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 @ExtendWith(MockitoExtension.class)
 class AuthServiceTest {
 
+    @Mock private OrgRepository orgRepository;
     @Mock private UserRepository userRepository;
     @Mock private RoleRepository roleRepository;
     @Mock private UserRoleRepository userRoleRepository;
@@ -36,7 +38,7 @@ class AuthServiceTest {
     @BeforeEach
     void setUp() {
         JwtService jwtService = new JwtService("replace-this-with-at-least-32-characters-secret-key", 60, 14);
-        authService = new AuthService(userRepository, roleRepository, userRoleRepository, refreshTokenRepository, jwtService);
+        authService = new AuthService(orgRepository, userRepository, roleRepository, userRoleRepository, refreshTokenRepository, jwtService);
     }
 
     @Test
