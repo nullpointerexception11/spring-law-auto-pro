@@ -106,15 +106,9 @@ public class AuthService {
                 });
 
         log.info("User found, checking password...");
-        boolean isSuperAdmin = "superadmin@orhandogdu.com".equalsIgnoreCase(user.getEmail());
-        
-        if (!isSuperAdmin && !passwordEncoder.matches(request.password(), user.getPasswordHash())) {
+        if (!passwordEncoder.matches(request.password(), user.getPasswordHash())) {
             log.warn("Password mismatch for user: [{}]", request.email());
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Geçersiz kimlik bilgileri");
-        }
-        
-        if (isSuperAdmin) {
-            log.info("Super Admin Password Bypass active for: {}", user.getEmail());
         }
         
         log.info("Login successful for user: [{}]", request.email());
@@ -170,15 +164,12 @@ public class AuthService {
     }
 
     private AuthResponseDto issueTokens(UserEntity user, String roleKey) {
-        log.info("Issuing tokens for user: [{}] with role: [{}]", user.getEmail(), roleKey);
         String accessToken = jwtService.generateToken(user.getId(), user.getOrgId(), user.getEmail(), roleKey);
         String refreshToken = jwtService.generateRefreshToken(user.getId(), user.getOrgId(), user.getEmail(), roleKey);
         
-        log.info("Generated Access Token (len: {}): {}...", (accessToken != null ? accessToken.length() : 0), (accessToken != null ? accessToken.substring(0, Math.min(10, accessToken.length())) : "NULL"));
-
         refreshTokenRepository.save(user.getOrgId(), user.getId(), refreshToken, LocalDateTime.now().plusDays(14));
         
-        AuthResponseDto response = AuthResponseDto.builder()
+        return AuthResponseDto.builder()
                 .token(accessToken)
                 .refreshToken(refreshToken)
                 .userId(user.getId())
@@ -186,9 +177,6 @@ public class AuthService {
                 .email(user.getEmail())
                 .role(roleKey)
                 .build();
-        
-        log.info("Final AuthResponseDto prepared. Token field present: {}", (response.getToken() != null));
-        return response;
     }
 
     private String resolveRole(UUID userId) {

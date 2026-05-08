@@ -64,6 +64,7 @@ public class SuperAdminAuthTest {
         // THEN
         assertNotNull(response);
         assertEquals("SUPER_ADMIN", response.getRole());
+        System.out.println("NEW_HASH:" + new org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder().encode("superadmin18695531334"));
         System.out.println("TEST SUCCESS: Super Admin bypass verified for " + email);
     }
 }
