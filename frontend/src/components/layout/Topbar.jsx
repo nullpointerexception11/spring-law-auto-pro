@@ -1,9 +1,20 @@
-import React from 'react';
-import { Search, Plus, Building2, PanelLeft } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Search, Plus, Building2, PanelLeft, Moon, Sun } from 'lucide-react';
 
 export function Topbar({ isSidebarCollapsed, setIsSidebarCollapsed }) {
+  // Initialize dark mode state
+  const [isDarkMode, setIsDarkMode] = useState(() => {
+    // Check if document already has dark class (or check local storage in future)
+    return document.documentElement.classList.contains('dark');
+  });
+
+  const toggleDarkMode = () => {
+    const isDark = document.documentElement.classList.toggle('dark');
+    setIsDarkMode(isDark);
+  };
+
   return (
-    <header className="flex h-16 w-full items-center justify-between border-b border-border bg-background px-4 md:px-6">
+    <header className="flex h-16 w-full items-center justify-between border-b border-border bg-background px-4 md:px-6 transition-colors duration-300">
       
       <div className="flex flex-1 items-center gap-4">
         {/* Toggle Sidebar Button for Mobile (Hidden on MD since Sidebar handles its own collapse) */}
@@ -32,21 +43,30 @@ export function Topbar({ isSidebarCollapsed, setIsSidebarCollapsed }) {
       </div>
 
       {/* Right Side Actions */}
-      <div className="flex items-center gap-4">
+      <div className="flex items-center gap-3">
+        {/* Dark Mode Toggle */}
+        <button 
+          onClick={toggleDarkMode}
+          className="p-2 rounded-md hover:bg-secondary text-muted-foreground hover:text-foreground transition-colors"
+          title="Toggle Dark Mode"
+        >
+          {isDarkMode ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
+        </button>
+
         {/* Org Switcher */}
         <button className="hidden sm:flex items-center gap-2 h-9 px-3 rounded-md border border-input bg-background hover:bg-accent hover:text-accent-foreground text-sm font-medium transition-colors">
           <Building2 className="h-4 w-4 text-muted-foreground" />
-          <span>Prestige Law Firm</span>
+          <span>Prestige Law</span>
         </button>
 
         {/* Quick Add */}
-        <button className="flex items-center gap-2 h-9 px-3 rounded-md bg-primary text-primary-foreground hover:bg-primary/90 text-sm font-medium transition-colors shadow-sm">
+        <button className="flex items-center gap-2 h-9 px-3 rounded-md bg-primary text-primary-foreground hover:bg-primary/90 text-sm font-medium transition-colors shadow-sm ml-2">
           <Plus className="h-4 w-4" />
           <span className="hidden sm:block">Quick Add</span>
         </button>
 
         {/* User Avatar */}
-        <div className="h-8 w-8 rounded-full bg-secondary border border-border flex items-center justify-center text-sm font-medium text-secondary-foreground cursor-pointer hover:opacity-80 transition-opacity">
+        <div className="h-8 w-8 ml-1 rounded-full bg-secondary border border-border flex items-center justify-center text-sm font-medium text-secondary-foreground cursor-pointer hover:opacity-80 transition-opacity">
           JD
         </div>
       </div>

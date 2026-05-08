@@ -28,20 +28,37 @@ const bottomNavigation = [
 ];
 
 export function Sidebar({ isCollapsed, setIsCollapsed }) {
+  const [isHovered, setIsHovered] = React.useState(false);
+
+  // Compute actual state: it's open if it's NOT collapsed, OR if it's hovered.
+  const isEffectivelyOpen = !isCollapsed || isHovered;
+
   return (
     <div 
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
       className={`flex h-full flex-col border-r border-border bg-card transition-all duration-300 ease-in-out ${
-        isCollapsed ? 'w-16' : 'w-56'
+        isEffectivelyOpen ? 'w-56' : 'w-16'
       }`}
     >
-      {/* Brand */}
-      <div className={`flex items-center h-16 border-b border-border/50 ${isCollapsed ? 'justify-center px-0' : 'px-5'}`}>
-        <Scale className={`h-6 w-6 text-primary shrink-0 transition-all ${isCollapsed ? '' : 'mr-3'}`} />
-        {!isCollapsed && (
-          <span className="text-lg font-semibold tracking-tight text-foreground truncate fade-enter-active">
-            Prestige
-          </span>
+      {/* Brand & Toggle */}
+      <div className={`flex items-center h-16 border-b border-border/50 px-3 ${!isEffectivelyOpen ? 'justify-center' : 'justify-between'}`}>
+        {isEffectivelyOpen && (
+          <div className="flex items-center overflow-hidden">
+            <Scale className="h-5 w-5 text-primary shrink-0 mr-2" />
+            <span className="font-semibold tracking-tight text-foreground truncate fade-enter-active">
+              Prestige
+            </span>
+          </div>
         )}
+        
+        <button
+          onClick={() => setIsCollapsed(!isCollapsed)}
+          title={isCollapsed ? "Pin Sidebar" : "Collapse Sidebar"}
+          className="p-1.5 rounded-md text-muted-foreground hover:bg-secondary hover:text-foreground transition-colors shrink-0"
+        >
+          {isCollapsed ? <PanelLeft className="h-5 w-5" /> : <PanelLeftClose className="h-5 w-5" />}
+        </button>
       </div>
 
       {/* Main Nav */}
@@ -50,10 +67,10 @@ export function Sidebar({ isCollapsed, setIsCollapsed }) {
           <NavLink
             key={item.name}
             to={item.href}
-            title={isCollapsed ? item.name : undefined}
+            title={!isEffectivelyOpen ? item.name : undefined}
             className={({ isActive }) =>
               `group flex items-center rounded-md py-2 text-sm font-medium transition-colors ${
-                isCollapsed ? 'justify-center px-0' : 'px-3'
+                !isEffectivelyOpen ? 'justify-center px-0' : 'px-3'
               } ${
                 isActive
                   ? 'bg-secondary text-secondary-foreground'
@@ -61,8 +78,8 @@ export function Sidebar({ isCollapsed, setIsCollapsed }) {
               }`
             }
           >
-            <item.icon className={`h-5 w-5 shrink-0 ${isCollapsed ? '' : 'mr-3'}`} />
-            {!isCollapsed && <span className="truncate fade-enter-active">{item.name}</span>}
+            <item.icon className={`h-5 w-5 shrink-0 transition-all ${!isEffectivelyOpen ? '' : 'mr-3'}`} />
+            {isEffectivelyOpen && <span className="truncate fade-enter-active">{item.name}</span>}
           </NavLink>
         ))}
       </nav>
@@ -73,10 +90,10 @@ export function Sidebar({ isCollapsed, setIsCollapsed }) {
           <NavLink
             key={item.name}
             to={item.href}
-            title={isCollapsed ? item.name : undefined}
+            title={!isEffectivelyOpen ? item.name : undefined}
             className={({ isActive }) =>
               `group flex items-center rounded-md py-2 text-sm font-medium transition-colors ${
-                isCollapsed ? 'justify-center px-0' : 'px-3'
+                !isEffectivelyOpen ? 'justify-center px-0' : 'px-3'
               } ${
                 isActive
                   ? 'bg-secondary text-secondary-foreground'
@@ -84,28 +101,11 @@ export function Sidebar({ isCollapsed, setIsCollapsed }) {
               }`
             }
           >
-            <item.icon className={`h-5 w-5 shrink-0 ${isCollapsed ? '' : 'mr-3'}`} />
-            {!isCollapsed && <span className="truncate fade-enter-active">{item.name}</span>}
+            <item.icon className={`h-5 w-5 shrink-0 transition-all ${!isEffectivelyOpen ? '' : 'mr-3'}`} />
+            {isEffectivelyOpen && <span className="truncate fade-enter-active">{item.name}</span>}
           </NavLink>
         ))}
 
-        {/* Sidebar Toggle Button at bottom */}
-        <button
-          onClick={() => setIsCollapsed(!isCollapsed)}
-          title={isCollapsed ? "Expand Sidebar" : "Collapse Sidebar"}
-          className={`group flex w-full items-center rounded-md py-2 mt-2 text-sm font-medium transition-colors text-muted-foreground hover:bg-secondary/50 hover:text-foreground ${
-            isCollapsed ? 'justify-center px-0' : 'px-3'
-          }`}
-        >
-          {isCollapsed ? (
-            <PanelLeft className="h-5 w-5 shrink-0" />
-          ) : (
-            <>
-              <PanelLeftClose className="h-5 w-5 shrink-0 mr-3" />
-              <span className="truncate fade-enter-active">Collapse</span>
-            </>
-          )}
-        </button>
       </div>
     </div>
   );
