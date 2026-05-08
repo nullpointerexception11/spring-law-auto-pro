@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
+import { useNavigate } from 'react-router-dom';
 import {
   flexRender,
   getCoreRowModel,
@@ -101,6 +102,8 @@ export function MatterTable() {
     }
   ];
 
+  const navigate = useNavigate();
+
   const table = useReactTable({
     data: matters,
     columns,
@@ -171,7 +174,8 @@ export function MatterTable() {
               table.getRowModel().rows.map(row => (
                 <tr 
                   key={row.id} 
-                  className="bg-card hover:bg-muted/50 transition-colors group cursor-pointer"
+                  onClick={() => navigate(`/matters/${row.original.id}`)}
+                  className="bg-card hover:bg-muted/80 transition-colors group cursor-pointer"
                 >
                   {row.getVisibleCells().map(cell => (
                     <td key={cell.id} className="px-4 py-3 align-middle overflow-hidden">

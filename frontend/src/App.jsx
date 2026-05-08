@@ -2,6 +2,7 @@ import React from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AppLayout } from './components/layout/AppLayout';
 import MatterList from './pages/matters/MatterList';
+import MatterDetail from './pages/matters/MatterDetail';
 
 function App() {
   return (
@@ -13,7 +14,7 @@ function App() {
           
           {/* Vertical Slices */}
           <Route path="matters" element={<MatterList />} />
-          <Route path="matters/:matterId" element={<div className="fade-enter-active">Matter Detail View (Coming Soon)</div>} />
+          <Route path="matters/:matterId" element={<MatterDetail />} />
           
           {/* Navigation Stubs */}
           <Route path="calendar" element={<div className="fade-enter-active">Calendar</div>} />
