@@ -4,7 +4,6 @@ import com.lawauto.backend.auth.AuthorizationGuard;
 import com.lawauto.backend.common.ApiResponse;
 import com.lawauto.backend.common.PageMeta;
 import jakarta.validation.Valid;
-import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import java.time.OffsetDateTime;
 import java.util.List;
@@ -24,7 +23,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 @Validated
 @RestController
-@RequestMapping("/api/users")
+@RequestMapping("/api/v1/users")
 public class UserAdminController {
     private final AuthorizationGuard authorizationGuard;
     private final UserAdminService userAdminService;
@@ -40,7 +39,7 @@ public class UserAdminController {
             @PageableDefault(size = 20, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable
     ) {
         authorizationGuard.requireOrg(orgId);
-        authorizationGuard.requireRole("ADMIN");
+        authorizationGuard.requireRole("ORG_ADMIN", "PLATFORM_ADMIN");
         
         Page<User> usersPage = userAdminService.listUsers(orgId, pageable);
         
@@ -50,7 +49,7 @@ public class UserAdminController {
                         u.getOrg() != null ? u.getOrg().getId() : null, 
                         u.getEmail(), 
                         u.getFullName(), 
-                        u.getStatus().name(), 
+                        u.getStatus(), 
                         u.getCreatedAt(), 
                         u.getUpdatedAt()))
                 .toList();
@@ -68,7 +67,7 @@ public class UserAdminController {
             @PathVariable UUID userId
     ) {
         authorizationGuard.requireOrg(orgId);
-        authorizationGuard.requireRole("ADMIN");
+        authorizationGuard.requireRole("ORG_ADMIN", "PLATFORM_ADMIN");
         return ApiResponse.ok(userAdminService.getUserDetail(orgId, userId));
     }
 
@@ -79,7 +78,7 @@ public class UserAdminController {
             @Valid @RequestBody UpdateRoleRequest request
     ) {
         authorizationGuard.requireOrg(orgId);
-        authorizationGuard.requireRole("ADMIN");
+        authorizationGuard.requireRole("ORG_ADMIN", "PLATFORM_ADMIN");
         userAdminService.updateUserRole(orgId, userId, request.role());
         return ApiResponse.ok("role-updated");
     }
@@ -91,19 +90,19 @@ public class UserAdminController {
             @Valid @RequestBody UpdateStatusRequest request
     ) {
         authorizationGuard.requireOrg(orgId);
-        authorizationGuard.requireRole("ADMIN");
+        authorizationGuard.requireRole("ORG_ADMIN", "PLATFORM_ADMIN");
         userAdminService.updateUserStatus(orgId, userId, request.status());
         return ApiResponse.ok("status-updated");
     }
 
     public record UpdateRoleRequest(@NotNull RoleKey role) {}
-    public record UpdateStatusRequest(@NotBlank String status) {}
+    public record UpdateStatusRequest(@NotNull UserStatus status) {}
     public record UserSummary(
             UUID id,
             UUID orgId,
             String email,
             String fullName,
-            String status,
+            UserStatus status,
             OffsetDateTime createdAt,
             OffsetDateTime updatedAt
     ) {}

@@ -2,6 +2,7 @@ package com.lawauto.backend.superadmin;
 
 import com.lawauto.backend.org.Org;
 import com.lawauto.backend.org.OrgRepository;
+import com.lawauto.backend.common.RecordStatus;
 import com.lawauto.backend.user.*;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
@@ -9,7 +10,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
-import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
+import java.util.Set;
 import java.util.UUID;
 
 @Slf4j
@@ -20,7 +22,6 @@ public class SuperAdminService {
     private final OrgRepository orgRepository;
     private final UserRepository userRepository;
     private final RoleRepository roleRepository;
-    private final UserRoleRepository userRoleRepository;
     private final PasswordEncoder passwordEncoder;
 
     @Transactional
@@ -31,42 +32,48 @@ public class SuperAdminService {
         Org org = new Org();
         org.setId(UUID.randomUUID());
         org.setName(request.orgName());
-        org.setUpdatedAt(LocalDateTime.now());
+        org.setStatus(RecordStatus.ACTIVE);
+        org.setUpdatedAt(OffsetDateTime.now());
+        org.setCreatedAt(OffsetDateTime.now());
         org = orgRepository.save(org);
 
         // 2. Create Default Roles for the Org
-        RoleEntity adminRole = createRole(org.getId(), RoleKey.ADMIN);
-        createRole(org.getId(), RoleKey.LAWYER);
-        createRole(org.getId(), RoleKey.SECRETARY);
+        Role orgAdminRole = createRole(org, RoleKey.ORG_ADMIN);
+        createRole(org, RoleKey.LAWYER);
+        createRole(org, RoleKey.SECRETARY);
 
         // 3. Create First Admin User
-        UserEntity adminUser = new UserEntity();
+        User adminUser = new User();
         adminUser.setId(UUID.randomUUID());
-        adminUser.setOrgId(org.getId());
+        adminUser.setOrg(org);
         adminUser.setEmail(request.adminEmail());
         adminUser.setFullName(request.adminFullName());
         adminUser.setPasswordHash(passwordEncoder.encode(request.adminPassword()));
-        adminUser.setStatus("ACTIVE");
-        adminUser.setCreatedAt(LocalDateTime.now());
-        adminUser.setUpdatedAt(LocalDateTime.now());
-        userRepository.save(adminUser);
+        adminUser.setStatus(UserStatus.ACTIVE);
+        adminUser.setCreatedAt(OffsetDateTime.now());
+        adminUser.setUpdatedAt(OffsetDateTime.now());
 
-        // 4. Assign ADMIN Role
-        UserRoleEntity userRole = new UserRoleEntity();
-        userRole.setUserId(adminUser.getId());
-        userRole.setRoleId(adminRole.getId());
-        userRoleRepository.save(userRole);
+        // 4. Assign ORG_ADMIN Role
+        adminUser.setRoles(Set.of(orgAdminRole));
+        userRepository.save(adminUser);
 
         log.info("Organization created successfully with ID: {}", org.getId());
         return org.getId();
     }
 
-    private RoleEntity createRole(UUID orgId, RoleKey key) {
-        RoleEntity role = new RoleEntity();
+    private Role createRole(Org org, RoleKey key) {
+        Role role = new Role();
         role.setId(UUID.randomUUID());
-        role.setOrgId(orgId);
-        role.setKey(key);
-        role.setCreatedAt(LocalDateTime.now());
+        role.setOrg(org);
+        role.setRoleKey(key);
+        role.setCreatedAt(OffsetDateTime.now());
         return roleRepository.save(role);
     }
+
+    public record CreateOrgRequest(
+            String orgName,
+            String adminEmail,
+            String adminFullName,
+            String adminPassword
+    ) {}
 }

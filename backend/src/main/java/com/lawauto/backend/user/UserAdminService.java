@@ -17,7 +17,6 @@ import org.springframework.web.server.ResponseStatusException;
 @Slf4j
 @Service
 public class UserAdminService {
-    private static final Set<UserStatus> ALLOWED_USER_STATUSES = Set.of(UserStatus.ACTIVE, UserStatus.INACTIVE);
     private final UserRepository userRepository;
     private final RoleRepository roleRepository;
 
@@ -43,7 +42,7 @@ public class UserAdminService {
 
         RoleKey primaryRole = user.getRoles().stream()
                 .findFirst()
-                .map(Role::getKey)
+                .map(Role::getRoleKey)
                 .orElse(null);
 
         return new UserDetail(
@@ -51,7 +50,7 @@ public class UserAdminService {
                 user.getOrg().getId(),
                 user.getEmail(),
                 user.getFullName(),
-                user.getStatus().name(),
+                user.getStatus(),
                 primaryRole,
                 user.getCreatedAt(),
                 user.getUpdatedAt()
@@ -69,7 +68,7 @@ public class UserAdminService {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "User does not belong to org");
         }
 
-        Role role = roleRepository.findByOrgIdAndKey(orgId, roleKey)
+        Role role = roleRepository.findByOrgIdAndRoleKey(orgId, roleKey)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Role not found in org"));
 
         user.setRoles(Set.of(role));
@@ -78,15 +77,8 @@ public class UserAdminService {
 
     @Transactional
     @CacheEvict(value = "userDetails", key = "#userId")
-    public void updateUserStatus(UUID orgId, UUID userId, String status) {
-        log.info("Updating status for user [{}] to [{}] in org [{}]", userId, status, orgId);
-        UserStatus newStatus;
-        try {
-            newStatus = UserStatus.valueOf(status.trim().toUpperCase());
-        } catch (Exception e) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Unsupported user status");
-        }
-
+    public void updateUserStatus(UUID orgId, UUID userId, UserStatus newStatus) {
+        log.info("Updating status for user [{}] to [{}] in org [{}]", userId, newStatus, orgId);
         User user = userRepository.findById(Objects.requireNonNull(userId))
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found"));
         
@@ -103,7 +95,7 @@ public class UserAdminService {
             UUID orgId,
             String email,
             String fullName,
-            String status,
+            UserStatus status,
             RoleKey role,
             OffsetDateTime createdAt,
             OffsetDateTime updatedAt

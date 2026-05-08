@@ -1,6 +1,6 @@
 package com.lawauto.backend.auth;
 
-import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 import java.util.UUID;
 
 public record RefreshTokenRecord(
@@ -8,7 +8,7 @@ public record RefreshTokenRecord(
         UUID orgId,
         UUID userId,
         String tokenHash,
-        LocalDateTime expiresAt,
-        LocalDateTime revokedAt,
-        LocalDateTime createdAt
+        OffsetDateTime expiresAt,
+        OffsetDateTime revokedAt,
+        OffsetDateTime createdAt
 ) {}

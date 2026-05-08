@@ -17,6 +17,8 @@ public class UniversalEventService {
     private final UniversalEventRepository universalEventRepository;
     private final EventReminderRepository eventReminderRepository;
     private final MatterRepository matterRepository;
+    private final OrgRepository orgRepository;
+    private final UserRepository userRepository;
     private final ActivityEventRepository activityEventRepository;
 
     /**
@@ -25,15 +27,15 @@ public class UniversalEventService {
     @Transactional
     public UniversalEvent addEvent(EventRequest request, UUID orgId, UUID userId) {
         UniversalEvent event = UniversalEvent.builder()
-                .org(OrgRepository.getReference(orgId))
+                .org(orgRepository.getReferenceById(orgId))
                 .matter(matterRepository.getReferenceById(request.getMatterId()))
                 .type(request.getType())
                 .title(request.getTitle())
                 .descriptionHtml(request.getDescriptionHtml())
                 .startAt(request.getStartAt())
                 .endAt(request.getEndAt())
-                .createdBy(UserRepository.getReference(userId))
-                .status("PENDING")
+                .createdBy(userRepository.getReferenceById(userId))
+                .status(UniversalEventStatus.PENDING)
                 .build();
 
         UniversalEvent savedEvent = universalEventRepository.save(event);
@@ -49,7 +51,7 @@ public class UniversalEventService {
         // Workflow: Log to Matter timeline
         ActivityEvent log = ActivityEvent.builder()
                 .org(savedEvent.getOrg())
-                .user(UserRepository.getReference(userId))
+                .user(userRepository.getReferenceById(userId))
                 .matter(savedEvent.getMatter())
                 .action("EVENT_ADDED")
                 .entityType("EVENT")

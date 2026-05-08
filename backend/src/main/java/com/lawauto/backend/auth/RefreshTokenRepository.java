@@ -3,8 +3,7 @@ package com.lawauto.backend.auth;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
-import java.sql.Timestamp;
-import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.UUID;
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
@@ -19,7 +18,7 @@ public class RefreshTokenRepository {
         this.jdbc = jdbc;
     }
 
-    public void save(UUID orgId, UUID userId, String rawToken, LocalDateTime expiresAt) {
+    public void save(UUID orgId, UUID userId, String rawToken, OffsetDateTime expiresAt) {
         String sql = """
                 insert into "RefreshToken" ("id", "orgId", "userId", "tokenHash", "expiresAt")
                 values (:id, :orgId, :userId, :tokenHash, :expiresAt)
@@ -29,7 +28,7 @@ public class RefreshTokenRepository {
                 .addValue("orgId", orgId)
                 .addValue("userId", userId)
                 .addValue("tokenHash", sha256(rawToken))
-                .addValue("expiresAt", Timestamp.valueOf(expiresAt)));
+                .addValue("expiresAt", expiresAt));
     }
 
     public RefreshTokenRecord findActiveByRawToken(String rawToken) {
@@ -45,9 +44,9 @@ public class RefreshTokenRepository {
                 rs.getObject("orgId", UUID.class),
                 rs.getObject("userId", UUID.class),
                 rs.getString("tokenHash"),
-                rs.getTimestamp("expiresAt").toLocalDateTime(),
-                rs.getTimestamp("revokedAt") == null ? null : rs.getTimestamp("revokedAt").toLocalDateTime(),
-                rs.getTimestamp("createdAt").toLocalDateTime()
+                rs.getObject("expiresAt", OffsetDateTime.class),
+                rs.getObject("revokedAt", OffsetDateTime.class),
+                rs.getObject("createdAt", OffsetDateTime.class)
         ));
         return rows.isEmpty() ? null : rows.get(0);
     }

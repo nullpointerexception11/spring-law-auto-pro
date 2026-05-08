@@ -40,10 +40,15 @@ public class FileObject {
 
     @Column(nullable = false)
     @Builder.Default
+    private Boolean isLatest = true;
+
+    @Column(nullable = false)
+    @Builder.Default
     private String storageProvider = "LOCAL";
 
     @Column(nullable = false)
-    private String storageKey;
+    @Builder.Default
+    private String storageKey = "";
 
     private String bucket;
     private String region;

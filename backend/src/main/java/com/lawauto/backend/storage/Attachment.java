@@ -1,5 +1,6 @@
 package com.lawauto.backend.storage;
 
+import com.lawauto.backend.org.Org;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
@@ -19,6 +20,10 @@ public class Attachment {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "orgId", nullable = false)
+    private Org org;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "fileId", nullable = false)

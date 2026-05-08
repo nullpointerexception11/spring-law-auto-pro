@@ -1,11 +1,10 @@
--- LawAuto Sovereign LMMS Master Schema (V1 - PRESTIGE PLATINUM v8.1)
--- Enterprise-Grade Legal Technology with FTS, RLS, and Audit Triggers
--- Implements Decision Tracking, Official Correspondence, Folder Hierarchy, KVKK, and Financials
+-- LawAuto Sovereign LMMS Master Schema (V1 - PRESTIGE PLATINUM v8.2 FINAL)
+-- Optimized for Weighted Search, RLS Isolation, Document Versioning, and Domain Events
 
 CREATE EXTENSION IF NOT EXISTS "pgcrypto";
 
 -- ---------------------------------------------------------
--- 1. ENUMS (Production Grade Domain Language)
+-- 1. ENUMS (Platinum Domain Language)
 -- ---------------------------------------------------------
 CREATE TYPE "RecordStatus" AS ENUM ('ACTIVE', 'ARCHIVED', 'LOCKED', 'DELETED', 'ANONYMIZED');
 CREATE TYPE "UserStatus" AS ENUM ('ACTIVE', 'INVITED', 'SUSPENDED', 'DISABLED', 'PENDING_SETUP');
@@ -14,18 +13,18 @@ CREATE TYPE "MatterType" AS ENUM ('LITIGATION', 'CONSULTATION', 'EXECUTION', 'ME
 CREATE TYPE "MatterStatus" AS ENUM ('OPEN', 'CLOSED', 'ON_HOLD', 'ARCHIVED');
 CREATE TYPE "PartyType" AS ENUM ('PERSON', 'COMPANY', 'GOVERNMENT_BODY');
 CREATE TYPE "PartyRole" AS ENUM ('CLIENT', 'OPPONENT', 'WITNESS', 'EXPERT', 'JUDGE', 'INSURANCE_COMPANY', 'OTHER');
-CREATE TYPE "AssignmentRole" AS ENUM ('LEAD', 'ASSISTANT', 'SECRETARY');
 CREATE TYPE "DecisionType" AS ENUM ('INTERIM', 'FINAL', 'APPEAL', 'SUPREME_COURT');
 CREATE TYPE "CorrDirection" AS ENUM ('INCOMING', 'OUTGOING');
 CREATE TYPE "CorrType" AS ENUM ('NOTIFICATION', 'EXPERT_REPORT', 'COURT_ORDER', 'PETITION_REPLY');
-CREATE TYPE "JobStatus" AS ENUM ('QUEUED', 'PROCESSING', 'COMPLETED', 'FAILED');
 CREATE TYPE "UniversalEventType" AS ENUM ('HEARING', 'DEADLINE', 'MEETING', 'TASK', 'REMINDER');
 CREATE TYPE "UniversalEventStatus" AS ENUM ('PENDING', 'COMPLETED', 'CANCELLED', 'MISSED');
 CREATE TYPE "InvoiceStatus" AS ENUM ('DRAFT', 'ISSUED', 'PAID', 'OVERDUE', 'CANCELLED');
 CREATE TYPE "PaymentMethod" AS ENUM ('CASH', 'BANK_TRANSFER', 'CREDIT_CARD');
+CREATE TYPE "TimeEntryType" AS ENUM ('BILLABLE', 'NON_BILLABLE', 'ADMIN', 'RESEARCH');
+CREATE TYPE "JobStatus" AS ENUM ('QUEUED', 'PROCESSING', 'COMPLETED', 'FAILED');
 
 -- ---------------------------------------------------------
--- 2. AUTOMATION: Trigger Function for updatedAt
+-- 2. AUTOMATION: Trigger Function
 -- ---------------------------------------------------------
 CREATE OR REPLACE FUNCTION update_updated_at_column()
 RETURNS TRIGGER AS $$
@@ -54,13 +53,12 @@ CREATE TABLE "User" (
   "fullName" TEXT NOT NULL,
   "passwordHash" TEXT,
   "status" "UserStatus" NOT NULL DEFAULT 'PENDING_SETUP',
-  "consentGivenAt" TIMESTAMPTZ,
   "createdAt" TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
   "updatedAt" TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
 -- ---------------------------------------------------------
--- 4. AUTHORIZATION SYSTEM (AccessPolicy Foundation)
+-- 4. AUTHORIZATION (RBAC + UserRole Junction)
 -- ---------------------------------------------------------
 CREATE TABLE "Role" (
   "id" UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -81,8 +79,14 @@ CREATE TABLE "RolePermission" (
   PRIMARY KEY ("roleId", "permissionId")
 );
 
+CREATE TABLE "UserRole" (
+  "userId" UUID NOT NULL REFERENCES "User"("id") ON DELETE CASCADE,
+  "roleId" UUID NOT NULL REFERENCES "Role"("id") ON DELETE CASCADE,
+  PRIMARY KEY ("userId", "roleId")
+);
+
 -- ---------------------------------------------------------
--- 5. THE PARTY SYSTEM (KVKK Ready + Search)
+-- 5. THE PARTY SYSTEM (Weighted Search)
 -- ---------------------------------------------------------
 CREATE TABLE "Party" (
   "id" UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -95,16 +99,16 @@ CREATE TABLE "Party" (
   "taxNo" TEXT, 
   "dataJson" JSONB,
   "status" "RecordStatus" NOT NULL DEFAULT 'ACTIVE',
-  "consentGivenAt" TIMESTAMPTZ,
-  "dataRetentionEndDate" TIMESTAMPTZ,
-  "createdByUserId" UUID NOT NULL REFERENCES "User"("id") ON DELETE RESTRICT,
   "createdAt" TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
   "updatedAt" TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  "fts" tsvector GENERATED ALWAYS AS (to_tsvector('turkish', "fullName" || ' ' || coalesce("taxNo", ''))) STORED
+  "fts" tsvector GENERATED ALWAYS AS (
+    setweight(to_tsvector('turkish', coalesce("fullName", '')), 'A') ||
+    setweight(to_tsvector('turkish', coalesce("taxNo", '')), 'B')
+  ) STORED
 );
 
 -- ---------------------------------------------------------
--- 6. THE MATTER SYSTEM (Advanced Domain Logic)
+-- 6. THE MATTER SYSTEM (Weighted Search + Lifecycle)
 -- ---------------------------------------------------------
 CREATE TABLE "Matter" (
   "id" UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -116,11 +120,13 @@ CREATE TABLE "Matter" (
   "descriptionHtml" TEXT,
   "openedAt" TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
   "closedAt" TIMESTAMPTZ,
-  "createdByUserId" UUID NOT NULL REFERENCES "User"("id") ON DELETE RESTRICT,
   "recordStatus" "RecordStatus" NOT NULL DEFAULT 'ACTIVE',
   "createdAt" TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
   "updatedAt" TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  "fts" tsvector GENERATED ALWAYS AS (to_tsvector('turkish', "title" || ' ' || coalesce("referenceNumber", ''))) STORED
+  "fts" tsvector GENERATED ALWAYS AS (
+    setweight(to_tsvector('turkish', coalesce("title", '')), 'A') ||
+    setweight(to_tsvector('turkish', coalesce("referenceNumber", '')), 'B')
+  ) STORED
 );
 
 CREATE TABLE "MatterParty" (
@@ -131,35 +137,8 @@ CREATE TABLE "MatterParty" (
   PRIMARY KEY ("matterId", "partyId")
 );
 
-CREATE TABLE "MatterDecision" (
-  "id" UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  "matterId" UUID NOT NULL REFERENCES "Matter"("id") ON DELETE CASCADE,
-  "decisionType" "DecisionType" NOT NULL,
-  "decisionDate" DATE NOT NULL,
-  "summary" TEXT,
-  "fullTextHtml" TEXT,
-  "appealDeadline" TIMESTAMPTZ,
-  "isAppealFiled" BOOLEAN DEFAULT false,
-  "fileId" UUID,
-  "createdByUserId" UUID NOT NULL REFERENCES "User"("id") ON DELETE RESTRICT,
-  "createdAt" TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
-);
-
-CREATE TABLE "Correspondence" (
-  "id" UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  "orgId" UUID NOT NULL REFERENCES "Org"("id") ON DELETE RESTRICT,
-  "matterId" UUID NOT NULL REFERENCES "Matter"("id") ON DELETE CASCADE,
-  "direction" "CorrDirection" NOT NULL,
-  "type" "CorrType" NOT NULL,
-  "date" DATE NOT NULL,
-  "referenceNo" TEXT,
-  "summary" TEXT,
-  "registeredByUserId" UUID NOT NULL REFERENCES "User"("id") ON DELETE RESTRICT,
-  "createdAt" TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
-);
-
 -- ---------------------------------------------------------
--- 7. STORAGE & DOCUMENT MANAGEMENT
+-- 7. DOCUMENT SYSTEM (Versioning + RLS Ready)
 -- ---------------------------------------------------------
 CREATE TABLE "FileFolder" (
   "id" UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -174,14 +153,17 @@ CREATE TABLE "FileObject" (
   "id" UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   "orgId" UUID NOT NULL REFERENCES "Org"("id") ON DELETE RESTRICT,
   "folderId" UUID REFERENCES "FileFolder"("id") ON DELETE SET NULL,
-  "storageProvider" TEXT NOT NULL DEFAULT 'LOCAL', -- S3, AZURE, GCP
+  "parentFileId" UUID REFERENCES "FileObject"("id"), -- Versioning link
+  "versionNo" INTEGER NOT NULL DEFAULT 1,
+  "isLatest" BOOLEAN NOT NULL DEFAULT true,
+  "storageProvider" TEXT NOT NULL DEFAULT 'LOCAL',
   "bucket" TEXT,
   "storageKey" TEXT NOT NULL,
   "fileName" TEXT NOT NULL,
   "mimeType" TEXT,
   "sizeBytes" BIGINT,
   "sha256" TEXT,
-  "ocrStatus" TEXT DEFAULT 'PENDING',
+  "ocrStatus" "JobStatus" NOT NULL DEFAULT 'QUEUED',
   "extractedText" TEXT,
   "createdByUserId" UUID NOT NULL REFERENCES "User"("id") ON DELETE RESTRICT,
   "createdAt" TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
@@ -189,6 +171,7 @@ CREATE TABLE "FileObject" (
 
 CREATE TABLE "Attachment" (
   "id" UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  "orgId" UUID NOT NULL REFERENCES "Org"("id") ON DELETE RESTRICT, -- Critical for RLS
   "fileId" UUID NOT NULL REFERENCES "FileObject"("id") ON DELETE CASCADE,
   "entityType" TEXT NOT NULL,
   "entityId" UUID NOT NULL,
@@ -197,7 +180,7 @@ CREATE TABLE "Attachment" (
 );
 
 -- ---------------------------------------------------------
--- 8. AI & ACTIVITY (Guardrail Audit)
+-- 8. INTELLIGENCE & AUDIT (Guardrails + Redaction)
 -- ---------------------------------------------------------
 CREATE TABLE "ActivityEvent" (
   "id" UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -210,8 +193,7 @@ CREATE TABLE "ActivityEvent" (
   "summary" TEXT,
   "changedColumns" TEXT[],
   "dataJson" JSONB,
-  "ipAddress" TEXT,
-  "createdAt" TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
+  "createdAt" TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP -- Append-only
 );
 
 CREATE TABLE "AiInteraction" (
@@ -221,16 +203,15 @@ CREATE TABLE "AiInteraction" (
   "model" TEXT NOT NULL,
   "prompt" TEXT NOT NULL,
   "response" TEXT,
-  "tokenCount" INTEGER,
+  "isRedacted" BOOLEAN NOT NULL DEFAULT false,
+  "redactedAt" TIMESTAMPTZ,
   "containsSensitiveData" BOOLEAN NOT NULL DEFAULT false,
   "retentionExpiresAt" TIMESTAMPTZ,
-  "relatedEntityType" TEXT,
-  "relatedEntityId" UUID,
   "createdAt" TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
 -- ---------------------------------------------------------
--- 9. EVENTS, TASKS & REMINDERS (Enum Centric)
+-- 9. WORKFLOW: EVENTS & ASSIGNEES
 -- ---------------------------------------------------------
 CREATE TABLE "UniversalEvent" (
   "id" UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -238,102 +219,76 @@ CREATE TABLE "UniversalEvent" (
   "matterId" UUID REFERENCES "Matter"("id") ON DELETE CASCADE,
   "type" "UniversalEventType" NOT NULL DEFAULT 'TASK',
   "title" TEXT NOT NULL,
-  "descriptionHtml" TEXT,
   "startAt" TIMESTAMPTZ NOT NULL,
   "endAt" TIMESTAMPTZ,
   "status" "UniversalEventStatus" NOT NULL DEFAULT 'PENDING',
-  "createdByUserId" UUID NOT NULL REFERENCES "User"("id") ON DELETE RESTRICT,
-  "createdAt" TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  "recordStatus" "RecordStatus" NOT NULL DEFAULT 'ACTIVE'
+  "createdAt" TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
-CREATE TABLE "EventReminder" (
-  "id" UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+CREATE TABLE "EventAssignee" (
   "eventId" UUID NOT NULL REFERENCES "UniversalEvent"("id") ON DELETE CASCADE,
-  "remindAt" TIMESTAMPTZ NOT NULL,
-  "isSent" BOOLEAN DEFAULT false,
-  "sentAt" TIMESTAMPTZ
+  "userId" UUID NOT NULL REFERENCES "User"("id") ON DELETE CASCADE,
+  PRIMARY KEY ("eventId", "userId")
 );
 
 -- ---------------------------------------------------------
--- 10. FINANCE SYSTEM
+-- 10. FINANCIAL SYSTEM (Ledger Ready)
 -- ---------------------------------------------------------
 CREATE TABLE "Invoice" (
   "id" UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   "orgId" UUID NOT NULL REFERENCES "Org"("id") ON DELETE RESTRICT,
   "partyId" UUID NOT NULL REFERENCES "Party"("id") ON DELETE RESTRICT,
-  "matterId" UUID REFERENCES "Matter"("id") ON DELETE SET NULL,
   "invoiceNumber" TEXT NOT NULL UNIQUE,
   "amount" DECIMAL(19,4) NOT NULL,
-  "taxRate" DECIMAL(5,2) NOT NULL DEFAULT 20.00,
-  "currency" TEXT NOT NULL DEFAULT 'TRY',
   "status" "InvoiceStatus" NOT NULL DEFAULT 'DRAFT',
-  "dueAt" TIMESTAMPTZ,
-  "paidAt" TIMESTAMPTZ,
-  "createdByUserId" UUID NOT NULL REFERENCES "User"("id") ON DELETE RESTRICT,
-  "updatedByUserId" UUID REFERENCES "User"("id") ON DELETE RESTRICT,
   "createdAt" TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
   "updatedAt" TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
-);
-
-CREATE TABLE "MatterPayment" (
-  "id" UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  "orgId" UUID NOT NULL REFERENCES "Org"("id") ON DELETE RESTRICT,
-  "matterId" UUID NOT NULL REFERENCES "Matter"("id") ON DELETE CASCADE,
-  "invoiceId" UUID REFERENCES "Invoice"("id") ON DELETE SET NULL,
-  "amount" DECIMAL(19,4) NOT NULL,
-  "currency" TEXT NOT NULL DEFAULT 'TRY',
-  "paidAt" TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  "method" "PaymentMethod" NOT NULL DEFAULT 'BANK_TRANSFER',
-  "note" TEXT,
-  "receiptFileId" UUID REFERENCES "FileObject"("id") ON DELETE SET NULL,
-  "recordedByUserId" UUID NOT NULL REFERENCES "User"("id") ON DELETE RESTRICT,
-  "createdAt" TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  "updatedAt" TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  "deletedAt" TIMESTAMPTZ
-);
-
-CREATE TABLE "Expense" (
-  "id" UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  "orgId" UUID NOT NULL REFERENCES "Org"("id") ON DELETE RESTRICT,
-  "matterId" UUID NOT NULL REFERENCES "Matter"("id") ON DELETE CASCADE,
-  "amount" DECIMAL(19,4) NOT NULL,
-  "currency" TEXT NOT NULL DEFAULT 'TRY',
-  "category" TEXT,
-  "incurredAt" DATE NOT NULL,
-  "createdAt" TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
 CREATE TABLE "TimeEntry" (
   "id" UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   "orgId" UUID NOT NULL REFERENCES "Org"("id") ON DELETE RESTRICT,
-  "matterId" UUID REFERENCES "Matter"("id") ON DELETE CASCADE,
   "userId" UUID NOT NULL REFERENCES "User"("id") ON DELETE RESTRICT,
-  "type" TEXT NOT NULL DEFAULT 'BILLABLE',
-  "description" TEXT,
+  "matterId" UUID REFERENCES "Matter"("id") ON DELETE CASCADE,
+  "type" "TimeEntryType" NOT NULL DEFAULT 'BILLABLE',
   "minutes" INTEGER NOT NULL,
-  "hourlyRate" DECIMAL(19,4),
   "workedAt" DATE NOT NULL,
-  "createdAt" TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  "deletedAt" TIMESTAMPTZ
+  "createdAt" TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
 -- ---------------------------------------------------------
--- 11. INDEXES (Architect Optimized)
+-- 11. INTEGRATION & JOBS
+-- ---------------------------------------------------------
+CREATE TABLE "DomainEvent" (
+  "id" UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  "orgId" UUID NOT NULL REFERENCES "Org"("id") ON DELETE RESTRICT,
+  "eventType" TEXT NOT NULL, -- e.g., 'MatterCreated'
+  "payload" JSONB,
+  "occurredAt" TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE "JobQueue" (
+  "id" UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  "orgId" UUID NOT NULL REFERENCES "Org"("id") ON DELETE RESTRICT,
+  "jobType" TEXT NOT NULL, -- 'OCR', 'AI_SUMMARY'
+  "payload" JSONB,
+  "status" "JobStatus" NOT NULL DEFAULT 'QUEUED',
+  "createdAt" TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  "updatedAt" TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+-- ---------------------------------------------------------
+-- 12. INDEXES
 -- ---------------------------------------------------------
 CREATE INDEX "Matter_fts_idx" ON "Matter" USING GIN ("fts");
 CREATE INDEX "Party_fts_idx" ON "Party" USING GIN ("fts");
-CREATE INDEX "Matter_org_active_idx" ON "Matter"("orgId", "createdAt" DESC) WHERE "recordStatus" = 'ACTIVE';
-CREATE INDEX "Activity_matter_created_idx" ON "ActivityEvent"("matterId", "createdAt" DESC);
-CREATE INDEX "Attachment_entity_idx" ON "Attachment"("entityType", "entityId");
-CREATE INDEX "Invoice_number_idx" ON "Invoice"("invoiceNumber");
+CREATE INDEX "Activity_org_matter_idx" ON "ActivityEvent"("orgId", "matterId", "createdAt" DESC);
+CREATE INDEX "Attachment_org_entity_idx" ON "Attachment"("orgId", "entityType", "entityId");
 
 -- ---------------------------------------------------------
--- 12. TRIGGERS (Automated Persistence)
+-- 13. TRIGGERS
 -- ---------------------------------------------------------
 CREATE TRIGGER "update_org_updated_at" BEFORE UPDATE ON "Org" FOR EACH ROW EXECUTE PROCEDURE update_updated_at_column();
 CREATE TRIGGER "update_user_updated_at" BEFORE UPDATE ON "User" FOR EACH ROW EXECUTE PROCEDURE update_updated_at_column();
-CREATE TRIGGER "update_party_updated_at" BEFORE UPDATE ON "Party" FOR EACH ROW EXECUTE PROCEDURE update_updated_at_column();
 CREATE TRIGGER "update_matter_updated_at" BEFORE UPDATE ON "Matter" FOR EACH ROW EXECUTE PROCEDURE update_updated_at_column();
 CREATE TRIGGER "update_invoice_updated_at" BEFORE UPDATE ON "Invoice" FOR EACH ROW EXECUTE PROCEDURE update_updated_at_column();
-CREATE TRIGGER "update_payment_updated_at" BEFORE UPDATE ON "MatterPayment" FOR EACH ROW EXECUTE PROCEDURE update_updated_at_column();

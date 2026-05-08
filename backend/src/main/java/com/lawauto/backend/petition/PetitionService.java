@@ -17,6 +17,8 @@ public class PetitionService {
 
     private final PetitionRepository petitionRepository;
     private final MatterRepository matterRepository;
+    private final OrgRepository orgRepository;
+    private final UserRepository userRepository;
     private final ActivityEventRepository activityEventRepository;
 
     /**
@@ -25,11 +27,11 @@ public class PetitionService {
     @Transactional
     public Petition createPetition(PetitionRequest request, UUID orgId, UUID userId) {
         Petition petition = Petition.builder()
-                .org(OrgRepository.getReference(orgId))
+                .org(orgRepository.getReferenceById(orgId))
                 .matter(matterRepository.getReferenceById(request.getMatterId()))
                 .title(request.getTitle())
                 .bodyHtml(request.getBodyHtml())
-                .createdBy(UserRepository.getReference(userId))
+                .createdBy(userRepository.getReferenceById(userId))
                 .build();
 
         Petition savedPetition = petitionRepository.save(petition);
@@ -37,7 +39,7 @@ public class PetitionService {
         // Workflow Log: Update the Matter timeline
         ActivityEvent event = ActivityEvent.builder()
                 .org(savedPetition.getOrg())
-                .user(UserRepository.getReference(userId))
+                .user(userRepository.getReferenceById(userId))
                 .matter(savedPetition.getMatter())
                 .action("PETITION_CREATED")
                 .entityType("PETITION")

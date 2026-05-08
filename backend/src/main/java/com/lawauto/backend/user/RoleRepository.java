@@ -5,5 +5,5 @@ import java.util.UUID;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 public interface RoleRepository extends JpaRepository<Role, UUID> {
-    Optional<Role> findByOrgIdAndKey(UUID orgId, RoleKey key);
+    Optional<Role> findByOrgIdAndRoleKey(UUID orgId, RoleKey roleKey);
 }

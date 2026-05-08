@@ -2,20 +2,19 @@ package com.lawauto.backend.auth;
 
 import com.lawauto.backend.org.Org;
 import com.lawauto.backend.org.OrgRepository;
-
-import com.lawauto.backend.user.RoleEntity;
+import com.lawauto.backend.user.Role;
 import com.lawauto.backend.user.RoleKey;
 import com.lawauto.backend.user.RoleRepository;
-import com.lawauto.backend.user.UserEntity;
+import com.lawauto.backend.user.User;
 import com.lawauto.backend.user.UserRepository;
-import com.lawauto.backend.user.UserRoleEntity;
-import com.lawauto.backend.user.UserRoleRepository;
+import com.lawauto.backend.user.UserStatus;
 import io.jsonwebtoken.Claims;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
-import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -29,7 +28,6 @@ public class AuthService {
     private final OrgRepository orgRepository;
     private final UserRepository userRepository;
     private final RoleRepository roleRepository;
-    private final UserRoleRepository userRoleRepository;
     private final RefreshTokenRepository refreshTokenRepository;
     private final JwtService jwtService;
     private final PasswordEncoder passwordEncoder;
@@ -38,7 +36,6 @@ public class AuthService {
             OrgRepository orgRepository,
             UserRepository userRepository,
             RoleRepository roleRepository,
-            UserRoleRepository userRoleRepository,
             RefreshTokenRepository refreshTokenRepository,
             JwtService jwtService,
             PasswordEncoder passwordEncoder
@@ -46,7 +43,6 @@ public class AuthService {
         this.orgRepository = orgRepository;
         this.userRepository = userRepository;
         this.roleRepository = roleRepository;
-        this.userRoleRepository = userRoleRepository;
         this.refreshTokenRepository = refreshTokenRepository;
         this.jwtService = jwtService;
         this.passwordEncoder = passwordEncoder;
@@ -58,34 +54,33 @@ public class AuthService {
 
         enforcePasswordPolicy(request.password());
 
-        LocalDateTime now = LocalDateTime.now();
-        UserEntity user = new UserEntity();
+        Org org = orgRepository.findById(request.orgId())
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Organization not found"));
+
+        User user = new User();
         user.setId(UUID.randomUUID());
-        user.setOrgId(request.orgId());
+        user.setOrg(org);
         user.setEmail(request.email().toLowerCase());
         user.setFullName(request.fullName());
         user.setPasswordHash(passwordEncoder.encode(request.password()));
-        user.setStatus("ACTIVE");
-        user.setCreatedAt(now);
-        user.setUpdatedAt(now);
-        userRepository.save(user);
+        user.setStatus(UserStatus.ACTIVE);
+        user.setCreatedAt(OffsetDateTime.now());
+        user.setUpdatedAt(OffsetDateTime.now());
 
-        RoleEntity role = roleRepository.findByOrgIdAndKey(request.orgId(), request.role())
+        Role role = roleRepository.findByOrgIdAndKey(request.orgId(), request.role())
                 .orElseGet(() -> {
-                    RoleEntity newRole = new RoleEntity();
+                    Role newRole = new Role();
                     newRole.setId(UUID.randomUUID());
-                    newRole.setOrgId(request.orgId());
-                    newRole.setKey(request.role());
-                    newRole.setCreatedAt(LocalDateTime.now());
+                    newRole.setOrg(org);
+                    newRole.setRoleKey(request.role());
+                    newRole.setCreatedAt(OffsetDateTime.now());
                     return roleRepository.save(newRole);
                 });
 
-        UserRoleEntity userRole = new UserRoleEntity();
-        userRole.setUserId(user.getId());
-        userRole.setRoleId(role.getId());
-        userRoleRepository.save(userRole);
+        user.setRoles(Set.of(role));
+        userRepository.save(user);
 
-        return issueTokens(user, role.getKey().name());
+        return issueTokens(user, role.getRoleKey().name());
     }
 
     public AuthResponseDto login(LoginRequest request) {
@@ -99,7 +94,7 @@ public class AuthService {
 
         log.info("Found Org: [{}], searching for User with email: [{}]", org.getName(), request.email().toLowerCase());
         
-        UserEntity user = userRepository.findByOrgIdAndEmail(org.getId(), request.email().toLowerCase())
+        User user = userRepository.findByOrgIdAndEmail(org.getId(), request.email().toLowerCase())
                 .orElseThrow(() -> {
                     log.warn("User not found for OrgId: [{}] and Email: [{}]", org.getId(), request.email().toLowerCase());
                     return new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Geçersiz kimlik bilgileri");
@@ -113,11 +108,11 @@ public class AuthService {
         
         log.info("Login successful for user: [{}]", request.email());
 
-        if (!"ACTIVE".equalsIgnoreCase(user.getStatus())) {
+        if (user.getStatus() != UserStatus.ACTIVE) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Kullanıcı hesabı aktif değil");
         }
 
-        String roleKey = resolveRole(user.getId());
+        String roleKey = resolveRole(user);
         return issueTokens(user, roleKey);
     }
 
@@ -137,15 +132,15 @@ public class AuthService {
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid refresh token");
         }
 
-        UserEntity user = userRepository.findById(java.util.Objects.requireNonNull(userId))
+        User user = userRepository.findById(java.util.Objects.requireNonNull(userId))
                 .orElseThrow(() -> new IllegalArgumentException("User not found"));
 
-        if (!"ACTIVE".equalsIgnoreCase(user.getStatus())) {
+        if (user.getStatus() != UserStatus.ACTIVE) {
             throw new IllegalArgumentException("User is not active");
         }
 
         refreshTokenRepository.revokeByRawToken(request.refreshToken());
-        String roleKey = resolveRole(user.getId());
+        String roleKey = resolveRole(user);
         return issueTokens(user, roleKey);
     }
 
@@ -154,29 +149,26 @@ public class AuthService {
         return Map.of("status", "logged_out");
     }
 
-    private AuthResponseDto issueTokens(UserEntity user, String roleKey) {
-        String accessToken = jwtService.generateToken(user.getId(), user.getOrgId(), user.getEmail(), roleKey);
-        String refreshToken = jwtService.generateRefreshToken(user.getId(), user.getOrgId(), user.getEmail(), roleKey);
+    private AuthResponseDto issueTokens(User user, String roleKey) {
+        UUID orgId = user.getOrg() != null ? user.getOrg().getId() : null;
+        String accessToken = jwtService.generateToken(user.getId(), orgId, user.getEmail(), roleKey);
+        String refreshToken = jwtService.generateRefreshToken(user.getId(), orgId, user.getEmail(), roleKey);
         
-        refreshTokenRepository.save(user.getOrgId(), user.getId(), refreshToken, LocalDateTime.now().plusDays(14));
+        refreshTokenRepository.save(orgId, user.getId(), refreshToken, OffsetDateTime.now().plusDays(14));
         
         return AuthResponseDto.builder()
                 .token(accessToken)
                 .refreshToken(refreshToken)
                 .userId(user.getId())
-                .orgId(user.getOrgId())
+                .orgId(orgId)
                 .email(user.getEmail())
                 .role(roleKey)
                 .build();
     }
 
-    private String resolveRole(UUID userId) {
-        return userRoleRepository.findByUserId(userId).stream()
-                .flatMap(ur -> {
-                    UUID roleId = ur.getRoleId();
-                    return roleId != null ? roleRepository.findById(roleId).stream() : java.util.stream.Stream.empty();
-                })
-                .map(r -> r.getKey().name())
+    private String resolveRole(User user) {
+        return user.getRoles().stream()
+                .map(r -> r.getRoleKey().name())
                 .findFirst()
                 .orElse("LAWYER");
     }

@@ -43,6 +43,12 @@ public class AiInteraction {
 
     @Column(nullable = false)
     @Builder.Default
+    private Boolean isRedacted = false;
+
+    private OffsetDateTime redactedAt;
+
+    @Column(nullable = false)
+    @Builder.Default
     private Boolean containsSensitiveData = false;
 
     private OffsetDateTime retentionExpiresAt;
