@@ -1,5 +1,6 @@
 import React from 'react';
 import { NavLink } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { 
   Scale, 
   Briefcase, 
@@ -13,25 +14,26 @@ import {
   PanelLeft
 } from 'lucide-react';
 
-const navigation = [
-  { name: 'Dashboard', href: '/', icon: Scale },
-  { name: 'Matters', href: '/matters', icon: Briefcase },
-  { name: 'Calendar', href: '/calendar', icon: Calendar },
-  { name: 'Documents', href: '/documents', icon: FileText },
-  { name: 'Billing', href: '/billing', icon: CreditCard },
-  { name: 'AI Research', href: '/ai', icon: Bot },
-];
-
-const bottomNavigation = [
-  { name: 'Notifications', href: '/notifications', icon: Bell },
-  { name: 'Settings', href: '/settings', icon: Settings },
-];
-
 export function Sidebar({ isCollapsed, setIsCollapsed }) {
+  const { t } = useTranslation();
   const [isHovered, setIsHovered] = React.useState(false);
 
   // Compute actual state: it's open if it's NOT collapsed, OR if it's hovered.
   const isEffectivelyOpen = !isCollapsed || isHovered;
+
+  const navigation = [
+    { name: t('sidebar.dashboard'), href: '/', icon: Scale },
+    { name: t('sidebar.matters'), href: '/matters', icon: Briefcase },
+    { name: t('sidebar.calendar'), href: '/calendar', icon: Calendar },
+    { name: t('sidebar.documents'), href: '/documents', icon: FileText },
+    { name: t('sidebar.billing'), href: '/billing', icon: CreditCard },
+    { name: t('sidebar.ai'), href: '/ai', icon: Bot },
+  ];
+
+  const bottomNavigation = [
+    { name: t('sidebar.notifications'), href: '/notifications', icon: Bell },
+    { name: t('sidebar.settings'), href: '/settings', icon: Settings },
+  ];
 
   return (
     <div 
@@ -54,7 +56,7 @@ export function Sidebar({ isCollapsed, setIsCollapsed }) {
         
         <button
           onClick={() => setIsCollapsed(!isCollapsed)}
-          title={isCollapsed ? "Pin Sidebar" : "Collapse Sidebar"}
+          title={isCollapsed ? t('sidebar.expand') : t('sidebar.collapse')}
           className="p-1.5 rounded-md text-muted-foreground hover:bg-secondary hover:text-foreground transition-colors shrink-0"
         >
           {isCollapsed ? <PanelLeft className="h-5 w-5" /> : <PanelLeftClose className="h-5 w-5" />}
@@ -105,7 +107,6 @@ export function Sidebar({ isCollapsed, setIsCollapsed }) {
             {isEffectivelyOpen && <span className="truncate fade-enter-active">{item.name}</span>}
           </NavLink>
         ))}
-
       </div>
     </div>
   );
