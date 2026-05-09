@@ -32,6 +32,7 @@ public class AuthService {
     public record LoginResponse(String token, String role, String orgId) {
     }
 
+    @org.springframework.transaction.annotation.Transactional(readOnly = true)
     public LoginResponse login(String email, String password) {
         User user = userRepository.findByEmailCanonical(email.toLowerCase())
                 .orElseThrow(() -> new RuntimeException("Invalid credentials"));
@@ -49,6 +50,7 @@ public class AuthService {
     private String generateToken(User user) {
         Map<String, Object> claims = new HashMap<>();
         claims.put("orgId", user.getOrg().getId().toString());
+        claims.put("userId", user.getId().toString());
         claims.put("roles", user.getRoles().stream()
                 .map(role -> role.getRoleKey().name())
                 .collect(Collectors.toList()));
