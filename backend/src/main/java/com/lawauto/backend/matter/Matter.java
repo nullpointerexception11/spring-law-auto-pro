@@ -12,30 +12,33 @@ import java.time.OffsetDateTime;
 import java.util.UUID;
 
 @Entity
-@Table(name = "\"Matter\"")
+@Table(name = "matters")
 @Getter
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
+@EqualsAndHashCode(onlyExplicitlyIncluded = true)
 public class Matter {
 
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
+    @EqualsAndHashCode.Include
     private UUID id;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "orgId", nullable = false)
+    @JoinColumn(name = "org_id", nullable = false)
     private Org org;
 
     @Column(nullable = false)
     private String title;
 
+    @Column(name = "reference_number")
     private String referenceNumber;
 
     @Enumerated(EnumType.STRING)
-    @JdbcTypeCode(SqlTypes.NAMED_ENUM)
     @Builder.Default
+    @Column(nullable = false)
     private MatterStatus status = MatterStatus.ACTIVE;
 
     @Column(columnDefinition = "text")
@@ -44,21 +47,22 @@ public class Matter {
     @Column(columnDefinition = "text")
     private String description;
 
-    @JdbcTypeCode(SqlTypes.ARRAY)
-    @Column(columnDefinition = "text[]")
-    private String[] tags;
+    @JdbcTypeCode(SqlTypes.JSON)
+    @Column(columnDefinition = "jsonb")
+    private java.util.List<String> tags;
 
-    @Column(nullable = false)
+    @Column(name = "opened_at", nullable = false)
     @Builder.Default
     private OffsetDateTime openedAt = OffsetDateTime.now();
 
+    @Column(name = "closed_at")
     private OffsetDateTime closedAt;
 
     @CreationTimestamp
-    @Column(nullable = false, updatable = false)
+    @Column(name = "created_at", nullable = false, updatable = false)
     private OffsetDateTime createdAt;
 
     @UpdateTimestamp
-    @Column(nullable = false)
+    @Column(name = "updated_at", nullable = false)
     private OffsetDateTime updatedAt;
 }

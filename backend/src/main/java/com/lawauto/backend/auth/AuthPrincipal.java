@@ -16,4 +16,16 @@ public record AuthPrincipal(
     public boolean hasRole(RoleKey role) {
         return roles != null && roles.contains(role);
     }
+
+    public boolean isPlatformAdmin() {
+        return hasRole(RoleKey.PLATFORM_ADMIN);
+    }
+
+    public boolean isOrgAdmin() {
+        return hasRole(RoleKey.ORG_ADMIN);
+    }
+
+    public boolean isInternal() {
+        return roles != null && roles.stream().anyMatch(RoleKey::isInternal);
+    }
 }

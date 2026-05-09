@@ -4,30 +4,31 @@ import jakarta.persistence.*;
 import lombok.*;
 
 @Entity
-@Table(name = "\"MatterParty\"")
+@Table(name = "matter_parties", uniqueConstraints = {
+    @UniqueConstraint(columnNames = {"matter_id", "party_id", "role_id"})
+})
 @Getter
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
+@EqualsAndHashCode(onlyExplicitlyIncluded = true)
 public class MatterParty {
 
-    @EmbeddedId
-    @Builder.Default
-    private MatterPartyId id = new MatterPartyId();
+    @Id
+    @GeneratedValue(strategy = GenerationType.UUID)
+    @EqualsAndHashCode.Include
+    private UUID id;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @MapsId("matterId")
-    @JoinColumn(name = "matterId", nullable = false)
+    @JoinColumn(name = "matter_id", nullable = false)
     private Matter matter;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @MapsId("partyId")
-    @JoinColumn(name = "partyId", nullable = false)
+    @JoinColumn(name = "party_id", nullable = false)
     private Party party;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @MapsId("roleId")
-    @JoinColumn(name = "roleId", nullable = false)
+    @JoinColumn(name = "role_id", nullable = false)
     private MatterPartyRole role;
 }

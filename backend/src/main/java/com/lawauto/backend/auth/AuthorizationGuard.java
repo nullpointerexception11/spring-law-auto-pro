@@ -14,7 +14,14 @@ public class AuthorizationGuard {
      * Retrieves the current authenticated principal from the SecurityContext.
      */
     public AuthPrincipal currentPrincipal() {
-        // TODO: Extract from SecurityContextHolder once JWT filter is integrated
+        var authentication = org.springframework.security.core.context.SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null || !authentication.isAuthenticated()) {
+            return null;
+        }
+        Object principal = authentication.getPrincipal();
+        if (principal instanceof AuthPrincipal authPrincipal) {
+            return authPrincipal;
+        }
         return null;
     }
 

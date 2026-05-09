@@ -9,25 +9,27 @@ import org.springframework.web.server.ResponseStatusException;
 import java.util.UUID;
 
 @Component
-public class OperationAccessGuard {
+    private final com.lawauto.backend.matter.MatterAssigneeRepository matterAssigneeRepository;
 
-    /**
-     * Enforces data-level authorization to ensure the user has access to a specific Matter.
-     * PLATFORM_ADMIN and ORG_ADMIN have global access within their tenant.
-     * For other roles, this guard will verify specific assignments.
-     */
+    public OperationAccessGuard(com.lawauto.backend.matter.MatterAssigneeRepository matterAssigneeRepository) {
+        this.matterAssigneeRepository = matterAssigneeRepository;
+    }
+
     public void requireMatterAccess(AuthPrincipal principal, UUID matterId) {
         if (principal == null) {
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Not authenticated");
         }
         
         // Global admins bypass specific matter assignment checks
-        if (principal.hasRole(RoleKey.ORG_ADMIN) || principal.hasRole(RoleKey.PLATFORM_ADMIN)) {
+        if (principal.isPlatformAdmin() || principal.isOrgAdmin()) {
             return;
         }
         
-        // TODO: Query MatterAssignee or similar table to verify the specific lawyer/staff 
-        // is authorized to view or edit this matterId.
-        // If not assigned, throw FORBIDDEN.
+        // Check specific assignment
+        boolean hasAccess = matterAssigneeRepository.hasAccess(matterId, principal.userId());
+        
+        if (!hasAccess) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "You are not assigned to this matter");
+        }
     }
 }
