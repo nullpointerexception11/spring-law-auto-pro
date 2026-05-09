@@ -9,6 +9,8 @@ import org.springframework.web.server.ResponseStatusException;
 import java.util.UUID;
 
 @Component
+public class OperationAccessGuard {
+
     private final com.lawauto.backend.matter.MatterAssigneeRepository matterAssigneeRepository;
 
     public OperationAccessGuard(com.lawauto.backend.matter.MatterAssigneeRepository matterAssigneeRepository) {
