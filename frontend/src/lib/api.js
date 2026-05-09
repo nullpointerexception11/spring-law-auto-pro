@@ -7,10 +7,12 @@ const api = axios.create({
   },
 });
 
-// Backend tenant izolasyonu (Org ID) beklediği için geçici olarak sabit bir ID ekliyoruz.
-// Gerçek uygulamada bu değer giriş yapmış kullanıcının organizasyonundan gelecektir.
+// Request interceptor for JWT
 api.interceptors.request.use((config) => {
-  config.headers['X-Org-Id'] = '1';
+  const token = localStorage.getItem("token");
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`;
+  }
   return config;
 });
 

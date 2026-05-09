@@ -9,8 +9,9 @@ import java.util.UUID;
  * Acts as the 'wallet' of permissions across the application.
  */
 public record AuthPrincipal(
-    UUID userId,
     UUID orgId,
+    UUID userId,
+    String email,
     Set<RoleKey> roles
 ) {
     public boolean hasRole(RoleKey role) {

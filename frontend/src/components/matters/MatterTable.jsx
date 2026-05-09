@@ -38,10 +38,7 @@ export function MatterTable() {
   const { data: matters = [], isLoading, error } = useQuery({
     queryKey: ['matters'],
     queryFn: async () => {
-      const TEST_ORG_ID = '11111111-1111-1111-1111-111111111111';
-      const response = await api.get('/matters', {
-        params: { orgId: TEST_ORG_ID }
-      });
+      const response = await api.get('/matters');
       return response.data.content || [];
     }
   });

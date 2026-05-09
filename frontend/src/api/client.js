@@ -4,23 +4,24 @@ export const api = axios.create({
   baseURL: import.meta.env.VITE_API_BASE_URL || "http://localhost:8080/api",
 });
 
-// Response interceptor to unwrap ApiResponse
+// Request interceptor to attach JWT token
+api.interceptors.request.use((config) => {
+  const token = localStorage.getItem("token");
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`;
+  }
+  return config;
+});
+
+// Response interceptor to handle raw data and errors
 api.interceptors.response.use(
-  (response) => {
-    // If the response has our standard wrapper { status, data, meta }, return only data
-    if (response.data && response.data.status === "ok" && Object.prototype.hasOwnProperty.call(response.data, "data")) {
-      return {
-        ...response,
-        data: response.data.data,
-        meta: response.data.meta
-      };
-    }
-    return response;
-  },
+  (response) => response,
   (error) => {
-    // Standardize error message extraction from ApiResponse wrapper
-    if (error.response && error.response.data && error.response.data.status === "error") {
-      error.message = error.response.data.meta || error.message;
+    // Standardize error handling for Spring Boot error responses
+    if (error.response && error.response.data) {
+      // Spring typically returns { message, status, ... } for exceptions
+      const message = error.response.data.message || error.message;
+      return Promise.reject({ ...error, message });
     }
     return Promise.reject(error);
   }

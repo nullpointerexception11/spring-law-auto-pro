@@ -39,6 +39,11 @@ public class MatterService {
      * Creates a new Matter record.
      */
     @Transactional
+    @com.lawauto.backend.operations.Auditable(
+        action = com.lawauto.backend.operations.ActivityAction.CREATE,
+        entityType = com.lawauto.backend.operations.EntityType.MATTER,
+        summary = "New matter created via API"
+    )
     @SuppressWarnings("null")
     public UUID createMatter(@org.springframework.lang.NonNull UUID orgId, com.lawauto.backend.matter.dto.CreateMatterRequest request) {
         java.util.Objects.requireNonNull(orgId, "orgId must not be null");
