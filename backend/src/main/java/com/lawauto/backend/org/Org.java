@@ -9,25 +9,35 @@ import java.time.OffsetDateTime;
 import java.util.UUID;
 
 @Entity
-@Table(name = "\"Org\"")
+@Table(name = "orgs")
 @Getter
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
+@EqualsAndHashCode(onlyExplicitlyIncluded = true)
 public class Org {
 
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
+    @EqualsAndHashCode.Include
     private UUID id;
 
     @Column(nullable = false, unique = true)
-    private String name;
+    private String slug;
 
+    @Column(nullable = false)
     private String displayName;
 
+    @Enumerated(EnumType.STRING)
     @Builder.Default
-    private String plan = "FREE";
+    @Column(nullable = false)
+    private OrgPlan plan = OrgPlan.FREE;
+
+    @Enumerated(EnumType.STRING)
+    @Builder.Default
+    @Column(nullable = false)
+    private OrgStatus status = OrgStatus.ACTIVE;
 
     @CreationTimestamp
     @Column(nullable = false, updatable = false)
