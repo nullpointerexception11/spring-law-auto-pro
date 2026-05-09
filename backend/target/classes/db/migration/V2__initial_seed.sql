@@ -7,7 +7,7 @@ INSERT INTO orgs (id, slug, display_name, plan, status) VALUES
 -- 2. Users
 -- password is 'password' hashed
 INSERT INTO users (id, org_id, email, email_canonical, full_name, password_hash, status) VALUES
-('f1111111-1111-1111-1111-111111111111', '11111111-1111-1111-1111-111111111111', 'admin@prestige.com', 'admin@prestige.com', 'System Admin', '$2a$10$G1.O5x3H2H547iQ88u3xuuXn8D7Hh7J3/gOOTtU1V1Vz.Nn.x7Z.G', 'ACTIVE');
+('f1111111-1111-1111-1111-111111111111', '11111111-1111-1111-1111-111111111111', 'admin@prestige.com', 'admin@prestige.com', 'System Admin', '$2a$10$DxnyFauRoL37AyO0GBVhgenfoi5noEHnlOsbhQcFuWrl9.FkTNQVK', 'ACTIVE');
 
 -- 3. Roles
 INSERT INTO roles (id, org_id, role_key, display_name, system_role) VALUES
