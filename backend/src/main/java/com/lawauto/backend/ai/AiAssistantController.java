@@ -14,14 +14,16 @@ public class AiAssistantController {
 
     private final ChatClient chatClient;
 
-    public AiAssistantController(ChatClient.Builder chatClientBuilder, ResourceLoader resourceLoader) {
-        // We configure the ChatClient with the SkillsTool and FileSystemTools.
-        // It points to the skills bundled inside the classpath.
+    public AiAssistantController(ChatClient.Builder chatClientBuilder, 
+                                ResourceLoader resourceLoader,
+                                com.lawauto.backend.ai.tools.MatterTools matterTools) {
+        // We configure the ChatClient with Skills, FileSystem access, and our custom Java Tools.
         this.chatClient = chatClientBuilder
                 .defaultToolCallbacks(SkillsTool.builder()
                         .addSkillsResource(resourceLoader.getResource("classpath:skills"))
                         .build())
                 .defaultTools(FileSystemTools.builder().build())
+                .defaultTools(matterTools) // Registering our Matter creation tool
                 .build();
     }
 
