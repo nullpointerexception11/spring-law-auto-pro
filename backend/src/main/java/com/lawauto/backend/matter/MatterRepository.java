@@ -1,6 +1,5 @@
 package com.lawauto.backend.matter;
 
-import com.lawauto.backend.matter.dto.MatterListDto;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -17,8 +16,8 @@ public interface MatterRepository extends JpaRepository<Matter, UUID> {
      */
     @Query(value = """
         SELECT m.id as id, m.title as title, m.reference_number as referenceNumber, m.status as status, m.opened_at as openedAt,
-               (SELECT p.full_name FROM matter_parties mp JOIN parties p ON mp.party_id = p.id JOIN roles r ON mp.role_id = r.id WHERE mp.matter_id = m.id AND r.role_key = 'CLIENT' ORDER BY p.created_at ASC LIMIT 1) as clientName,
-               (SELECT p.full_name FROM matter_parties mp JOIN parties p ON mp.party_id = p.id JOIN roles r ON mp.role_id = r.id WHERE mp.matter_id = m.id AND r.role_key = 'LAWYER' ORDER BY p.created_at ASC LIMIT 1) as assignedLawyerName,
+               (SELECT p.full_name FROM matter_parties mp JOIN parties p ON mp.party_id = p.id JOIN matter_party_roles r ON mp.role_id = r.id WHERE mp.matter_id = m.id AND r.role_key = 'CLIENT' ORDER BY p.created_at ASC LIMIT 1) as clientName,
+               (SELECT p.full_name FROM matter_parties mp JOIN parties p ON mp.party_id = p.id JOIN matter_party_roles r ON mp.role_id = r.id WHERE mp.matter_id = m.id AND r.role_key = 'LAWYER' ORDER BY p.created_at ASC LIMIT 1) as assignedLawyerName,
                (SELECT ue.start_at FROM universal_events ue WHERE ue.matter_id = m.id AND ue.type = 'HEARING' AND ue.start_at > CURRENT_TIMESTAMP ORDER BY ue.start_at ASC LIMIT 1) as nextHearingDate
         FROM matters m
         WHERE m.org_id = :orgId

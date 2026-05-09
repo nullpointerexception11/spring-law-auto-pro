@@ -22,8 +22,8 @@ public class MatterController {
      */
     @GetMapping
     public Page<MatterListDto> listMatters(Pageable pageable) {
-        var principal = authorizationGuard.currentPrincipal();
-        return matterService.listMatters(principal.orgId(), pageable);
+        var principal = java.util.Objects.requireNonNull(authorizationGuard.currentPrincipal());
+        return matterService.listMatters(java.util.Objects.requireNonNull(principal.orgId()), pageable);
     }
 
     /**
@@ -33,14 +33,14 @@ public class MatterController {
     @GetMapping("/{matterId}")
     public com.lawauto.backend.matter.dto.MatterDetailDto getMatterDetail(
             @PathVariable @org.springframework.lang.NonNull UUID matterId) {
-        var principal = authorizationGuard.currentPrincipal();
-        return matterService.getMatterDetail(principal.orgId(), matterId);
+        var principal = java.util.Objects.requireNonNull(authorizationGuard.currentPrincipal());
+        return matterService.getMatterDetail(java.util.Objects.requireNonNull(principal.orgId()), matterId);
     }
 
     @PostMapping
     public java.util.UUID createMatter(
             @org.springframework.web.bind.annotation.RequestBody com.lawauto.backend.matter.dto.CreateMatterRequest request) {
-        var principal = authorizationGuard.currentPrincipal();
-        return matterService.createMatter(principal.orgId(), request);
+        var principal = java.util.Objects.requireNonNull(authorizationGuard.currentPrincipal());
+        return matterService.createMatter(java.util.Objects.requireNonNull(principal.orgId()), request);
     }
 }

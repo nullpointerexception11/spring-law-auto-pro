@@ -10,26 +10,31 @@ import java.time.OffsetDateTime;
 import java.util.UUID;
 
 @Entity
-@Table(name = "\"SearchDocument\"")
+@Table(name = "search_documents", indexes = {
+    @Index(name = "idx_search_org", columnList = "org_id")
+})
 @Getter
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
+@EqualsAndHashCode(onlyExplicitlyIncluded = true)
 public class SearchDocument {
 
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
+    @EqualsAndHashCode.Include
     private UUID id;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "orgId", nullable = false)
+    @JoinColumn(name = "org_id", nullable = false)
     private Org org;
 
-    @Column(nullable = false)
-    private String entityType; // e.g., 'MATTER', 'PARTY', 'CORRESPONDENCE', 'FILE_OCR'
+    @Enumerated(EnumType.STRING)
+    @Column(name = "entity_type", nullable = false)
+    private EntityType entityType;
 
-    @Column(nullable = false)
+    @Column(name = "entity_id", nullable = false)
     private UUID entityId;
 
     @Column(nullable = false)
@@ -42,10 +47,10 @@ public class SearchDocument {
     // in the repository layer for blazing fast Full-Text Search.
 
     @CreationTimestamp
-    @Column(nullable = false, updatable = false)
+    @Column(name = "created_at", nullable = false, updatable = false)
     private OffsetDateTime createdAt;
 
     @UpdateTimestamp
-    @Column(nullable = false)
+    @Column(name = "updated_at", nullable = false)
     private OffsetDateTime updatedAt;
 }

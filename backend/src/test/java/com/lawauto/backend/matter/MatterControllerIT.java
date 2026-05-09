@@ -15,7 +15,6 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Objects;
-import java.util.UUID;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -35,29 +34,25 @@ public class MatterControllerIT {
     @Autowired
     private ObjectMapper objectMapper;
 
-    private UUID testOrgId;
-
     @BeforeEach
     void setUp() {
         Org org = new Org();
-        org.setName("Test Law Firm");
-        org = orgRepository.save(org);
-        testOrgId = org.getId();
+        org.setSlug("test-law-firm");
+        org.setDisplayName("Test Law Firm");
+        orgRepository.save(org);
     }
 
     @Test
     void shouldCreateMatterSuccessfully() throws Exception {
         CreateMatterRequest request = new CreateMatterRequest(
-            "Integration Test Matter",
-            "2024/TEST",
-            "Testing full flow",
-            "Detailed description",
-            new String[]{"test", "integration"},
-            java.time.OffsetDateTime.now()
-        );
+                "Integration Test Matter",
+                "2024/TEST",
+                "Testing full flow",
+                "Detailed description",
+                java.util.List.of("test", "integration"),
+                java.time.OffsetDateTime.now());
 
         mockMvc.perform(post("/api/matters")
-                .param("orgId", Objects.requireNonNull(testOrgId.toString()))
                 .contentType(Objects.requireNonNull(MediaType.APPLICATION_JSON))
                 .content(Objects.requireNonNull(objectMapper.writeValueAsString(request))))
                 .andExpect(status().isOk());

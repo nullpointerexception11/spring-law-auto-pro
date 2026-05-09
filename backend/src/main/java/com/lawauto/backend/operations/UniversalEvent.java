@@ -12,24 +12,29 @@ import java.time.OffsetDateTime;
 import java.util.UUID;
 
 @Entity
-@Table(name = "\"UniversalEvent\"")
+@Table(name = "universal_events", indexes = {
+    @Index(name = "idx_event_org_start", columnList = "org_id, start_at"),
+    @Index(name = "idx_event_matter", columnList = "matter_id")
+})
 @Getter
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
+@EqualsAndHashCode(onlyExplicitlyIncluded = true)
 public class UniversalEvent {
 
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
+    @EqualsAndHashCode.Include
     private UUID id;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "orgId", nullable = false)
+    @JoinColumn(name = "org_id", nullable = false)
     private Org org;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "matterId")
+    @JoinColumn(name = "matter_id")
     private Matter matter;
 
     @Enumerated(EnumType.STRING)
@@ -39,29 +44,33 @@ public class UniversalEvent {
     @Column(nullable = false)
     private String title;
 
-    @Column(columnDefinition = "text")
+    @Column(name = "description_html", columnDefinition = "text")
     private String descriptionHtml;
 
-    @Column(nullable = false)
+    private String location;
+
+    @Column(name = "start_at", nullable = false)
     private OffsetDateTime startAt;
 
+    @Column(name = "end_at")
     private OffsetDateTime endAt;
 
     private String rrule; // iCal recurrence standard
 
     @Enumerated(EnumType.STRING)
     @Builder.Default
-    private UniversalEventStatus status = UniversalEventStatus.PENDING;
+    @Column(nullable = false)
+    private UniversalEventStatus status = UniversalEventStatus.SCHEDULED;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "createdByUserId", nullable = false)
+    @JoinColumn(name = "created_by_id", nullable = false)
     private User createdBy;
 
     @CreationTimestamp
-    @Column(nullable = false, updatable = false)
+    @Column(name = "created_at", nullable = false, updatable = false)
     private OffsetDateTime createdAt;
 
     @UpdateTimestamp
-    @Column(nullable = false)
+    @Column(name = "updated_at", nullable = false)
     private OffsetDateTime updatedAt;
 }

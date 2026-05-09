@@ -3,6 +3,8 @@ package com.lawauto.backend.matter;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.util.UUID;
+
 @Entity
 @Table(name = "matter_parties", uniqueConstraints = {
     @UniqueConstraint(columnNames = {"matter_id", "party_id", "role_id"})

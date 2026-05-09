@@ -1,8 +1,13 @@
 package com.lawauto.backend.operations;
 
 public enum UniversalEventStatus {
-    PENDING,
+    DRAFT,
+    SCHEDULED,
+    CONFIRMED,
+    IN_PROGRESS,
     COMPLETED,
     CANCELED,
+    RESCHEDULED,
+    POSTPONED,
     MISSED
 }

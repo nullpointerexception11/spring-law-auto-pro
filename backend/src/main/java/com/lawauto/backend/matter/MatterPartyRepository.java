@@ -8,7 +8,7 @@ import org.springframework.data.repository.query.Param;
 import java.util.List;
 import java.util.UUID;
 
-public interface MatterPartyRepository extends JpaRepository<MatterParty, MatterPartyId> {
+public interface MatterPartyRepository extends JpaRepository<MatterParty, UUID> {
 
     /**
      * Highly optimized query to fetch only the necessary Party details and their Contextual Roles 
@@ -16,7 +16,7 @@ public interface MatterPartyRepository extends JpaRepository<MatterParty, Matter
      */
     @Query("""
         SELECT new com.lawauto.backend.matter.dto.MatterDetailDto$PartySummaryDto(
-            p.id, p.fullName, r.name, r.category
+            p.id, p.fullName, r.displayName, r.category
         )
         FROM MatterParty mp
         JOIN mp.party p

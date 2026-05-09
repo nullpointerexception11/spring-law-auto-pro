@@ -1,7 +1,6 @@
 package com.lawauto.backend.operations;
 
 import com.lawauto.backend.auth.AuthPrincipal;
-import com.lawauto.backend.user.RoleKey;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
 import org.springframework.web.server.ResponseStatusException;

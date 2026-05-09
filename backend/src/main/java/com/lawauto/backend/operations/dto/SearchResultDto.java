@@ -9,7 +9,7 @@ import java.util.UUID;
  */
 public record SearchResultDto(
     UUID id,
-    String entityType,
+    com.lawauto.backend.operations.EntityType entityType,
     UUID entityId,
     String title,
     String snippet
@@ -18,16 +18,27 @@ public record SearchResultDto(
      * Maps the native Entity to a lightweight DTO, generating a truncated snippet.
      */
     public static SearchResultDto fromEntity(SearchDocument doc) {
-        String bodySnippet = doc.getBody();
-        if (bodySnippet != null && bodySnippet.length() > 200) {
-            bodySnippet = bodySnippet.substring(0, 197) + "...";
-        }
         return new SearchResultDto(
             doc.getId(),
             doc.getEntityType(),
             doc.getEntityId(),
             doc.getTitle(),
-            bodySnippet
+            createSnippet(doc.getBody())
         );
+    }
+
+    private static String createSnippet(String body) {
+        if (body == null) return null;
+
+        // Clean up whitespace
+        body = body.replaceAll("\\s+", " ").trim();
+
+        if (body.length() <= 200) return body;
+
+        // Cut at word boundary
+        int cut = body.lastIndexOf(' ', 197);
+        if (cut == -1) cut = 197;
+
+        return body.substring(0, cut) + "...";
     }
 }
