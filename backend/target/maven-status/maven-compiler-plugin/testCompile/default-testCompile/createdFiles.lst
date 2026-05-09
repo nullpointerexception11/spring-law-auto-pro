@@ -1,1 +1,5 @@
 com\lawauto\backend\HealthControllerTest.class
+com\lawauto\backend\auth\AuthControllerIT.class
+com\lawauto\backend\matter\MatterControllerIT.class
+com\lawauto\backend\db\DatabaseConnectionTest.class
+com\lawauto\backend\HashTest.class

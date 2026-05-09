@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Outlet } from 'react-router-dom';
 import { Sidebar } from './Sidebar';
 import { Topbar } from './Topbar';
+import { AiChat } from '../AiChat';
 
 export function AppLayout() {
   // Manage the state of the sidebar here so both Sidebar and Topbar can access it.
@@ -30,6 +31,7 @@ export function AppLayout() {
           </div>
         </main>
       </div>
+      <AiChat />
     </div>
   );
 }

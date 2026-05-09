@@ -27,9 +27,9 @@ public class GlobalSearchService {
      */
     @Transactional(readOnly = true)
     public Page<SearchResultDto> searchGlobally(
-            @org.springframework.lang.NonNull UUID orgId, 
+            UUID orgId, 
             String keyword, 
-            @org.springframework.lang.NonNull Pageable pageable) {
+            Pageable pageable) {
         // Enforce strict Tenant isolation boundary
         authorizationGuard.requireOrg(orgId);
         

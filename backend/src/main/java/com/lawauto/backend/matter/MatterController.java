@@ -32,7 +32,7 @@ public class MatterController {
      */
     @GetMapping("/{matterId}")
     public com.lawauto.backend.matter.dto.MatterDetailDto getMatterDetail(
-            @PathVariable @org.springframework.lang.NonNull UUID matterId) {
+            @PathVariable UUID matterId) {
         var principal = java.util.Objects.requireNonNull(authorizationGuard.currentPrincipal());
         return matterService.getMatterDetail(java.util.Objects.requireNonNull(principal.orgId()), matterId);
     }

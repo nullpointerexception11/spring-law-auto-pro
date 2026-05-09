@@ -51,7 +51,7 @@ public class MatterTools {
         );
 
         // 3. Invoke service
-        UUID matterId = matterService.createMatter(orgId, request);
+        UUID matterId = java.util.Objects.requireNonNull(matterService.createMatter(orgId, request));
 
         return "Başarılı: '" + title + "' başlıklı dava oluşturuldu. Sistem ID: " + matterId;
     }

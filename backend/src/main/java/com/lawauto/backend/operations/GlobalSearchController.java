@@ -26,9 +26,9 @@ public class GlobalSearchController {
      */
     @GetMapping
     public Page<SearchResultDto> search(
-            @RequestParam @org.springframework.lang.NonNull UUID orgId,
-            @RequestParam @org.springframework.lang.NonNull String q,
-            @org.springframework.lang.NonNull Pageable pageable) {
+            @RequestParam UUID orgId,
+            @RequestParam String q,
+            Pageable pageable) {
         return searchService.searchGlobally(orgId, q, pageable);
     }
 }

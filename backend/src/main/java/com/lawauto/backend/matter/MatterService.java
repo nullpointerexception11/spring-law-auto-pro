@@ -12,6 +12,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
+import java.util.Objects;
 import java.util.UUID;
 
 @Service
@@ -44,9 +45,9 @@ public class MatterService {
         entityType = com.lawauto.backend.operations.EntityType.MATTER,
         summary = "New matter created via API"
     )
-    @SuppressWarnings("null")
-    public UUID createMatter(@org.springframework.lang.NonNull UUID orgId, com.lawauto.backend.matter.dto.CreateMatterRequest request) {
-        java.util.Objects.requireNonNull(orgId, "orgId must not be null");
+    public UUID createMatter(UUID orgId, com.lawauto.backend.matter.dto.CreateMatterRequest request) {
+        Objects.requireNonNull(orgId, "orgId must not be null");
+        Objects.requireNonNull(request, "request must not be null");
         
         // 1. Fetch organization
         com.lawauto.backend.org.Org org = orgRepository.findById(orgId)

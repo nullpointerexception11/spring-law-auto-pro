@@ -62,7 +62,7 @@ app:
 
   ai:
     openai:
-      api-key: ${OPENAI_API_KEY:replace-me-with-your-openai-api-key}
+      api-key: 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
       chat:
         options:
           model: gpt-4o-mini
