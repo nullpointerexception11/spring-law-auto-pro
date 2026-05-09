@@ -1,4 +1,11 @@
 spring:
+  ai:
+    openai:
+      api-key: ${OPENAI_API_KEY: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}
+      chat:
+        options:
+          model: gpt-4o-mini
+          temperature: 0.7
   datasource:
     url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/law_auto}
     username: ${SPRING_DATASOURCE_USERNAME:postgres}
@@ -60,10 +67,3 @@ app:
   exports:
     root: ${APP_EXPORTS_ROOT:C:/tmp/law-auto-exports}
 
-  ai:
-    openai:
-      api-key: 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
-      chat:
-        options:
-          model: gpt-4o-mini
-          temperature: 0.7
