@@ -14,7 +14,6 @@ com\lawauto\backend\operations\UniversalEventType.class
 com\lawauto\backend\operations\UniversalEvent$UniversalEventBuilder.class
 com\lawauto\backend\matter\MatterService.class
 com\lawauto\backend\operations\UniversalEventStatus.class
-com\lawauto\backend\matter\MatterPartyId.class
 com\lawauto\backend\matter\MatterRepository.class
 com\lawauto\backend\matter\dto\MatterDetailDto.class
 com\lawauto\backend\matter\MatterPartyRepository.class
@@ -24,7 +23,6 @@ com\lawauto\backend\operations\SearchDocument$SearchDocumentBuilder.class
 com\lawauto\backend\operations\UniversalEvent.class
 com\lawauto\backend\operations\ActivityEventRepository.class
 com\lawauto\backend\operations\OperationAccessGuard.class
-com\lawauto\backend\common\ApiResponse.class
 com\lawauto\backend\matter\MatterParty$MatterPartyBuilder.class
 com\lawauto\backend\matter\Party.class
 com\lawauto\backend\auth\AuthorizationGuard.class
