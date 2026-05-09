@@ -60,3 +60,10 @@ app:
   exports:
     root: ${APP_EXPORTS_ROOT:C:/tmp/law-auto-exports}
 
+  ai:
+    openai:
+      api-key: ${OPENAI_API_KEY:replace-me-with-your-openai-api-key}
+      chat:
+        options:
+          model: gpt-4o-mini
+          temperature: 0.7
