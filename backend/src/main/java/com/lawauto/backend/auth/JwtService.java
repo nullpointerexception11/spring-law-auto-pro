@@ -28,6 +28,11 @@ public class JwtService {
         return orgIdStr != null ? UUID.fromString(orgIdStr) : null;
     }
 
+    public UUID extractUserId(String token) {
+        String userIdStr = extractAllClaims(token).get("userId", String.class);
+        return userIdStr != null ? UUID.fromString(userIdStr) : null;
+    }
+
     @SuppressWarnings("unchecked")
     public List<String> extractRoles(String token) {
         return extractAllClaims(token).get("roles", List.class);

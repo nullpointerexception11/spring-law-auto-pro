@@ -1,7 +1,5 @@
 package com.lawauto.backend.auth;
 
-import com.lawauto.backend.user.Role;
-import com.lawauto.backend.user.RoleKey;
 import com.lawauto.backend.user.User;
 import com.lawauto.backend.user.UserRepository;
 import io.jsonwebtoken.Jwts;
@@ -16,7 +14,6 @@ import java.nio.charset.StandardCharsets;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Set;
 import java.util.stream.Collectors;
 
 @Service
@@ -32,7 +29,10 @@ public class AuthService {
     @Value("${app.jwt.expiration-minutes}")
     private long expirationMinutes;
 
-    public String login(String email, String password) {
+    public record LoginResponse(String token, String role, String orgId) {
+    }
+
+    public LoginResponse login(String email, String password) {
         User user = userRepository.findByEmailCanonical(email.toLowerCase())
                 .orElseThrow(() -> new RuntimeException("Invalid credentials"));
 
@@ -40,7 +40,10 @@ public class AuthService {
             throw new RuntimeException("Invalid credentials");
         }
 
-        return generateToken(user);
+        String token = generateToken(user);
+        String role = user.getRoles().isEmpty() ? "USER" : user.getRoles().iterator().next().getRoleKey().name();
+
+        return new LoginResponse(token, role, user.getOrg().getId().toString());
     }
 
     private String generateToken(User user) {

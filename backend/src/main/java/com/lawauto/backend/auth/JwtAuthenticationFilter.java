@@ -47,18 +47,19 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             if (jwtService.isTokenValid(jwt)) {
                 userEmail = jwtService.extractUsername(jwt);
                 UUID orgId = jwtService.extractOrgId(jwt);
+                UUID userId = jwtService.extractUserId(jwt);
                 List<String> roles = jwtService.extractRoles(jwt);
 
                 if (userEmail != null && SecurityContextHolder.getContext().getAuthentication() == null) {
                     // Map roles to authorities
-                    var authorities = roles != null ? 
+                    List<SimpleGrantedAuthority> authorities = roles != null ? 
                         roles.stream().map(SimpleGrantedAuthority::new).collect(Collectors.toList()) : 
                         Collections.emptyList();
 
                     // Create our custom AuthPrincipal
                     AuthPrincipal principal = new AuthPrincipal(
                         orgId,
-                        null, // userId (could be added to claims if needed)
+                        userId,
                         userEmail,
                         roles != null ? roles.stream().map(com.lawauto.backend.user.RoleKey::valueOf).collect(Collectors.toSet()) : Collections.emptySet()
                     );

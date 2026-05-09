@@ -38,8 +38,8 @@ public class ActivityAspect {
             HttpServletRequest request = ((ServletRequestAttributes) RequestContextHolder.currentRequestAttributes()).getRequest();
             
             // Resolve actual entities (using proxy/reference to avoid full fetch if possible)
-            Org org = orgRepository.getReferenceById(principal.orgId());
-            User user = userRepository.getReferenceById(principal.userId());
+            Org org = orgRepository.getReferenceById(java.util.Objects.requireNonNull(principal.orgId(), "orgId cannot be null"));
+            User user = userRepository.getReferenceById(java.util.Objects.requireNonNull(principal.userId(), "userId cannot be null"));
 
             UUID entityId = null;
             if (result instanceof UUID uuid) {
@@ -60,7 +60,7 @@ public class ActivityAspect {
                     .userAgent(request.getHeader("User-Agent"))
                     .build();
 
-            activityEventRepository.save(event);
+            activityEventRepository.save(java.util.Objects.requireNonNull(event, "ActivityEvent cannot be null"));
             log.debug("Audit log saved: {} on {} by {}", auditable.action(), auditable.entityType(), principal.email());
 
         } catch (Exception e) {

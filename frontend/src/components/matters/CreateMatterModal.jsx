@@ -4,8 +4,6 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { X, Loader2, Plus, Info } from 'lucide-react';
 import api from '../../lib/api';
 
-const TEST_ORG_ID = '11111111-1111-1111-1111-111111111111';
-
 export function CreateMatterModal({ isOpen, onClose }) {
   const queryClient = useQueryClient();
   
@@ -26,9 +24,7 @@ export function CreateMatterModal({ isOpen, onClose }) {
         tags: data.tags ? data.tags.split(',').map(t => t.trim()).filter(t => t !== '') : []
       };
       
-      const response = await api.post(`/matters`, processedData, {
-        params: { orgId: TEST_ORG_ID }
-      });
+      const response = await api.post(`/matters`, processedData);
       return response.data;
     },
     onSuccess: () => {
