@@ -69,11 +69,19 @@ public class MatterService {
      */
     @Transactional(readOnly = true)
     public Page<MatterListDto> listMatters(UUID orgId, Pageable pageable) {
-        // authorizationGuard.requireOrg(orgId); // Temporarily bypassed for stabilization
+        authorizationGuard.requireOrg(orgId);
         
-        // TODO: Non-admin specific filtering logic
-        
-        return matterRepository.findAllListDtosByOrgId(orgId, pageable);
+        return matterRepository.findAllListDtosByOrgId(orgId, pageable)
+                .map(p -> new MatterListDto(
+                        p.getId(),
+                        p.getTitle(),
+                        p.getReferenceNumber(),
+                        p.getStatus() != null ? MatterStatus.valueOf(p.getStatus()) : null,
+                        p.getOpenedAt(),
+                        p.getClientName(),
+                        p.getAssignedLawyerName(),
+                        p.getNextHearingDate()
+                ));
     }
 
     /**
