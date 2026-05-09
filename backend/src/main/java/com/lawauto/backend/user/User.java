@@ -37,13 +37,13 @@ public class User {
     @Column(nullable = false)
     private String email;
 
-    @Column(nullable = false, unique = true)
+    @Column(name = "email_canonical", nullable = false, unique = true)
     private String emailCanonical;
 
-    @Column(nullable = false)
+    @Column(name = "full_name", nullable = false)
     private String fullName;
 
-    @Column(nullable = false)
+    @Column(name = "password_hash", nullable = false)
     private String passwordHash;
 
     @Enumerated(EnumType.STRING)
@@ -58,9 +58,10 @@ public class User {
     private String locale = "tr-TR";
 
     @JdbcTypeCode(SqlTypes.JSON)
-    @Column(columnDefinition = "jsonb")
+    @Column(name = "notification_settings", columnDefinition = "jsonb")
     private Map<String, Object> notificationSettings;
 
+    @Column(name = "last_login_at")
     private OffsetDateTime lastLoginAt;
 
     @ManyToMany(fetch = FetchType.LAZY)
@@ -72,10 +73,10 @@ public class User {
     private Set<Role> roles;
 
     @CreationTimestamp
-    @Column(nullable = false, updatable = false)
+    @Column(name = "created_at", nullable = false, updatable = false)
     private OffsetDateTime createdAt;
 
     @UpdateTimestamp
-    @Column(nullable = false)
+    @Column(name = "updated_at", nullable = false)
     private OffsetDateTime updatedAt;
 }

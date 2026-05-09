@@ -16,7 +16,7 @@ public record MatterDetailDto(
     MatterStatus status,
     String summary,
     String description,
-    String[] tags,
+    java.util.List<String> tags,
     OffsetDateTime openedAt,
     OffsetDateTime closedAt,
     
@@ -34,7 +34,7 @@ public record MatterDetailDto(
      * Initializes the parties list as empty. It will be populated by the Service layer.
      */
     public MatterDetailDto(UUID id, String title, String referenceNumber, MatterStatus status, 
-                           String summary, String description, String[] tags, 
+                           String summary, String description, java.util.List<String> tags, 
                            OffsetDateTime openedAt, OffsetDateTime closedAt, 
                            String courtName, String caseNumber, String judgeName, LocalDate decisionDate) {
         this(id, title, referenceNumber, status, summary, description, tags, openedAt, closedAt, 
@@ -53,6 +53,6 @@ public record MatterDetailDto(
         UUID partyId,
         String fullName,
         String roleName, 
-        String roleCategory
+        com.lawauto.backend.matter.PartyCategory category
     ) {}
 }
