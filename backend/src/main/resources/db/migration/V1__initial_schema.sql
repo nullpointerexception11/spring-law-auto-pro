@@ -83,6 +83,7 @@ CREATE TABLE matter_assignees (
   id UUID PRIMARY KEY,
   matter_id UUID NOT NULL REFERENCES matters(id) ON DELETE CASCADE,
   user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  role TEXT NOT NULL,
   assigned_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   UNIQUE(matter_id, user_id)
 );
