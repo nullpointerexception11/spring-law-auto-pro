@@ -29,10 +29,10 @@ public class AuthControllerIT {
 
         // Assert
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
-        assertThat(response.getBody()).isNotNull();
-        assertThat(response.getBody().token()).isNotBlank();
-        assertThat(response.getBody().role()).isNotBlank();
-        assertThat(response.getBody().orgId()).isNotBlank();
+        AuthService.LoginResponse body = java.util.Objects.requireNonNull(response.getBody(), "Response body must not be null");
+        assertThat(body.token()).isNotBlank();
+        assertThat(body.role()).isNotBlank();
+        assertThat(body.orgId()).isNotBlank();
     }
     
     @Test
