@@ -9,27 +9,36 @@ import java.time.OffsetDateTime;
 import java.util.UUID;
 
 @Entity
-@Table(name = "\"Role\"", uniqueConstraints = {
-        @UniqueConstraint(columnNames = {"orgId", "roleKey"})
+@Table(name = "roles", uniqueConstraints = {
+        @UniqueConstraint(columnNames = {"org_id", "role_key"})
 })
 @Getter
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
+@EqualsAndHashCode(onlyExplicitlyIncluded = true)
 public class Role {
 
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
+    @EqualsAndHashCode.Include
     private UUID id;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "orgId", nullable = false)
+    @JoinColumn(name = "org_id", nullable = false)
     private Org org;
 
     @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
+    @Column(name = "role_key", nullable = false)
     private RoleKey roleKey;
+
+    @Column(nullable = false)
+    private String displayName;
+
+    @Builder.Default
+    @Column(nullable = false)
+    private boolean systemRole = false;
 
     @CreationTimestamp
     @Column(nullable = false, updatable = false)

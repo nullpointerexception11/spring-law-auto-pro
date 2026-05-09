@@ -14,26 +14,31 @@ import java.util.Set;
 import java.util.UUID;
 
 @Entity
-@Table(name = "\"User\"", uniqueConstraints = {
-        @UniqueConstraint(columnNames = {"orgId", "email"})
+@Table(name = "users", uniqueConstraints = {
+        @UniqueConstraint(columnNames = {"org_id", "email"})
 })
 @Getter
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
+@EqualsAndHashCode(onlyExplicitlyIncluded = true)
 public class User {
 
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
+    @EqualsAndHashCode.Include
     private UUID id;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "orgId", nullable = false)
+    @JoinColumn(name = "org_id", nullable = false)
     private Org org;
 
     @Column(nullable = false)
     private String email;
+
+    @Column(nullable = false, unique = true)
+    private String emailCanonical;
 
     @Column(nullable = false)
     private String fullName;
@@ -43,7 +48,8 @@ public class User {
 
     @Enumerated(EnumType.STRING)
     @Builder.Default
-    private UserStatus status = UserStatus.PENDING;
+    @Column(nullable = false)
+    private UserStatus status = UserStatus.INVITED;
 
     @Builder.Default
     private String timezone = "Europe/Istanbul";
@@ -59,9 +65,9 @@ public class User {
 
     @ManyToMany(fetch = FetchType.LAZY)
     @JoinTable(
-        name = "\"UserRole\"",
-        joinColumns = @JoinColumn(name = "userId"),
-        inverseJoinColumns = @JoinColumn(name = "roleId")
+        name = "user_roles",
+        joinColumns = @JoinColumn(name = "user_id"),
+        inverseJoinColumns = @JoinColumn(name = "role_id")
     )
     private Set<Role> roles;
 

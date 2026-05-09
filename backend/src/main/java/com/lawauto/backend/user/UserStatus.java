@@ -1,9 +1,9 @@
 package com.lawauto.backend.user;
 
 public enum UserStatus {
-    PENDING,
-    ACTIVE,
-    INACTIVE,
     INVITED,
+    ACTIVE,
+    SUSPENDED,
+    DISABLED,
     ANONYMIZED
 }
