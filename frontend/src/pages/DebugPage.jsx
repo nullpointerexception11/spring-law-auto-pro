@@ -21,7 +21,7 @@ export default function DebugPage() {
 
         <section className="p-6 bg-slate-800 rounded-xl border border-slate-700">
           <h2 className="text-xl text-indigo-400 mb-4 font-bold">Yönlendirme Testi:</h2>
-          <p>Eğer rolün <code className="bg-slate-700 px-2 py-1 rounded text-white">SUPER_ADMIN</code> ise butona bastığında yönlenmelisin.</p>
+          <p>Eğer rolün <code className="bg-slate-700 px-2 py-1 rounded text-white">PLATFORM_ADMIN</code> ise butona bastığında yönlenmelisin.</p>
           <button 
             onClick={() => window.location.href = "/super-admin"}
             className="mt-4 px-6 py-3 bg-indigo-600 text-white font-bold rounded-lg hover:bg-indigo-700 transition-all"

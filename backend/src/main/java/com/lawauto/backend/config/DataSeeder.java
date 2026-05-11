@@ -25,10 +25,9 @@ public class DataSeeder implements CommandLineRunner {
     private final PasswordEncoder passwordEncoder;
 
     @Override
-    @Transactional
     public void run(String... args) {
-        if (userRepository.count() > 0) {
-            log.info("Database already seeded. Skipping...");
+        if (orgRepository.findBySlug("prestige-law").isPresent()) {
+            log.info("Database already seeded (Org exists). Skipping...");
             return;
         }
 
@@ -40,7 +39,7 @@ public class DataSeeder implements CommandLineRunner {
         org.setSlug("prestige-law");
         org.setDisplayName("Prestige Hukuk");
         org.setPlan(OrgPlan.ENTERPRISE);
-        orgRepository.save(org);
+        orgRepository.saveAndFlush(org);
 
         // 2. Create Roles
         Role adminRole = createRole(org, RoleKey.ORG_ADMIN, "Yönetici");
@@ -57,7 +56,7 @@ public class DataSeeder implements CommandLineRunner {
         superAdmin.setPasswordHash(passwordEncoder.encode("superpassword123"));
         superAdmin.setStatus(UserStatus.ACTIVE);
         superAdmin.setRoles(Set.of(superAdminRole));
-        userRepository.save(superAdmin);
+        userRepository.saveAndFlush(superAdmin);
 
         // 4. Create Normal Lawyer User
         User lawyer = new User();
@@ -69,7 +68,7 @@ public class DataSeeder implements CommandLineRunner {
         lawyer.setPasswordHash(passwordEncoder.encode("password123"));
         lawyer.setStatus(UserStatus.ACTIVE);
         lawyer.setRoles(Set.of(lawyerRole));
-        userRepository.save(lawyer);
+        userRepository.saveAndFlush(lawyer);
 
         log.info("Seeding completed successfully.");
     }
@@ -81,6 +80,6 @@ public class DataSeeder implements CommandLineRunner {
         role.setRoleKey(key);
         role.setDisplayName(displayName);
         role.setSystemRole(true);
-        return roleRepository.save(role);
+        return roleRepository.saveAndFlush(role);
     }
 }

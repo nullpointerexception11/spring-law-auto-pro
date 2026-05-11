@@ -22,42 +22,42 @@ CREATE TYPE "DeleteStatus" AS ENUM ('PENDING', 'APPROVED', 'REJECTED', 'EXECUTED
 CREATE TABLE "org" (
   "id" UUID PRIMARY KEY,
   "name" TEXT NOT NULL UNIQUE,
-  "displayName" TEXT,
+  "display_name" TEXT,
   "plan" TEXT DEFAULT 'FREE',
-  "createdAt" TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-  "updatedAt" TIMESTAMPTZ NOT NULL DEFAULT NOW()
+  "created_at" TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  "updated_at" TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
 CREATE TABLE "user" (
   "id" UUID PRIMARY KEY,
-  "orgId" UUID REFERENCES "org"("id"),
+  "org_id" UUID REFERENCES "org"("id"),
   "email" TEXT NOT NULL,
-  "fullName" TEXT NOT NULL,
-  "passwordHash" TEXT NOT NULL,
+  "full_name" TEXT NOT NULL,
+  "password_hash" TEXT NOT NULL,
   "status" "UserStatus" DEFAULT 'PENDING',
   "timezone" TEXT DEFAULT 'Europe/Istanbul',
   "locale" TEXT DEFAULT 'tr-TR',
-  "notificationSettings" JSONB,
-  "lastLoginAt" TIMESTAMPTZ,
-  "createdAt" TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-  "updatedAt" TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-  UNIQUE("orgId", "email")
+  "notification_settings" JSONB,
+  "last_login_at" TIMESTAMPTZ,
+  "created_at" TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  "updated_at" TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  UNIQUE("org_id", "email")
 );
 
 CREATE TABLE "role" (
   "id" UUID PRIMARY KEY,
-  "orgId" UUID REFERENCES "org"("id"),
-  "roleKey" "RoleKey" NOT NULL,
-  "createdAt" TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-  "displayName" TEXT NOT NULL,
-  "systemRole" BOOLEAN DEFAULT false,
-  UNIQUE("orgId", "roleKey")
+  "org_id" UUID REFERENCES "org"("id"),
+  "role_key" "RoleKey" NOT NULL,
+  "created_at" TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  "display_name" TEXT NOT NULL,
+  "system_role" BOOLEAN DEFAULT false,
+  UNIQUE("org_id", "role_key")
 );
 
 CREATE TABLE "user_role" (
-  "userId" UUID NOT NULL REFERENCES "user"("id"),
-  "roleId" UUID NOT NULL REFERENCES "role"("id"),
-  PRIMARY KEY ("userId", "roleId")
+  "user_id" UUID NOT NULL REFERENCES "user"("id"),
+  "role_id" UUID NOT NULL REFERENCES "role"("id"),
+  PRIMARY KEY ("user_id", "role_id")
 );
 
 CREATE TABLE "file_object" (

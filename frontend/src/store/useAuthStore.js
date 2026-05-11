@@ -41,7 +41,7 @@ export const useAuthStore = create(
       // Helper to check permissions
       hasPermission: (permission) => {
         const { role } = get();
-        if (role === 'SUPER_ADMIN') return true;
+        if (role === 'PLATFORM_ADMIN') return true;
         // Logic for role-based permissions can be expanded here
         return false;
       },

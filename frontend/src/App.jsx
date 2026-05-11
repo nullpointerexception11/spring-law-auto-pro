@@ -61,7 +61,7 @@ function App() {
 
             {/* Restricted Admin Route */}
             <Route path={ROUTES.SUPER_ADMIN} element={
-              <ProtectedRoute role="SUPER_ADMIN">
+              <ProtectedRoute role="PLATFORM_ADMIN">
                 <SuperAdminPage />
               </ProtectedRoute>
             } />

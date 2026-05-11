@@ -34,10 +34,6 @@ export function CreateMatterModal({ isOpen, onClose }) {
 
   if (!isOpen) return null;
 
-  const onSubmit = (data) => {
-    mutation.mutate(data);
-  };
-
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-background/80 backdrop-blur-sm animate-in fade-in duration-200">
       <div className="bg-card w-full max-w-xl rounded-xl border border-border shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">

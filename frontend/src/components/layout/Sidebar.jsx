@@ -19,7 +19,7 @@ import { useAuthStore } from '@/store/useAuthStore';
 
 export function Sidebar({ isCollapsed, setIsCollapsed }) {
   const [isHovered, setIsHovered] = React.useState(false);
-  const logout = useAuthStore(state => state.logout);
+  const { logout, role } = useAuthStore();
   const navigate = useNavigate();
 
   const isEffectivelyOpen = !isCollapsed || isHovered;
@@ -31,6 +31,7 @@ export function Sidebar({ isCollapsed, setIsCollapsed }) {
     { name: 'Belgeler', href: '/documents', icon: FileText },
     { name: 'Faturalandırma', href: '/billing', icon: CreditCard },
     { name: 'AI Asistan', href: '/ai', icon: BrainCircuit },
+    ...(role === 'PLATFORM_ADMIN' ? [{ name: 'Sistem Paneli', href: '/super-admin', icon: Scale }] : []),
   ];
 
   const handleLogout = () => {

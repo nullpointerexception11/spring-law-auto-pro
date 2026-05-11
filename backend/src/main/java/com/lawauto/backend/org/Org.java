@@ -19,7 +19,6 @@ import java.util.UUID;
 public class Org {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.UUID)
     @EqualsAndHashCode.Include
     private UUID id;
 

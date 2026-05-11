@@ -37,7 +37,7 @@ export default function LoginPage() {
       const userRole = (data.role || "").toString().trim().toUpperCase();
       toast.success("Giriş başarılı!");
 
-      if (userRole === "SUPER_ADMIN") {
+      if (userRole === "PLATFORM_ADMIN") {
         navigate("/super-admin");
       } else {
         navigate("/dashboard");

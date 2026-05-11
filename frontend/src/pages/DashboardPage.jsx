@@ -16,7 +16,7 @@ import { useAuthStore } from "@/store/useAuthStore";
 import { motion } from "framer-motion";
 
 export default function DashboardPage() {
-  const user = useAuthStore(state => state.user);
+  const { user, role } = useAuthStore();
 
   return (
     <div className="space-y-10 fade-enter-active">
@@ -25,10 +25,12 @@ export default function DashboardPage() {
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
         <div>
           <h1 className="text-4xl font-black text-slate-900 mb-2 tracking-tight">
-            Hoş Geldin, <span className="text-indigo-600">{user?.fullName || 'Avukat'}</span>
+            Hoş Geldin, <span className="text-indigo-600">{user?.fullName || (role === 'PLATFORM_ADMIN' ? 'Sistem Yöneticisi' : 'Avukat')}</span>
           </h1>
           <p className="text-slate-500 text-lg font-medium">
-            Hukuk otomasyon sisteminizde her şey kontrol altında.
+            {role === 'PLATFORM_ADMIN' 
+              ? 'Tüm sistem ve organizasyonlar genelinde tam yetkiye sahipsiniz.' 
+              : 'Hukuk otomasyon sisteminizde her şey kontrol altında.'}
           </p>
         </div>
         <div className="flex items-center gap-3">
