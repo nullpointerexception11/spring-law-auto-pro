@@ -6,8 +6,7 @@ import lombok.*;
 import java.util.UUID;
 
 /**
- * Stores only storage‑related metadata for a binary file.
- * One‑to‑one relations to OCR and AI result entities.
+ * Main entity for file metadata.
  */
 @Entity
 @Table(name = "file_metadata", indexes = {
@@ -36,10 +35,6 @@ public class FileMetadata extends TenantAware {
     @Column(nullable = false, length = 64)
     private String sha256;
 
-    /**
-     * The key used by {@link com.lawauto.backend.storage.StorageService}
-     * to locate the raw bytes.
-     */
     @Column(nullable = false, unique = true)
     private UUID storageKey;
 

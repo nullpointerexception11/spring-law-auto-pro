@@ -6,6 +6,8 @@ import org.springframework.core.io.InputStreamResource;
 import org.springframework.stereotype.Service;
 import software.amazon.awssdk.services.s3.S3Client;
 import software.amazon.awssdk.services.s3.model.*;
+import software.amazon.awssdk.core.ResponseInputStream;
+import software.amazon.awssdk.core.sync.RequestBody;
 import java.io.InputStream;
 import java.net.URL;
 import java.util.UUID;

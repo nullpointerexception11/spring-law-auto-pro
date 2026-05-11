@@ -3,56 +3,51 @@ package com.lawauto.backend.ai.tools;
 import com.lawauto.backend.auth.AuthPrincipal;
 import com.lawauto.backend.matter.MatterService;
 import com.lawauto.backend.matter.dto.CreateMatterRequest;
-import org.springframework.ai.tool.annotation.Tool;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 
 import java.time.OffsetDateTime;
 import java.util.UUID;
 
-/**
- * AI Tool for Matter (Dava) operations.
- * This class provides functions that the AI Agent can invoke.
- */
 @Component
 public class MatterTools {
 
     private final MatterService matterService;
+
+    // Bu record mutlaka burada olmalı ✅
+    public record MatterRequest(
+        String title, 
+        String referenceNumber, 
+        String summary, 
+        String description
+    ) {}
 
     public MatterTools(MatterService matterService) {
         this.matterService = matterService;
     }
 
     /**
-     * Creates a new legal matter (dava) in the system.
-     * @param title The title of the matter (required).
-     * @param referenceNumber The case number or reference (optional).
-     * @param summary A short summary (optional).
-     * @param description Full description (optional).
-     * @return A success message with the created Matter ID.
+     * AI tarafından çağrılan metot.
+     * Parametre olarak MatterRequest record'u alır.
      */
-    @Tool(description = "Sistemde yeni bir hukuk davası (matter) oluşturur.")
-    public String createMatter(String title, String referenceNumber, String summary, String description) {
-        // 1. Get current organization from Security Context
+    public String createMatter(MatterRequest request) {
         AuthPrincipal principal = (AuthPrincipal) SecurityContextHolder.getContext()
                 .getAuthentication()
                 .getPrincipal();
         
         UUID orgId = principal.orgId();
 
-        // 2. Prepare request
-        CreateMatterRequest request = new CreateMatterRequest(
-                title,
-                referenceNumber,
-                summary,
-                description,
-                null, // tags
+        CreateMatterRequest serviceRequest = new CreateMatterRequest(
+                request.title(),
+                request.referenceNumber(),
+                request.summary(),
+                request.description(),
+                null, 
                 OffsetDateTime.now()
         );
 
-        // 3. Invoke service
-        UUID matterId = java.util.Objects.requireNonNull(matterService.createMatter(orgId, request));
+        UUID matterId = java.util.Objects.requireNonNull(matterService.createMatter(orgId, serviceRequest));
 
-        return "Başarılı: '" + title + "' başlıklı dava oluşturuldu. Sistem ID: " + matterId;
+        return "Başarılı: '" + request.title() + "' başlıklı dava oluşturuldu. ID: " + matterId;
     }
 }
