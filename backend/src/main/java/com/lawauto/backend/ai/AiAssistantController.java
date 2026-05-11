@@ -27,6 +27,7 @@ public class AiAssistantController {
     public String chat(@RequestBody ChatRequest request) {
         return Objects.requireNonNull(chatClient.prompt()
                 .user(request.message())
+                .advisors(a -> a.param("chat_memory_id", request.conversationId()))
                 .call()
                 .content());
     }
@@ -35,10 +36,11 @@ public class AiAssistantController {
     public Flux<String> chatStream(@RequestBody ChatRequest request) {
         return chatClient.prompt()
                 .user(request.message())
+                .advisors(a -> a.param("chat_memory_id", request.conversationId()))
                 .stream()
                 .content();
     }
 
-    public record ChatRequest(String message) {
+    public record ChatRequest(String message, String conversationId) {
     }
 }

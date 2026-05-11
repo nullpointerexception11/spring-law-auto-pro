@@ -67,4 +67,8 @@ app:
     refresh-expiration-days: ${APP_JWT_REFRESH_EXPIRATION_DAYS:14}
   exports:
     root: ${APP_EXPORTS_ROOT:C:/tmp/law-auto-exports}
+  storage:
+    provider: ${APP_STORAGE_PROVIDER:LOCAL}
+    local:
+      path: ${APP_STORAGE_LOCAL_PATH:./storage}
 

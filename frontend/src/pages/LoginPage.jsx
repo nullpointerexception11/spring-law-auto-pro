@@ -1,13 +1,16 @@
 import { useState } from "react";
 import { api } from "@/api/client";
 import { useNavigate } from "react-router-dom";
+import { useAuthStore } from "@/store/useAuthStore";
 import { Card, CardContent } from "@/components/ui/card";
 import { AuthInfoPanel } from "@/components/auth/AuthInfoPanel";
 import { LoginForm } from "@/components/auth/LoginForm";
+import { toast } from "sonner";
 
 export default function LoginPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const setAuth = useAuthStore((state) => state.setAuth);
   const navigate = useNavigate();
 
   const handleAuth = async (values) => {
@@ -19,14 +22,20 @@ export default function LoginPage() {
       
       if (!data?.token) {
         setError("Sunucudan geçersiz yanıt alındı (Token bulunamadı).");
+        toast.error("Giriş işlemi başarısız.");
         return;
       }
 
-      localStorage.setItem("token", data.token);
-      localStorage.setItem("role", data.role);
-      localStorage.setItem("orgId", data.orgId);
+      // Use global store instead of direct localStorage
+      setAuth({
+        token: data.token,
+        role: data.role,
+        orgId: data.orgId,
+        user: data.user // Assuming backend returns user info
+      });
       
       const userRole = (data.role || "").toString().trim().toUpperCase();
+      toast.success("Giriş başarılı!");
 
       if (userRole === "SUPER_ADMIN") {
         navigate("/super-admin");
@@ -34,7 +43,9 @@ export default function LoginPage() {
         navigate("/dashboard");
       }
     } catch (err) {
-      setError(err.message || "Giriş başarısız. Lütfen bilgilerinizi kontrol edin.");
+      const msg = err.response?.data?.message || err.message || "Giriş başarısız. Lütfen bilgilerinizi kontrol edin.";
+      setError(msg);
+      toast.error("Giriş başarısız.");
     } finally {
       setLoading(false);
     }

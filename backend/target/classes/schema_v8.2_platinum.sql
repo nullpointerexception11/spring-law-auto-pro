@@ -19,7 +19,7 @@ CREATE TYPE "DeleteMode" AS ENUM ('SOFT', 'HARD');
 CREATE TYPE "DeleteStatus" AS ENUM ('PENDING', 'APPROVED', 'REJECTED', 'EXECUTED');
 
 -- 2. CORE TABLES
-CREATE TABLE "Org" (
+CREATE TABLE "org" (
   "id" UUID PRIMARY KEY,
   "name" TEXT NOT NULL UNIQUE,
   "displayName" TEXT,
@@ -28,9 +28,9 @@ CREATE TABLE "Org" (
   "updatedAt" TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
-CREATE TABLE "User" (
+CREATE TABLE "user" (
   "id" UUID PRIMARY KEY,
-  "orgId" UUID REFERENCES "Org"("id"),
+  "orgId" UUID REFERENCES "org"("id"),
   "email" TEXT NOT NULL,
   "fullName" TEXT NOT NULL,
   "passwordHash" TEXT NOT NULL,
@@ -44,23 +44,25 @@ CREATE TABLE "User" (
   UNIQUE("orgId", "email")
 );
 
-CREATE TABLE "Role" (
+CREATE TABLE "role" (
   "id" UUID PRIMARY KEY,
-  "orgId" UUID REFERENCES "Org"("id"),
+  "orgId" UUID REFERENCES "org"("id"),
   "roleKey" "RoleKey" NOT NULL,
   "createdAt" TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  "displayName" TEXT NOT NULL,
+  "systemRole" BOOLEAN DEFAULT false,
   UNIQUE("orgId", "roleKey")
 );
 
-CREATE TABLE "UserRole" (
-  "userId" UUID NOT NULL REFERENCES "User"("id"),
-  "roleId" UUID NOT NULL REFERENCES "Role"("id"),
+CREATE TABLE "user_role" (
+  "userId" UUID NOT NULL REFERENCES "user"("id"),
+  "roleId" UUID NOT NULL REFERENCES "role"("id"),
   PRIMARY KEY ("userId", "roleId")
 );
 
-CREATE TABLE "FileObject" (
+CREATE TABLE "file_object" (
   "id" UUID PRIMARY KEY,
-  "orgId" UUID NOT NULL REFERENCES "Org"("id"),
+  "orgId" UUID NOT NULL REFERENCES "org"("id"),
   "storageProvider" TEXT DEFAULT 'S3', -- 'S3', 'LOCAL', 'GCS'
   "storageKey" TEXT NOT NULL,
   "fileName" TEXT NOT NULL,

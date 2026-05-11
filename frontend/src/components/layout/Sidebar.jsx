@@ -1,5 +1,5 @@
-import React from 'react';
-import { NavLink } from 'react-router-dom';
+import React, { useEffect } from 'react';
+import { NavLink, useNavigate } from 'react-router-dom';
 import { 
   Scale, 
   Briefcase, 
@@ -10,101 +10,130 @@ import {
   Bell, 
   Settings,
   PanelLeftClose,
-  PanelLeft
+  PanelLeft,
+  LogOut,
+  BrainCircuit,
+  LayoutDashboard
 } from 'lucide-react';
+import { useAuthStore } from '@/store/useAuthStore';
 
 export function Sidebar({ isCollapsed, setIsCollapsed }) {
   const [isHovered, setIsHovered] = React.useState(false);
+  const logout = useAuthStore(state => state.logout);
+  const navigate = useNavigate();
 
   const isEffectivelyOpen = !isCollapsed || isHovered;
 
   const navigation = [
-    { name: 'Gösterge Paneli', href: '/', icon: Scale },
+    { name: 'Gösterge Paneli', href: '/dashboard', icon: LayoutDashboard },
     { name: 'Davalar', href: '/matters', icon: Briefcase },
     { name: 'Takvim', href: '/calendar', icon: Calendar },
     { name: 'Belgeler', href: '/documents', icon: FileText },
     { name: 'Faturalandırma', href: '/billing', icon: CreditCard },
-    { name: 'AI Araştırma', href: '/ai', icon: Bot },
+    { name: 'AI Asistan', href: '/ai', icon: BrainCircuit },
   ];
 
-  const bottomNavigation = [
-    { name: 'Bildirimler', href: '/notifications', icon: Bell },
-    { name: 'Ayarlar', href: '/settings', icon: Settings },
-  ];
+  const handleLogout = () => {
+    logout();
+    navigate('/login');
+  };
 
   return (
     <div 
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
-      className={`flex h-full flex-col border-r border-border bg-card transition-all duration-300 ease-in-out ${
-        isEffectivelyOpen ? 'w-56' : 'w-16'
-      }`}
+      className={cn(
+        "flex h-full flex-col border-r border-slate-100 bg-white transition-all duration-500 ease-in-out shadow-sm z-30",
+        isEffectivelyOpen ? 'w-64' : 'w-20'
+      )}
     >
       {/* Brand & Toggle */}
-      <div className={`flex items-center h-16 border-b border-border/50 px-3 ${!isEffectivelyOpen ? 'justify-center' : 'justify-between'}`}>
-        {isEffectivelyOpen && (
-          <div className="flex items-center overflow-hidden">
-            <Scale className="h-5 w-5 text-primary shrink-0 mr-2" />
-            <span className="font-semibold tracking-tight text-foreground truncate fade-enter-active">
-              Prestige
+      <div className={cn(
+        "flex items-center h-20 px-5 transition-all duration-300",
+        !isEffectivelyOpen ? 'justify-center' : 'justify-between'
+      )}>
+        {isEffectivelyOpen ? (
+          <div className="flex items-center gap-3 overflow-hidden">
+            <div className="h-9 w-9 rounded-xl bg-indigo-600 flex items-center justify-center shadow-lg shadow-indigo-100">
+              <Scale className="h-5 w-5 text-white" />
+            </div>
+            <span className="font-black text-lg tracking-tight text-slate-900 truncate">
+              LAW<span className="text-indigo-600">AUTO</span>
             </span>
           </div>
+        ) : (
+          <div className="h-10 w-10 rounded-xl bg-indigo-600 flex items-center justify-center shadow-md">
+            <Scale className="h-5 w-5 text-white" />
+          </div>
         )}
-        
-        <button
-          onClick={() => setIsCollapsed(!isCollapsed)}
-          title={isCollapsed ? 'Genişlet' : 'Daralt'}
-          className="p-1.5 rounded-md text-muted-foreground hover:bg-secondary hover:text-foreground transition-colors shrink-0"
-        >
-          {isCollapsed ? <PanelLeft className="h-5 w-5" /> : <PanelLeftClose className="h-5 w-5" />}
-        </button>
       </div>
 
       {/* Main Nav */}
-      <nav className="flex-1 space-y-1 p-3">
+      <nav className="flex-1 space-y-2 p-4">
         {navigation.map((item) => (
           <NavLink
             key={item.name}
             to={item.href}
-            title={!isEffectivelyOpen ? item.name : undefined}
             className={({ isActive }) =>
-              `group flex items-center rounded-md py-2 text-sm font-medium transition-colors ${
-                !isEffectivelyOpen ? 'justify-center px-0' : 'px-3'
-              } ${
+              cn(
+                "group flex items-center rounded-2xl py-3 text-sm font-bold transition-all duration-300",
+                !isEffectivelyOpen ? 'justify-center px-0' : 'px-4',
                 isActive
-                  ? 'bg-secondary text-secondary-foreground'
-                  : 'text-muted-foreground hover:bg-secondary/50 hover:text-foreground'
-              }`
+                  ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-100'
+                  : 'text-slate-500 hover:bg-slate-50 hover:text-indigo-600'
+              )
             }
           >
-            <item.icon className={`h-5 w-5 shrink-0 transition-all ${!isEffectivelyOpen ? '' : 'mr-3'}`} />
-            {isEffectivelyOpen && <span className="truncate fade-enter-active">{item.name}</span>}
+            <item.icon className={cn("h-5 w-5 shrink-0 transition-all", isEffectivelyOpen && "mr-3")} />
+            {isEffectivelyOpen && <span className="truncate">{item.name}</span>}
           </NavLink>
         ))}
       </nav>
 
       {/* Bottom Nav */}
-      <div className="mt-auto space-y-1 p-3 border-t border-border/50">
-        {bottomNavigation.map((item) => (
-          <NavLink
-            key={item.name}
-            to={item.href}
-            title={!isEffectivelyOpen ? item.name : undefined}
-            className={({ isActive }) =>
-              `group flex items-center rounded-md py-2 text-sm font-medium transition-colors ${
-                !isEffectivelyOpen ? 'justify-center px-0' : 'px-3'
-              } ${
-                isActive
-                  ? 'bg-secondary text-secondary-foreground'
-                  : 'text-muted-foreground hover:bg-secondary/50 hover:text-foreground'
-              }`
-            }
-          >
-            <item.icon className={`h-5 w-5 shrink-0 transition-all ${!isEffectivelyOpen ? '' : 'mr-3'}`} />
-            {isEffectivelyOpen && <span className="truncate fade-enter-active">{item.name}</span>}
-          </NavLink>
-        ))}
+      <div className="mt-auto p-4 space-y-2 border-t border-slate-50">
+        <NavLink
+          to="/settings"
+          className={({ isActive }) =>
+            cn(
+              "group flex items-center rounded-2xl py-3 text-sm font-bold transition-all duration-300",
+              !isEffectivelyOpen ? 'justify-center px-0' : 'px-4',
+              isActive
+                ? 'bg-slate-100 text-slate-900'
+                : 'text-slate-500 hover:bg-slate-50 hover:text-indigo-600'
+            )
+          }
+        >
+          <Settings className={cn("h-5 w-5 shrink-0", isEffectivelyOpen && "mr-3")} />
+          {isEffectivelyOpen && <span className="truncate">Ayarlar</span>}
+        </NavLink>
+
+        <button
+          onClick={handleLogout}
+          className={cn(
+            "w-full group flex items-center rounded-2xl py-3 text-sm font-bold transition-all duration-300 text-red-500 hover:bg-red-50",
+            !isEffectivelyOpen ? 'justify-center px-0' : 'px-4'
+          )}
+        >
+          <LogOut className={cn("h-5 w-5 shrink-0", isEffectivelyOpen && "mr-3")} />
+          {isEffectivelyOpen && <span className="truncate">Çıkış Yap</span>}
+        </button>
+
+        {/* Collapse Toggle at Bottom */}
+        <button
+          onClick={() => setIsCollapsed(!isCollapsed)}
+          className={cn(
+            "w-full mt-4 flex items-center justify-center h-10 rounded-xl text-slate-400 hover:bg-slate-50 hover:text-slate-600 transition-all",
+            !isEffectivelyOpen && "hidden"
+          )}
+        >
+          {isCollapsed ? <PanelLeft className="h-5 w-5" /> : <PanelLeftClose className="h-5 w-5" />}
+        </button>
       </div>
     </div>
   );
+}
+
+function cn(...classes) {
+  return classes.filter(Boolean).join(' ');
 }

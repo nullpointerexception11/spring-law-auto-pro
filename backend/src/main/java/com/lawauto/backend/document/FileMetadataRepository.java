@@ -4,9 +4,12 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.List;
 
 @Repository
 public interface FileMetadataRepository extends JpaRepository<FileMetadata, UUID> {
+
+    List<FileMetadata> findByMatterId(UUID matterId);
 
     /**
      * Tenant‑scoped SHA‑256 araması; aynı dosyanın aynı org içinde birden fazla kez yüklenmesini önler.

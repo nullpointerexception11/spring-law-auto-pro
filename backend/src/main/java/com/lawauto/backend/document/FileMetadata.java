@@ -18,6 +18,10 @@ import java.util.UUID;
 @AllArgsConstructor
 @Builder
 public class FileMetadata extends TenantAware {
+    
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "matter_id")
+    private com.lawauto.backend.matter.Matter matter;
 
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)

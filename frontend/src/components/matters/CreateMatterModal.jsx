@@ -1,11 +1,18 @@
 import React from 'react';
 import { useForm } from 'react-hook-form';
-import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { X, Loader2, Plus, Info } from 'lucide-react';
-import api from '../../lib/api';
+import { useCreateMatter } from '@/hooks/useMatters';
+import { Button } from '@/components/ui/button';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from '@/components/ui/dialog';
 
 export function CreateMatterModal({ isOpen, onClose }) {
-  const queryClient = useQueryClient();
+  const mutation = useCreateMatter();
   
   const { register, handleSubmit, reset, formState: { errors } } = useForm({
     defaultValues: {
@@ -16,23 +23,14 @@ export function CreateMatterModal({ isOpen, onClose }) {
     }
   });
 
-  const mutation = useMutation({
-    mutationFn: async (data) => {
-      // Tags processing: comma separated string to array
-      const processedData = {
-        ...data,
-        tags: data.tags ? data.tags.split(',').map(t => t.trim()).filter(t => t !== '') : []
-      };
-      
-      const response = await api.post(`/matters`, processedData);
-      return response.data;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['matters'] });
-      reset();
-      onClose();
-    }
-  });
+  const onSubmit = (data) => {
+    mutation.mutate(data, {
+      onSuccess: () => {
+        reset();
+        onClose();
+      }
+    });
+  };
 
   if (!isOpen) return null;
 

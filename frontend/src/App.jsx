@@ -1,48 +1,77 @@
-import React from 'react';
+import React, { lazy, Suspense } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
-import { AppLayout } from './components/layout/AppLayout';
-import LoginPage from './pages/LoginPage';
-import MatterList from './pages/matters/MatterList';
-import MatterDetail from './pages/matters/MatterDetail';
+import { Toaster } from 'sonner';
+import { Loader2 } from 'lucide-react';
 
-const ProtectedRoute = ({ children }) => {
-  const token = localStorage.getItem('token');
-  if (!token) {
-    return <Navigate to="/login" replace />;
-  }
-  return children;
-};
+// Layout & Auth
+import { AppLayout } from './components/layout/AppLayout';
+import { ProtectedRoute } from './components/auth/ProtectedRoute';
+import { ErrorBoundary, NotFoundPage } from './components/common/ErrorBoundary';
+import { ROUTES } from './lib/constants';
+
+// Lazy Loaded Pages for performance (Items 8 & 9)
+const LoginPage = lazy(() => import('./pages/LoginPage'));
+const DashboardPage = lazy(() => import('./pages/DashboardPage'));
+const MatterList = lazy(() => import('./pages/matters/MatterList'));
+const MatterDetail = lazy(() => import('./pages/matters/MatterDetail'));
+const AiAssistantPage = lazy(() => import('./pages/AiAssistantPage'));
+const SuperAdminPage = lazy(() => import('./pages/SuperAdminPage'));
+
+/**
+ * Loading component for Suspense
+ */
+const PageLoader = () => (
+  <div className="flex h-[calc(100vh-100px)] w-full items-center justify-center">
+    <div className="flex flex-col items-center gap-4">
+      <Loader2 className="h-10 w-10 animate-spin text-indigo-600" />
+      <p className="text-sm font-bold text-slate-400 uppercase tracking-widest animate-pulse">Sayfa Yükleniyor...</p>
+    </div>
+  </div>
+);
 
 function App() {
   return (
-    <BrowserRouter>
-      <Routes>
-        <Route path="/login" element={<LoginPage />} />
+    <ErrorBoundary>
+      <BrowserRouter>
+        <Toaster position="top-right" richColors closeButton />
         
-        <Route path="/" element={
-          <ProtectedRoute>
-            <AppLayout />
-          </ProtectedRoute>
-        }>
-          {/* Automatically redirect to the primary working space */}
-          <Route index element={<Navigate to="/matters" replace />} />
-          
-          {/* Vertical Slices */}
-          <Route path="matters" element={<MatterList />} />
-          <Route path="matters/:matterId" element={<MatterDetail />} />
-          
-          {/* Navigation Stubs */}
-          <Route path="calendar" element={<div className="fade-enter-active">Calendar</div>} />
-          <Route path="documents" element={<div className="fade-enter-active">Documents</div>} />
-          <Route path="billing" element={<div className="fade-enter-active">Billing</div>} />
-          <Route path="ai" element={<div className="fade-enter-active">AI Research</div>} />
-          <Route path="notifications" element={<div className="fade-enter-active">Notifications</div>} />
-          <Route path="settings" element={<div className="fade-enter-active">Settings</div>} />
-        </Route>
+        <Suspense fallback={<PageLoader />}>
+          <Routes>
+            {/* Auth Routes */}
+            <Route path={ROUTES.LOGIN} element={<LoginPage />} />
+            
+            {/* Protected Application Routes */}
+            <Route path="/" element={
+              <ProtectedRoute>
+                <AppLayout />
+              </ProtectedRoute>
+            }>
+              <Route index element={<Navigate to={ROUTES.DASHBOARD} replace />} />
+              <Route path={ROUTES.DASHBOARD} element={<DashboardPage />} />
+              <Route path={ROUTES.MATTERS} element={<MatterList />} />
+              <Route path={ROUTES.MATTER_DETAIL()} element={<MatterDetail />} />
+              <Route path={ROUTES.AI} element={<AiAssistantPage />} />
+              
+              {/* Feature Stubs with lazy structure planned */}
+              <Route path={ROUTES.CALENDAR} element={<div className="p-8">Takvim Modülü Yakında</div>} />
+              <Route path={ROUTES.DOCUMENTS} element={<div className="p-8">Belge Yönetimi Yakında</div>} />
+              <Route path={ROUTES.BILLING} element={<div className="p-8">Faturalandırma Yakında</div>} />
+              <Route path={ROUTES.SETTINGS} element={<div className="p-8">Ayarlar Modülü</div>} />
+            </Route>
 
-        <Route path="*" element={<Navigate to="/" replace />} />
-      </Routes>
-    </BrowserRouter>
+            {/* Restricted Admin Route */}
+            <Route path={ROUTES.SUPER_ADMIN} element={
+              <ProtectedRoute role="SUPER_ADMIN">
+                <SuperAdminPage />
+              </ProtectedRoute>
+            } />
+
+            {/* Real 404 Handling (Item 10) */}
+            <Route path="*" element={<NotFoundPage />} />
+          </Routes>
+        </Suspense>
+      </BrowserRouter>
+    </ErrorBoundary>
   );
 }
 

@@ -9,7 +9,7 @@ import java.time.OffsetDateTime;
 import java.util.UUID;
 
 @Entity
-@Table(name = "roles", uniqueConstraints = {
+@Table(name = "role", uniqueConstraints = {
         @UniqueConstraint(columnNames = {"org_id", "role_key"})
 })
 @Getter

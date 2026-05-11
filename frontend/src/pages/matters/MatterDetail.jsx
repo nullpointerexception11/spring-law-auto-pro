@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { useQuery } from '@tanstack/react-query';
+import { useMatter } from '@/hooks/useMatters';
+import { DocumentManager } from '@/components/matters/DocumentManager';
 import { 
   ArrowLeft, 
   Calendar, 
@@ -14,174 +15,158 @@ import {
   History,
   Files,
   StickyNote,
-  ChevronRight
+  ChevronRight,
+  Edit3
 } from 'lucide-react';
-import api from '../../lib/api';
-
-const TEST_ORG_ID = '11111111-1111-1111-1111-111111111111';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { motion } from 'framer-motion';
 
 export default function MatterDetail() {
   const { matterId } = useParams();
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('overview');
 
-  // Backend'den dava detaylarını çekiyoruz
-  const { data: matter, isLoading: isMatterLoading, error: matterError } = useQuery({
-    queryKey: ['matter', matterId],
-    queryFn: async () => {
-      const response = await api.get(`/matters/${matterId}`, {
-        params: { orgId: TEST_ORG_ID }
-      });
-      return response.data;
-    }
-  });
+  const { data: matter, isLoading, error } = useMatter(matterId);
 
-  // Zaman çizelgesi verilerini çekiyoruz
-  const { data: timelineData, isLoading: isTimelineLoading } = useQuery({
-    queryKey: ['matter-timeline', matterId],
-    queryFn: async () => {
-      const response = await api.get(`/matters/${matterId}/timeline`, {
-        params: { orgId: TEST_ORG_ID }
-      });
-      return response.data;
-    },
-    enabled: activeTab === 'timeline'
-  });
-
-  if (isMatterLoading) {
+  if (isLoading) {
     return (
       <div className="flex flex-col items-center justify-center h-[calc(100vh-200px)] space-y-4">
-        <Loader2 className="h-10 w-10 animate-spin text-primary" />
-        <p className="text-muted-foreground animate-pulse font-medium">Dava detayları hazırlanıyor...</p>
+        <Loader2 className="h-10 w-10 animate-spin text-indigo-600" />
+        <p className="text-slate-500 animate-pulse font-medium">Dava detayları hazırlanıyor...</p>
       </div>
     );
   }
 
-  if (matterError || !matter) {
+  if (error || !matter) {
     return (
       <div className="flex flex-col items-center justify-center h-[calc(100vh-200px)] space-y-4 text-center">
-        <div className="p-4 rounded-full bg-destructive/10">
-          <ShieldAlert className="h-10 w-10 text-destructive" />
+        <div className="p-4 rounded-3xl bg-red-50">
+          <ShieldAlert className="h-10 w-10 text-red-600" />
         </div>
         <div className="space-y-1">
-          <h2 className="text-xl font-semibold">Dava bulunamadı</h2>
-          <p className="text-muted-foreground">Erişmek istediğiniz dosya mevcut değil veya yetkiniz yok.</p>
+          <h2 className="text-xl font-bold text-slate-900">Dava bulunamadı</h2>
+          <p className="text-sm text-slate-500">Erişmek istediğiniz dosya mevcut değil veya yetkiniz yok.</p>
         </div>
-        <button 
+        <Button 
+          variant="outline"
           onClick={() => navigate('/matters')}
-          className="mt-4 px-4 py-2 bg-secondary hover:bg-secondary/80 rounded-md transition-colors inline-flex items-center gap-2"
+          className="mt-4 rounded-xl"
         >
-          <ArrowLeft className="h-4 w-4" /> Listeye Dön
-        </button>
+          <ArrowLeft className="h-4 w-4 mr-2" /> Listeye Dön
+        </Button>
       </div>
     );
   }
 
   const tabs = [
     { id: 'overview', label: 'Genel Bakış', icon: FileText },
-    { id: 'timeline', label: 'Zaman Çizelgesi', icon: History },
     { id: 'documents', label: 'Evraklar', icon: Files },
+    { id: 'timeline', label: 'Zaman Çizelgesi', icon: History },
     { id: 'notes', label: 'Notlar', icon: StickyNote },
   ];
 
   return (
-    <div className="space-y-6 fade-enter-active">
-      {/* Header / Navigation */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-4">
+    <div className="space-y-8 fade-enter-active">
+      {/* Header */}
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
+        <div className="flex items-center gap-5">
           <button 
             onClick={() => navigate('/matters')}
-            className="p-2 hover:bg-secondary rounded-full transition-colors text-muted-foreground hover:text-foreground"
-            title="Geri Dön"
+            className="h-12 w-12 flex items-center justify-center bg-white border border-slate-200 rounded-2xl hover:bg-slate-50 transition-all shadow-sm text-slate-500"
           >
             <ArrowLeft className="h-5 w-5" />
           </button>
-          <div className="space-y-1">
-            <h1 className="text-2xl font-bold tracking-tight">{matter.title}</h1>
-            <div className="flex items-center gap-2 text-sm text-muted-foreground">
-              <span className="font-mono bg-secondary/50 px-2 py-0.5 rounded text-[11px] border border-border">
-                {matter.referenceNumber || 'Dosya No Belirtilmedi'}
-              </span>
-              <span>•</span>
-              <span className="flex items-center gap-1">
-                <Clock className="h-3 w-3" />
+          <div>
+            <div className="flex items-center gap-3 mb-1">
+              <h1 className="text-2xl font-bold text-slate-900">{matter.title}</h1>
+              <Badge variant="outline" className="rounded-lg bg-indigo-50/50 text-indigo-700 border-indigo-100 font-mono text-[10px]">
+                {matter.referenceNumber || 'YENİ DOSYA'}
+              </Badge>
+            </div>
+            <div className="flex items-center gap-4 text-xs text-slate-500 font-medium">
+              <span className="flex items-center gap-1.5">
+                <Clock className="h-3.5 w-3.5 text-slate-400" />
                 {new Date(matter.openedAt).toLocaleDateString('tr-TR')} tarihinde açıldı
               </span>
+              <span className="h-1 w-1 rounded-full bg-slate-300" />
+              <span className="text-indigo-600 font-bold uppercase tracking-wider">{matter.status}</span>
             </div>
           </div>
         </div>
         
-        <div className="flex gap-2">
-          <button className="px-4 py-2 text-sm font-medium border border-border rounded-lg hover:bg-secondary transition-colors">
-            Dosyayı Düzenle
-          </button>
-          <button className="px-4 py-2 text-sm font-medium bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors shadow-sm">
+        <div className="flex items-center gap-3">
+          <Button variant="outline" className="rounded-2xl h-11 px-6 shadow-sm">
+            <Edit3 className="h-4 w-4 mr-2" /> Düzenle
+          </Button>
+          <Button className="rounded-2xl h-11 px-6 bg-indigo-600 hover:bg-indigo-700 shadow-lg shadow-indigo-100">
             Yeni İşlem
-          </button>
+          </Button>
         </div>
       </div>
 
-      {/* Tabs Navigation */}
-      <div className="flex items-center border-b border-border overflow-x-auto no-scrollbar">
+      {/* Navigation Tabs */}
+      <div className="flex items-center border-b border-slate-200 gap-2">
         {tabs.map((tab) => {
           const Icon = tab.icon;
+          const isActive = activeTab === tab.id;
           return (
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}
-              className={`flex items-center gap-2 px-6 py-3 text-sm font-medium transition-all relative whitespace-nowrap ${
-                activeTab === tab.id 
-                  ? 'text-primary' 
-                  : 'text-muted-foreground hover:text-foreground'
-              }`}
+              className={cn(
+                "flex items-center gap-2 px-6 py-4 text-sm font-bold transition-all relative",
+                isActive ? "text-indigo-600" : "text-slate-500 hover:text-slate-900"
+              )}
             >
-              <Icon className="h-4 w-4" />
+              <Icon className={cn("h-4 w-4", isActive ? "text-indigo-600" : "text-slate-400")} />
               {tab.label}
-              {activeTab === tab.id && (
-                <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary rounded-t-full" />
+              {isActive && (
+                <motion.div 
+                  layoutId="activeTab"
+                  className="absolute bottom-0 left-0 right-0 h-1 bg-indigo-600 rounded-t-full" 
+                />
               )}
             </button>
           );
         })}
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Main Content Area */}
-        <div className="lg:col-span-2">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <div className="lg:col-span-2 space-y-8">
           {activeTab === 'overview' && (
-            <div className="space-y-6">
-              {/* Summary Card */}
-              <div className="p-6 rounded-xl border border-border bg-card/50 backdrop-blur-sm shadow-sm space-y-4">
-                <div className="flex items-center gap-2 font-semibold text-foreground/80 border-b border-border pb-3">
-                  <FileText className="h-4 w-4 text-primary" />
+            <div className="space-y-8">
+              <div className="bg-white p-8 rounded-[32px] border border-slate-100 shadow-sm space-y-6">
+                <div className="flex items-center gap-3 text-slate-900 font-bold">
+                  <div className="h-8 w-8 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center">
+                    <FileText className="h-4 w-4" />
+                  </div>
                   Dosya Özeti
                 </div>
-                <p className="text-sm leading-relaxed text-muted-foreground">
+                <p className="text-sm leading-relaxed text-slate-600 font-medium bg-slate-50/50 p-6 rounded-2xl border border-slate-50">
                   {matter.summary || 'Bu dosya için henüz bir özet girilmemiş.'}
                 </p>
               </div>
 
-              {/* Parties List */}
-              <div className="p-6 rounded-xl border border-border bg-card/50 backdrop-blur-sm shadow-sm">
-                <div className="flex items-center justify-between mb-4 border-b border-border pb-3">
-                  <div className="flex items-center gap-2 font-semibold text-foreground/80">
-                    <User className="h-4 w-4 text-primary" />
+              <div className="bg-white p-8 rounded-[32px] border border-slate-100 shadow-sm">
+                <div className="flex items-center justify-between mb-8">
+                  <div className="flex items-center gap-3 text-slate-900 font-bold">
+                    <div className="h-8 w-8 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center">
+                      <User className="h-4 w-4" />
+                    </div>
                     Dava Tarafları
                   </div>
-                  <span className="text-[10px] bg-primary/10 text-primary px-2 py-0.5 rounded-full font-bold">
-                    {matter.parties?.length || 0} Taraf
-                  </span>
                 </div>
                 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   {matter.parties?.map((party, idx) => (
-                    <div key={idx} className="p-4 rounded-lg border border-border bg-secondary/20 flex items-start gap-3">
-                      <div className="p-2 rounded-md bg-background shadow-sm">
-                        <User className="h-4 w-4 text-muted-foreground" />
+                    <div key={idx} className="p-5 rounded-2xl bg-slate-50 border border-slate-100 flex items-start gap-4 hover:border-indigo-200 transition-all group">
+                      <div className="h-10 w-10 rounded-xl bg-white shadow-sm flex items-center justify-center text-slate-400 group-hover:text-indigo-600 transition-colors">
+                        <User className="h-5 w-5" />
                       </div>
-                      <div className="space-y-1 min-w-0">
-                        <p className="text-sm font-semibold truncate">{party.fullName}</p>
-                        <p className="text-[10px] text-muted-foreground uppercase tracking-wider font-bold">
+                      <div>
+                        <p className="text-sm font-bold text-slate-900">{party.fullName}</p>
+                        <p className="text-[10px] text-slate-500 font-bold uppercase tracking-wider mt-1">
                           {party.roleName}
                         </p>
                       </div>
@@ -192,121 +177,83 @@ export default function MatterDetail() {
             </div>
           )}
 
-          {activeTab === 'timeline' && (
-            <div className="p-6 rounded-xl border border-border bg-card/50 backdrop-blur-sm shadow-sm">
-              <div className="flex items-center gap-2 font-semibold text-foreground/80 border-b border-border pb-4 mb-6">
-                <History className="h-4 w-4 text-primary" />
-                Dosya Geçmişi ve Akış
-              </div>
+          {activeTab === 'documents' && (
+            <DocumentManager matterId={matterId} />
+          )}
 
-              {isTimelineLoading ? (
-                <div className="flex flex-col items-center justify-center py-12 gap-3">
-                  <Loader2 className="h-8 w-8 animate-spin text-primary/50" />
-                  <p className="text-sm text-muted-foreground italic">Zaman çizelgesi yükleniyor...</p>
+          {activeTab === 'timeline' && (
+            <div className="bg-white p-8 rounded-[32px] border border-slate-100 shadow-sm">
+              <div className="flex items-center gap-3 text-slate-900 font-bold mb-10">
+                <div className="h-8 w-8 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center">
+                  <History className="h-4 w-4" />
                 </div>
-              ) : timelineData?.content?.length > 0 ? (
-                <div className="relative space-y-8 before:absolute before:inset-0 before:ml-5 before:-translate-x-px before:h-full before:w-0.5 before:bg-gradient-to-b before:from-transparent before:via-border before:to-transparent">
-                  {timelineData.content.map((item, idx) => (
-                    <div key={item.id || idx} className="relative flex items-start gap-6 group">
-                      <div className="absolute left-0 mt-1 flex h-10 w-10 items-center justify-center rounded-full border-4 border-background bg-secondary shadow-sm transition-colors group-hover:bg-primary group-hover:text-primary-foreground group-hover:border-primary/20">
-                        <ChevronRight className="h-4 w-4" />
-                      </div>
-                      <div className="flex-1 ml-10 bg-secondary/30 p-4 rounded-lg border border-border/50 hover:border-primary/30 transition-colors">
-                        <div className="flex items-center justify-between mb-1">
-                          <span className="text-[10px] font-bold uppercase tracking-widest text-primary/70">
-                            {item.action}
-                          </span>
-                          <span className="text-[10px] text-muted-foreground bg-background px-1.5 py-0.5 rounded border border-border">
-                            {new Date(item.createdAt).toLocaleString('tr-TR')}
-                          </span>
-                        </div>
-                        <p className="text-sm font-medium text-foreground mb-1">{item.summary}</p>
-                        <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground">
-                          <User className="h-3 w-3" />
-                          <span>{item.userFullName}</span>
-                        </div>
-                      </div>
-                    </div>
-                  ))}
+                Dosya Geçmişi
+              </div>
+              
+              <div className="text-center py-12 space-y-4">
+                <div className="h-16 w-16 mx-auto rounded-full bg-slate-50 flex items-center justify-center text-slate-300">
+                  <History className="h-8 w-8" />
                 </div>
-              ) : (
-                <div className="text-center py-12 space-y-3">
-                  <div className="mx-auto h-12 w-12 rounded-full bg-secondary flex items-center justify-center">
-                    <History className="h-6 w-6 text-muted-foreground" />
-                  </div>
-                  <p className="text-sm text-muted-foreground italic">Bu dosya için henüz bir işlem geçmişi bulunmuyor.</p>
-                </div>
-              )}
+                <p className="text-sm text-slate-500 font-medium italic">Geçmiş verileri hazırlanıyor...</p>
+              </div>
             </div>
           )}
 
-          {(activeTab === 'documents' || activeTab === 'notes') && (
-            <div className="p-12 rounded-xl border-2 border-dashed border-border bg-secondary/5 flex flex-col items-center justify-center text-center gap-4">
-              <div className="p-4 rounded-full bg-secondary/50">
-                {activeTab === 'documents' ? <Files className="h-8 w-8 text-muted-foreground" /> : <StickyNote className="h-8 w-8 text-muted-foreground" />}
+          {activeTab === 'notes' && (
+            <div className="p-16 rounded-[40px] border border-dashed border-slate-200 bg-slate-50/50 flex flex-col items-center justify-center text-center gap-6">
+              <div className="h-20 w-20 rounded-full bg-white shadow-sm flex items-center justify-center text-slate-300">
+                <StickyNote className="h-10 w-10" />
               </div>
-              <div className="space-y-1">
-                <h3 className="font-semibold text-foreground">{activeTab === 'documents' ? 'Evraklar' : 'Notlar'}</h3>
-                <p className="text-sm text-muted-foreground max-w-xs">Bu bölüm henüz geliştirme aşamasındadır. Yakında burada dosya yönetimini görebileceksiniz.</p>
+              <div className="space-y-2">
+                <h3 className="text-lg font-bold text-slate-900">Dosya Notları</h3>
+                <p className="text-sm text-slate-500 max-w-xs font-medium">Bu bölüm yakında aktif edilecektir. Notlarınızı buradan takip edebileceksiniz.</p>
               </div>
             </div>
           )}
         </div>
 
-        {/* Sidebar Info Area */}
+        {/* Sidebar */}
         <div className="space-y-6">
-          {/* Court Info Card */}
-          <div className="p-6 rounded-xl border border-border bg-card shadow-md space-y-5">
-            <div className="space-y-4">
-              <div className="flex items-center justify-between">
-                <div className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Dava Durumu</div>
-                <span className="px-2 py-0.5 rounded bg-success/10 text-success border border-success/20 text-[10px] font-bold uppercase tracking-wider">
-                  {matter.status}
-                </span>
+          <div className="bg-white p-8 rounded-[32px] border border-slate-100 shadow-sm space-y-8">
+            <div className="flex items-center justify-between">
+              <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Duruşma / Karar</span>
+              <Badge className="bg-emerald-50 text-emerald-700 border-emerald-100 hover:bg-emerald-50 rounded-lg px-3 py-1 font-bold text-[10px]">
+                AKTİF DOSYA
+              </Badge>
+            </div>
+            
+            <div className="space-y-6">
+              <div className="flex items-start gap-4">
+                <div className="h-10 w-10 rounded-xl bg-slate-50 text-slate-400 flex items-center justify-center shrink-0">
+                  <Gavel className="h-5 w-5" />
+                </div>
+                <div className="space-y-1">
+                  <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Mahkeme</p>
+                  <p className="text-sm font-bold text-slate-900">{matter.courtName || 'Henüz Girilmedi'}</p>
+                </div>
               </div>
-              
-              <div className="space-y-4">
-                <div className="flex items-start gap-3">
-                  <Gavel className="h-5 w-5 text-muted-foreground shrink-0 mt-0.5" />
-                  <div className="space-y-1">
-                    <div className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Mahkeme</div>
-                    <div className="text-sm font-medium">{matter.courtName || 'Bilinmiyor'}</div>
-                  </div>
-                </div>
 
-                <div className="flex items-start gap-3">
-                  <Calendar className="h-5 w-5 text-muted-foreground shrink-0 mt-0.5" />
-                  <div className="space-y-1">
-                    <div className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Esas No</div>
-                    <div className="text-sm font-medium">{matter.caseNumber || 'Bilinmiyor'}</div>
-                  </div>
+              <div className="flex items-start gap-4">
+                <div className="h-10 w-10 rounded-xl bg-slate-50 text-slate-400 flex items-center justify-center shrink-0">
+                  <Calendar className="h-5 w-5" />
                 </div>
-
-                <div className="flex items-start gap-3">
-                  <User className="h-5 w-5 text-muted-foreground shrink-0 mt-0.5" />
-                  <div className="space-y-1">
-                    <div className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Hakim</div>
-                    <div className="text-sm font-medium">{matter.judgeName || 'Atanmamış'}</div>
-                  </div>
+                <div className="space-y-1">
+                  <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Dava No</p>
+                  <p className="text-sm font-bold text-slate-900">{matter.caseNumber || 'Atanmadı'}</p>
                 </div>
               </div>
             </div>
 
-            <div className="pt-4 border-t border-border">
-              <button className="w-full py-2.5 bg-primary text-primary-foreground rounded-lg text-sm font-medium hover:bg-primary/90 transition-colors flex items-center justify-center gap-2 shadow-lg shadow-primary/20">
-                UYAP Dosyasına Git <ExternalLink className="h-4 w-4" />
-              </button>
-            </div>
-          </div>
-
-          {/* Quick Stats or Actions could go here */}
-          <div className="p-5 rounded-xl border border-dashed border-border bg-secondary/10">
-            <p className="text-[11px] text-muted-foreground text-center italic">
-              Bu dosya en son {new Date(matter.updatedAt).toLocaleDateString('tr-TR')} tarihinde güncellendi.
-            </p>
+            <Button className="w-full h-12 bg-slate-900 hover:bg-slate-800 text-white rounded-2xl font-bold shadow-lg shadow-slate-100">
+              UYAP Entegrasyonu <ExternalLink className="h-4 w-4 ml-2" />
+            </Button>
           </div>
         </div>
       </div>
     </div>
   );
+}
+
+function cn(...classes) {
+  return classes.filter(Boolean).join(' ');
 }
