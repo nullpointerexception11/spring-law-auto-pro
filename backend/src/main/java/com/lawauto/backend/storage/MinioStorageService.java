@@ -12,7 +12,6 @@ import java.util.UUID;
  * MinIO implementation of StorageService.
  * Placeholder for actual MinIO client integration.
  */
-@Service
 @RequiredArgsConstructor
 public class MinioStorageService implements StorageService {
 

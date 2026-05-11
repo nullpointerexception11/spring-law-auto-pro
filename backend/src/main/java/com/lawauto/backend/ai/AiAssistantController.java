@@ -3,7 +3,6 @@ package com.lawauto.backend.ai;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.chat.client.advisor.MessageChatMemoryAdvisor;
 import org.springframework.ai.chat.memory.InMemoryChatMemory;
-import org.springframework.ai.model.function.FunctionCallbackWrapper;
 import org.springframework.web.bind.annotation.*;
 import com.lawauto.backend.ai.tools.MatterTools;
 import java.util.Objects;
@@ -15,17 +14,12 @@ public class AiAssistantController {
 
     private final ChatClient chatClient;
 
-    public AiAssistantController(ChatClient.Builder chatClientBuilder, 
-                                MatterTools matterTools) {
+    public AiAssistantController(ChatClient.Builder chatClientBuilder) {
         
-        // defaultAdvisors worked, but for FunctionCallbackWrapper we try 'functions'
+        // Using Bean name registration which is the most stable across Milestone versions
         this.chatClient = chatClientBuilder
                 .defaultAdvisors(new MessageChatMemoryAdvisor(new InMemoryChatMemory()))
-                .functions(FunctionCallbackWrapper.builder(matterTools::createMatter)
-                        .withName("createMatter")
-                        .withDescription("Sistemde yeni bir hukuk davası (matter) oluşturur.")
-                        .withInputType(MatterTools.MatterRequest.class)
-                        .build())
+                .defaultFunctions("createMatterTool") // We will define this as a @Bean
                 .build();
     }
 

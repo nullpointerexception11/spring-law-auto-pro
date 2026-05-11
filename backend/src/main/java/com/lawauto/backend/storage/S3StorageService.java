@@ -19,7 +19,6 @@ import java.util.UUID;
  *   - an {@link S3Client} configured via the AWS SDK properties,
  *   - the target bucket name (injected via @Value).
  */
-@Service
 @RequiredArgsConstructor
 public class S3StorageService implements StorageService {
 

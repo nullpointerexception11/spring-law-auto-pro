@@ -18,7 +18,6 @@ import java.util.UUID;
  * Simple filesystem implementation for local development or on‑prem deployments.
  * Base directory is configured via `app.storage.local.path`.
  */
-@Service
 @RequiredArgsConstructor
 public class LocalStorageService implements StorageService {
 
