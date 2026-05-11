@@ -10,9 +10,9 @@
   <parent>
     <groupId>org.springframework.boot</groupId>
     <artifactId>spring-boot-starter-parent</artifactId>
-    <version>4.0.0-M1</version>
+    <version>3.2.6</version>
     <relativePath/>
-  </parent>
+</parent>
 
   <properties>
     <java.version>21</java.version>
@@ -52,10 +52,6 @@
     <dependency>
       <groupId>org.flywaydb</groupId>
       <artifactId>flyway-core</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>org.flywaydb</groupId>
-      <artifactId>flyway-database-postgresql</artifactId>
     </dependency>
     <dependency>
       <groupId>io.jsonwebtoken</groupId>
@@ -109,11 +105,6 @@
       <scope>test</scope>
     </dependency>
     <dependency>
-      <groupId>org.springframework.boot</groupId>
-      <artifactId>spring-boot-web-server-test</artifactId>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
       <groupId>org.testcontainers</groupId>
       <artifactId>junit-jupiter</artifactId>
       <version>${testcontainers.version}</version>
@@ -134,11 +125,6 @@
       <groupId>org.springframework.ai</groupId>
       <artifactId>spring-ai-starter-model-openai</artifactId>
     </dependency>
-    <dependency>
-      <groupId>org.springaicommunity</groupId>
-      <artifactId>spring-ai-agent-utils</artifactId>
-      <version>0.4.2</version>
-    </dependency>
   </dependencies>
 
   <dependencyManagement>
@@ -146,7 +132,7 @@
       <dependency>
         <groupId>org.springframework.ai</groupId>
         <artifactId>spring-ai-bom</artifactId>
-        <version>2.0.0-M1</version>
+        <version>1.0.0</version>
         <type>pom</type>
         <scope>import</scope>
       </dependency>
@@ -162,22 +148,4 @@
     </plugins>
   </build>
 
-  <repositories>
-    <repository>
-      <id>spring-milestones</id>
-      <name>Spring Milestones</name>
-      <url>https://repo.spring.io/milestone</url>
-      <snapshots>
-        <enabled>false</enabled>
-      </snapshots>
-    </repository>
-    <repository>
-      <id>spring-releases</id>
-      <name>Spring Releases</name>
-      <url>https://repo.spring.io/release</url>
-      <snapshots>
-        <enabled>false</enabled>
-      </snapshots>
-    </repository>
-  </repositories>
 </project>
