@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
 import { useDocuments, useUploadDocument } from '@/hooks/useDocuments';
-import { FileText, Upload, Loader2, Download, Trash2, FileCheck, FileSearch } from 'lucide-react';
+import { FileText, Upload, Loader2, Trash2, FileCheck, FileSearch, Sparkles } from 'lucide-react';
+import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 
 export function DocumentManager({ matterId }) {
