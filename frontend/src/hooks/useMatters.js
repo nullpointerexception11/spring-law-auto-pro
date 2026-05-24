@@ -13,6 +13,8 @@ export const useMatters = () => {
       // Standardizing response: handle both paged and raw list responses
       return response.data.content || response.data || [];
     },
+    staleTime: 60_000,
+    gcTime: 10 * 60_000,
   });
 };
 
@@ -27,6 +29,8 @@ export const useMatter = (id) => {
       return response.data;
     },
     enabled: !!id,
+    staleTime: 30_000,
+    gcTime: 10 * 60_000,
   });
 };
 

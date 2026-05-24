@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   flexRender,
@@ -44,10 +44,11 @@ export function MatterTable() {
   const [globalFilter, setGlobalFilter] = useState('');
   const navigate = useNavigate();
   const tableContainerRef = useRef(null);
+  const dateFormatter = useMemo(() => new Intl.DateTimeFormat('tr-TR'), []);
 
   const { data: matters = [], isLoading, error } = useMatters();
 
-  const columns = [
+  const columns = useMemo(() => [
     {
       accessorKey: 'displayId',
       header: 'KAYIT NO',
@@ -84,7 +85,7 @@ export function MatterTable() {
       header: 'AÇILIŞ TARİHİ',
       cell: info => (
         <div className="flex flex-col text-[11px] font-medium text-slate-500">
-          <span>{new Date(info.getValue()).toLocaleDateString('tr-TR')}</span>
+          <span>{dateFormatter.format(new Date(info.getValue()))}</span>
         </div>
       ),
       size: 140,
@@ -118,7 +119,7 @@ export function MatterTable() {
       ),
       size: 60,
     }
-  ];
+  ], [dateFormatter, navigate]);
 
   const table = useReactTable({
     data: matters,
