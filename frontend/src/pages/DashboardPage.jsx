@@ -1,157 +1,98 @@
 import React from 'react';
-import { 
-  Briefcase, 
-  Users, 
-  FileText, 
-  Calendar, 
-  TrendingUp, 
-  ArrowRight,
-  Plus,
-  Sparkles,
-  Gavel
-} from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
-import { useAuthStore } from "@/store/useAuthStore";
-import { motion } from "framer-motion";
+import { Briefcase, Users, FileText, TrendingUp, ArrowRight, Plus, Sparkles } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
+import { useAuthStore } from '@/store/useAuthStore';
+import { cn } from '@/lib/utils';
 
 export default function DashboardPage() {
   const { user, role } = useAuthStore();
 
   return (
-    <div className="space-y-10 fade-enter-active">
-      
-      {/* Welcome Section */}
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
+    <div className="space-y-8 fade-enter">
+      {/* Welcome */}
+      <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-4xl font-black text-slate-900 mb-2 tracking-tight">
-            Hoş Geldin, <span className="text-indigo-600">{user?.fullName || (role === 'PLATFORM_ADMIN' ? 'Sistem Yöneticisi' : 'Avukat')}</span>
+          <h1 className="text-xl font-semibold text-foreground">
+            Hoş geldin, {user?.fullName || (role === 'PLATFORM_ADMIN' ? 'Yönetici' : 'Avukat')}
           </h1>
-          <p className="text-slate-500 text-lg font-medium">
-            {role === 'PLATFORM_ADMIN' 
-              ? 'Tüm sistem ve organizasyonlar genelinde tam yetkiye sahipsiniz.' 
-              : 'Hukuk otomasyon sisteminizde her şey kontrol altında.'}
+          <p className="text-sm text-muted-foreground mt-0.5">
+            Hukuk otomasyon sisteminize hoş geldiniz.
           </p>
         </div>
-        <div className="flex items-center gap-3">
-          <Button className="h-12 px-6 rounded-2xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold shadow-lg shadow-indigo-100 transition-all hover:scale-[1.02] active:scale-95">
-            <Plus className="h-5 w-5 mr-2" /> Yeni Dava Kaydı
-          </Button>
-        </div>
+        <Button size="sm">
+          <Plus className="w-4 h-4 mr-1.5" />
+          Yeni Dava
+        </Button>
       </div>
 
-      {/* Stats Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <StatCard 
-          icon={<Briefcase className="h-6 w-6" />} 
-          label="Aktif Davalar" 
-          value="42" 
-          trend="+5 bu ay" 
-          color="indigo" 
-        />
-        <StatCard 
-          icon={<Gavel className="h-6 w-6" />} 
-          label="Beklenen Kararlar" 
-          value="12" 
-          trend="3 kritik" 
-          color="amber" 
-        />
-        <StatCard 
-          icon={<Users className="h-6 w-6" />} 
-          label="Müvekkil Sayısı" 
-          value="86" 
-          trend="+8 yeni" 
-          color="emerald" 
-        />
-        <StatCard 
-          icon={<Sparkles className="h-6 w-6" />} 
-          label="AI Analizleri" 
-          value="156" 
-          trend="Bugün: 12" 
-          color="violet" 
-        />
+      {/* Stats */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        <StatCard icon={Briefcase} label="Aktif Dava" value="42" trend="+5" />
+        <StatCard icon={FileText} label="Bekleyen" value="12" trend="3 kritik" />
+        <StatCard icon={Users} label="Müvekkil" value="86" trend="+8" />
+        <StatCard icon={Sparkles} label="AI Analiz" value="156" trend="12 bugün" />
       </div>
 
-      {/* Main Content Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        {/* Recent Matters */}
-        <Card className="lg:col-span-2 rounded-[40px] border-slate-100 shadow-sm bg-white overflow-hidden">
-          <CardHeader className="p-8 pb-4 flex flex-row justify-between items-center">
-            <CardTitle className="text-xl font-bold text-slate-900">Son İşlemler</CardTitle>
-            <Button variant="ghost" className="text-indigo-600 font-bold hover:bg-indigo-50 rounded-xl px-4">
-              Tümünü Gör <ArrowRight className="h-4 w-4 ml-2" />
+      {/* Content */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <Card className="lg:col-span-2">
+          <CardHeader className="flex flex-row items-center justify-between">
+            <CardTitle className="text-sm font-medium">Son İşlemler</CardTitle>
+            <Button variant="ghost" size="sm" className="text-xs gap-1">
+              Tümü <ArrowRight className="w-3 h-3" />
             </Button>
           </CardHeader>
-          <CardContent className="p-8 pt-4">
-            <div className="space-y-4">
-              {[1, 2, 3].map((i) => (
-                <div key={i} className="flex items-center justify-between p-5 hover:bg-slate-50/80 rounded-3xl transition-all group cursor-pointer border border-transparent hover:border-slate-100">
-                  <div className="flex items-center gap-4">
-                    <div className="w-12 h-12 bg-indigo-50 text-indigo-600 rounded-2xl flex items-center justify-center shadow-sm">
-                      <FileText className="h-5 w-5" />
-                    </div>
-                    <div>
-                      <p className="font-bold text-slate-900">Dosya #2024/{i * 456}</p>
-                      <p className="text-[11px] text-slate-400 font-bold uppercase tracking-wider">Ağır Ceza Mahkemesi</p>
-                    </div>
+          <CardContent className="space-y-1">
+            {[1, 2, 3].map((i) => (
+              <div key={i} className="flex items-center justify-between py-3 px-3 rounded-md hover:bg-accent transition-colors cursor-pointer">
+                <div className="flex items-center gap-3">
+                  <div className="w-9 h-9 rounded-md bg-primary/10 flex items-center justify-center">
+                    <FileText className="w-4 h-4 text-primary" />
                   </div>
-                  <div className="flex items-center gap-6">
-                    <div className="hidden md:block text-right">
-                      <p className="text-xs font-bold text-slate-700">Duruşma Tarihi</p>
-                      <p className="text-[11px] text-slate-400 font-medium">15 Haziran 2024</p>
-                    </div>
-                    <span className="h-8 px-4 flex items-center bg-emerald-50 text-emerald-700 text-[10px] font-black rounded-xl border border-emerald-100 uppercase tracking-widest">
-                      Açık
-                    </span>
+                  <div>
+                    <p className="text-sm font-medium text-foreground">Dosya #2024/{i * 456}</p>
+                    <p className="text-xs text-muted-foreground">Ağır Ceza Mahkemesi</p>
                   </div>
                 </div>
-              ))}
-            </div>
+                <span className="text-xs text-muted-foreground">15 Haz 2024</span>
+              </div>
+            ))}
           </CardContent>
         </Card>
 
-        {/* AI Insight Card */}
-        <Card className="rounded-[40px] border-none bg-gradient-to-br from-indigo-600 to-violet-700 shadow-xl shadow-indigo-200 p-8 text-white">
-          <div className="h-12 w-12 rounded-2xl bg-white/20 backdrop-blur-md flex items-center justify-center mb-6">
-            <Sparkles className="h-6 w-6 text-white" />
-          </div>
-          <h3 className="text-2xl font-bold mb-4">Günün AI Analizi</h3>
-          <p className="text-indigo-100 text-sm leading-relaxed mb-8 font-medium">
-            "Yargıtay'ın son işçilik alacakları kararını incelediniz mi? Mevcut 5 dosyanız bu karardan doğrudan etkilenebilir."
-          </p>
-          <Button className="w-full h-12 bg-white text-indigo-600 font-bold rounded-2xl hover:bg-indigo-50 shadow-lg shadow-black/10">
-            Analizi İncele
-          </Button>
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-sm font-medium">AI Analizi</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-sm text-muted-foreground leading-relaxed">
+              &ldquo;Yargıtay&apos;ın son işçilik alacakları kararını incelediniz mi? 
+              Mevcut 5 dosyanız bu karardan etkilenebilir.&rdquo;
+            </p>
+            <Button size="sm" variant="outline" className="w-full mt-4 text-xs">
+              İncele
+            </Button>
+          </CardContent>
         </Card>
       </div>
     </div>
   );
 }
 
-function StatCard({ icon, label, value, trend, color }) {
-  const colors = {
-    indigo: "bg-indigo-50 text-indigo-600 shadow-indigo-100",
-    amber: "bg-amber-50 text-amber-600 shadow-amber-100",
-    emerald: "bg-emerald-50 text-emerald-600 shadow-emerald-100",
-    violet: "bg-violet-50 text-violet-600 shadow-violet-100",
-  };
-
+function StatCard({ icon: Icon, label, value, trend }) {
   return (
-    <motion.div whileHover={{ y: -5 }} className="bg-white p-7 rounded-[32px] border border-slate-50 shadow-sm hover:shadow-md transition-all">
-      <div className={cn("h-12 w-12 rounded-2xl flex items-center justify-center mb-6", colors[color])}>
-        {icon}
+    <div className="rounded-lg border border-border bg-card p-5">
+      <div className="w-9 h-9 rounded-md bg-primary/10 flex items-center justify-center mb-4">
+        <Icon className="w-4 h-4 text-primary" />
       </div>
-      <p className="text-slate-400 text-xs font-bold mb-1 uppercase tracking-widest">{label}</p>
-      <div className="flex items-baseline justify-between">
-        <h4 className="text-3xl font-black text-slate-900">{value}</h4>
-        <span className="text-[10px] font-black text-slate-500 bg-slate-50 px-2.5 py-1 rounded-lg border border-slate-100 uppercase tracking-widest">
-          {trend}
-        </span>
+      <p className="text-xs text-muted-foreground mb-1">{label}</p>
+      <div className="flex items-baseline gap-2.5">
+        <span className="text-2xl font-semibold text-foreground">{value}</span>
+        <span className="text-[11px] text-muted-foreground">{trend}</span>
       </div>
-    </motion.div>
+    </div>
   );
 }
 
-function cn(...classes) {
-  return classes.filter(Boolean).join(' ');
-}
+

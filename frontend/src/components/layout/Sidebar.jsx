@@ -1,37 +1,26 @@
-import React, { useEffect } from 'react';
+import React from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
 import { 
-  Scale, 
-  Briefcase, 
-  Calendar, 
-  FileText, 
-  CreditCard, 
-  Bot, 
-  Bell, 
-  Settings,
-  PanelLeftClose,
-  PanelLeft,
-  LogOut,
-  BrainCircuit,
-  LayoutDashboard
+  Scale, Briefcase, Calendar, FileText, CreditCard, 
+  Settings, LogOut, BrainCircuit, LayoutDashboard, PanelLeft
 } from 'lucide-react';
 import { useAuthStore } from '@/store/useAuthStore';
+import { cn } from '@/lib/utils';
 
-export function Sidebar({ isCollapsed, setIsCollapsed }) {
-  const [isHovered, setIsHovered] = React.useState(false);
+export function Sidebar({ collapsed, onToggle }) {
   const { logout, role } = useAuthStore();
   const navigate = useNavigate();
 
-  const isEffectivelyOpen = !isCollapsed || isHovered;
-
   const navigation = [
-    { name: 'Gösterge Paneli', href: '/dashboard', icon: LayoutDashboard },
+    { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
     { name: 'Davalar', href: '/matters', icon: Briefcase },
     { name: 'Takvim', href: '/calendar', icon: Calendar },
     { name: 'Belgeler', href: '/documents', icon: FileText },
-    { name: 'Faturalandırma', href: '/billing', icon: CreditCard },
+    { name: 'Fatura', href: '/billing', icon: CreditCard },
     { name: 'AI Asistan', href: '/ai', icon: BrainCircuit },
-    ...(role === 'PLATFORM_ADMIN' ? [{ name: 'Sistem Paneli', href: '/super-admin', icon: Scale }] : []),
+    ...(role === 'PLATFORM_ADMIN' 
+      ? [{ name: 'Yönetim', href: '/super-admin', icon: Scale }] 
+      : []),
   ];
 
   const handleLogout = () => {
@@ -40,101 +29,90 @@ export function Sidebar({ isCollapsed, setIsCollapsed }) {
   };
 
   return (
-    <div 
-      onMouseEnter={() => setIsHovered(true)}
-      onMouseLeave={() => setIsHovered(false)}
-      className={cn(
-        "flex h-full flex-col border-r border-slate-100 bg-white transition-all duration-500 ease-in-out shadow-sm z-30",
-        isEffectivelyOpen ? 'w-64' : 'w-20'
-      )}
-    >
-      {/* Brand & Toggle */}
+    <aside className={cn(
+      'flex flex-col h-full border-r border-border bg-card transition-all duration-200',
+      collapsed ? 'w-16' : 'w-56'
+    )}>
+      {/* Brand */}
       <div className={cn(
-        "flex items-center h-20 px-5 transition-all duration-300",
-        !isEffectivelyOpen ? 'justify-center' : 'justify-between'
+        'flex items-center h-14 border-b border-border px-4',
+        collapsed && 'justify-center px-0'
       )}>
-        {isEffectivelyOpen ? (
-          <div className="flex items-center gap-3 overflow-hidden">
-            <div className="h-9 w-9 rounded-xl bg-indigo-600 flex items-center justify-center shadow-lg shadow-indigo-100">
-              <Scale className="h-5 w-5 text-white" />
-            </div>
-            <span className="font-black text-lg tracking-tight text-slate-900 truncate">
-              LAW<span className="text-indigo-600">AUTO</span>
-            </span>
+        {collapsed ? (
+          <div className="w-8 h-8 rounded-md bg-primary flex items-center justify-center">
+            <Scale className="w-4 h-4 text-primary-foreground" />
           </div>
         ) : (
-          <div className="h-10 w-10 rounded-xl bg-indigo-600 flex items-center justify-center shadow-md">
-            <Scale className="h-5 w-5 text-white" />
+          <div className="flex items-center gap-2.5">
+            <div className="w-8 h-8 rounded-md bg-primary flex items-center justify-center">
+              <Scale className="w-4 h-4 text-primary-foreground" />
+            </div>
+            <span className="font-semibold text-sm text-foreground tracking-tight">
+              LawAuto
+            </span>
           </div>
         )}
       </div>
 
-      {/* Main Nav */}
-      <nav className="flex-1 space-y-2 p-4">
+      {/* Navigation */}
+      <nav className="flex-1 py-3 px-2 space-y-1">
         {navigation.map((item) => (
           <NavLink
             key={item.name}
             to={item.href}
-            className={({ isActive }) =>
-              cn(
-                "group flex items-center rounded-2xl py-3 text-sm font-bold transition-all duration-300",
-                !isEffectivelyOpen ? 'justify-center px-0' : 'px-4',
-                isActive
-                  ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-100'
-                  : 'text-slate-500 hover:bg-slate-50 hover:text-indigo-600'
-              )
-            }
+            className={({ isActive }) => cn(
+              'flex items-center gap-3 h-9 rounded-md text-sm transition-colors',
+              collapsed ? 'justify-center w-12 mx-auto' : 'px-3',
+              isActive
+                ? 'bg-primary/10 text-primary font-medium'
+                : 'text-muted-foreground hover:text-foreground hover:bg-accent'
+            )}
           >
-            <item.icon className={cn("h-5 w-5 shrink-0 transition-all", isEffectivelyOpen && "mr-3")} />
-            {isEffectivelyOpen && <span className="truncate">{item.name}</span>}
+            <item.icon className="w-4 h-4 shrink-0" />
+            {!collapsed && <span className="truncate">{item.name}</span>}
           </NavLink>
         ))}
       </nav>
 
-      {/* Bottom Nav */}
-      <div className="mt-auto p-4 space-y-2 border-t border-slate-50">
+      {/* Bottom */}
+      <div className="py-3 px-2 border-t border-border space-y-1">
         <NavLink
           to="/settings"
-          className={({ isActive }) =>
-            cn(
-              "group flex items-center rounded-2xl py-3 text-sm font-bold transition-all duration-300",
-              !isEffectivelyOpen ? 'justify-center px-0' : 'px-4',
-              isActive
-                ? 'bg-slate-100 text-slate-900'
-                : 'text-slate-500 hover:bg-slate-50 hover:text-indigo-600'
-            )
-          }
+          className={({ isActive }) => cn(
+            'flex items-center gap-3 h-9 rounded-md text-sm transition-colors',
+            collapsed ? 'justify-center w-12 mx-auto' : 'px-3',
+            isActive
+              ? 'bg-primary/10 text-primary font-medium'
+              : 'text-muted-foreground hover:text-foreground hover:bg-accent'
+          )}
         >
-          <Settings className={cn("h-5 w-5 shrink-0", isEffectivelyOpen && "mr-3")} />
-          {isEffectivelyOpen && <span className="truncate">Ayarlar</span>}
+          <Settings className="w-4 h-4 shrink-0" />
+          {!collapsed && <span>Ayarlar</span>}
         </NavLink>
 
         <button
           onClick={handleLogout}
           className={cn(
-            "w-full group flex items-center rounded-2xl py-3 text-sm font-bold transition-all duration-300 text-red-500 hover:bg-red-50",
-            !isEffectivelyOpen ? 'justify-center px-0' : 'px-4'
+            'flex items-center gap-3 h-9 rounded-md text-sm transition-colors w-full',
+            collapsed ? 'justify-center w-12 mx-auto' : 'px-3',
+            'text-muted-foreground hover:text-destructive hover:bg-destructive/10'
           )}
         >
-          <LogOut className={cn("h-5 w-5 shrink-0", isEffectivelyOpen && "mr-3")} />
-          {isEffectivelyOpen && <span className="truncate">Çıkış Yap</span>}
+          <LogOut className="w-4 h-4 shrink-0" />
+          {!collapsed && <span>Çıkış</span>}
         </button>
 
-        {/* Collapse Toggle at Bottom */}
-        <button
-          onClick={() => setIsCollapsed(!isCollapsed)}
-          className={cn(
-            "w-full mt-4 flex items-center justify-center h-10 rounded-xl text-slate-400 hover:bg-slate-50 hover:text-slate-600 transition-all",
-            !isEffectivelyOpen && "hidden"
-          )}
-        >
-          {isCollapsed ? <PanelLeft className="h-5 w-5" /> : <PanelLeftClose className="h-5 w-5" />}
-        </button>
+        {!collapsed && (
+          <button
+            onClick={onToggle}
+            className="flex items-center justify-center h-9 rounded-md text-muted-foreground hover:text-foreground hover:bg-accent w-full text-sm"
+          >
+            <PanelLeft className="w-4 h-4" />
+          </button>
+        )}
       </div>
-    </div>
+    </aside>
   );
 }
 
-function cn(...classes) {
-  return classes.filter(Boolean).join(' ');
-}
+

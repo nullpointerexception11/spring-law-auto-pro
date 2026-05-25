@@ -14,18 +14,15 @@ const LoginPage = lazy(() => import('./pages/LoginPage'));
 const DashboardPage = lazy(() => import('./pages/DashboardPage'));
 const MatterList = lazy(() => import('./pages/matters/MatterList'));
 const MatterDetail = lazy(() => import('./pages/matters/MatterDetail'));
-const AiAssistantPage = lazy(() => import('./pages/AiAssistantPage'));
+const AiAssistantPage = lazy(() => import('./pages/AiAssistantPageV2'));
 const SuperAdminPage = lazy(() => import('./pages/SuperAdminPage'));
 
 /**
  * Loading component for Suspense
  */
 const PageLoader = () => (
-  <div className="flex h-[calc(100vh-100px)] w-full items-center justify-center">
-    <div className="flex flex-col items-center gap-4">
-      <Loader2 className="h-10 w-10 animate-spin text-indigo-600" />
-      <p className="text-sm font-bold text-slate-400 uppercase tracking-widest animate-pulse">Sayfa Yükleniyor...</p>
-    </div>
+  <div className="flex h-screen w-full items-center justify-center bg-background">
+    <Loader2 className="h-6 w-6 animate-spin text-primary" />
   </div>
 );
 
