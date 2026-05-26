@@ -66,8 +66,8 @@ export function ModelIndicator({ model, isStreaming }) {
           </motion.div>
         </TooltipTrigger>
         <TooltipContent side="top" className="text-xs max-w-[200px]">
-          <div className="font-bold text-slate-900 mb-1">Model Routing</div>
-          <p className="text-slate-500">{modelDescription}</p>
+          <div className="font-bold text-foreground mb-1">Model Routing</div>
+          <p className="text-muted-foreground">{modelDescription}</p>
           <div className="mt-1.5 pt-1.5 border-t border-slate-100 text-[10px] text-slate-400">
             {isLargeModel ? "🧠 Dilekçe yazımı, karmaşık analiz" : "⚡ Sınıflandırma, özetleme, basit Q&A"}
           </div>

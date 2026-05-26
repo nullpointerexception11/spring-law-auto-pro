@@ -10,9 +10,11 @@ public interface MatterListDtoProjection {
     UUID getId();
     String getTitle();
     String getReferenceNumber();
+    String getDisplayId();
     String getStatus();
     OffsetDateTime getOpenedAt();
     String getClientName();
     String getAssignedLawyerName();
     OffsetDateTime getNextHearingDate();
+    String getSummary();
 }

@@ -35,24 +35,24 @@ export function AiInsightsPanel({ isOpen, onClose }) {
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: 10 }}
-      className="rounded-2xl border border-slate-200 bg-white shadow-sm overflow-hidden"
+      className="rounded-2xl border border-border bg-card shadow-sm overflow-hidden"
     >
       {/* Header */}
-      <div className="flex items-center justify-between px-5 py-4 border-b border-slate-100">
+      <div className="flex items-center justify-between px-5 py-4 border-b border-border">
         <div className="flex items-center gap-3">
           <div className="flex items-center justify-center size-9 rounded-xl bg-violet-50 text-violet-600">
             <BrainCircuit className="size-5" />
           </div>
           <div>
-            <h3 className="font-bold text-slate-900 text-sm">AI Analizleri</h3>
-            <p className="text-[10px] text-slate-400 font-medium uppercase tracking-wider">
+            <h3 className="font-bold text-foreground text-sm">AI Analizleri</h3>
+            <p className="text-[10px] text-muted-foreground font-medium uppercase tracking-wider">
               Hukuki Öngörüler ve Öneriler
             </p>
           </div>
         </div>
         <button
           onClick={onClose}
-          className="flex items-center justify-center size-8 rounded-lg hover:bg-slate-100 text-slate-400 transition-colors"
+          className="flex items-center justify-center size-8 rounded-lg hover:bg-slate-100 text-muted-foreground transition-colors"
         >
           <X className="size-4" />
         </button>
@@ -129,7 +129,7 @@ function InsightCard({ insight, index }) {
         </div>
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2">
-            <span className="font-bold text-slate-900 text-sm">{title}</span>
+            <span className="font-bold text-foreground text-sm">{title}</span>
             {priority === "high" && (
               <Badge variant="destructive" className="text-[8px] font-bold uppercase tracking-widest px-1.5 py-0.5">
                 Öncelikli
@@ -146,7 +146,7 @@ function InsightCard({ insight, index }) {
             <Button
               variant="ghost"
               size="sm"
-              className="mt-2 h-7 px-2.5 rounded-lg text-[10px] font-bold text-indigo-600 hover:bg-indigo-50"
+              className="mt-2 h-7 px-2.5 rounded-lg text-[10px] font-bold text-primary hover:bg-primary/10"
             >
               {action}
             </Button>

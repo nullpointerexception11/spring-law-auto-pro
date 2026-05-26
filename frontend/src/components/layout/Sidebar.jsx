@@ -1,8 +1,8 @@
 import React from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
 import { 
-  Scale, Briefcase, Calendar, FileText, CreditCard, 
-  Settings, LogOut, BrainCircuit, LayoutDashboard, PanelLeft
+  Scale, Briefcase, Calendar, CreditCard, Search, Users,
+  Settings, LogOut, LayoutDashboard, PanelLeft
 } from 'lucide-react';
 import { useAuthStore } from '@/store/useAuthStore';
 import { cn } from '@/lib/utils';
@@ -12,12 +12,12 @@ export function Sidebar({ collapsed, onToggle }) {
   const navigate = useNavigate();
 
   const navigation = [
-    { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
+    { name: 'Panel', href: '/dashboard', icon: LayoutDashboard },
     { name: 'Davalar', href: '/matters', icon: Briefcase },
     { name: 'Takvim', href: '/calendar', icon: Calendar },
-    { name: 'Belgeler', href: '/documents', icon: FileText },
-    { name: 'Fatura', href: '/billing', icon: CreditCard },
-    { name: 'AI Asistan', href: '/ai', icon: BrainCircuit },
+    { name: 'Hukuk Arama', href: '/legal-search', icon: Search },
+    { name: 'Müvekkiller', href: '/clients', icon: Users },
+    { name: 'Finans', href: '/billing', icon: CreditCard },
     ...(role === 'PLATFORM_ADMIN' 
       ? [{ name: 'Yönetim', href: '/super-admin', icon: Scale }] 
       : []),

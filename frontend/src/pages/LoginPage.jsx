@@ -2,7 +2,6 @@ import { useState } from "react";
 import { api } from "@/api/client";
 import { useNavigate } from "react-router-dom";
 import { useAuthStore } from "@/store/useAuthStore";
-import { Card, CardContent } from "@/components/ui/card";
 import { AuthInfoPanel } from "@/components/auth/AuthInfoPanel";
 import { LoginForm } from "@/components/auth/LoginForm";
 import { toast } from "sonner";
@@ -26,12 +25,11 @@ export default function LoginPage() {
         return;
       }
 
-      // Use global store instead of direct localStorage
       setAuth({
         token: data.token,
         role: data.role,
         orgId: data.orgId,
-        user: data.user // Assuming backend returns user info
+        user: data.user
       });
       
       const userRole = (data.role || "").toString().trim().toUpperCase();
@@ -52,21 +50,18 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-slate-50 p-4 font-sans">
-      <Card className="max-w-5xl w-full grid md:grid-cols-2 shadow-2xl border-none overflow-hidden animate-in p-0 rounded-3xl">
-        
-        {/* Left Side: Info Panel */}
+    <div className="min-h-screen flex items-center justify-center bg-background p-4">
+      <div className="max-w-5xl w-full grid md:grid-cols-2 border border-border rounded-2xl overflow-hidden bg-card">
         <AuthInfoPanel />
 
-        {/* Right Side: Form Content */}
-        <CardContent className="p-8 md:p-16 flex flex-col justify-center bg-white">
-          <div className="mb-10 text-center md:text-left">
-            <h2 className="text-3xl font-bold text-slate-900 mb-2">Hoş Geldiniz</h2>
-            <p className="text-slate-500 font-medium">Devam etmek için giriş yapın.</p>
+        <div className="p-8 md:p-12 flex flex-col justify-center">
+          <div className="mb-8">
+            <h2 className="text-2xl font-semibold text-foreground mb-1">Hoş Geldiniz</h2>
+            <p className="text-sm text-muted-foreground">Devam etmek için giriş yapın.</p>
           </div>
 
           {error && (
-            <div className="mb-6 p-4 bg-red-50 border border-red-100 text-red-600 text-sm rounded-xl animate-in font-medium">
+            <div className="mb-6 p-3 rounded-lg bg-destructive/10 border border-destructive/20 text-destructive text-sm font-medium">
               {error}
             </div>
           )}
@@ -74,13 +69,12 @@ export default function LoginPage() {
           <LoginForm onSubmit={handleAuth} isLoading={loading} />
 
           <div className="mt-8 text-center">
-            <p className="text-slate-400 text-sm">
+            <p className="text-xs text-muted-foreground">
               Giriş yapamıyorsanız lütfen sistem yöneticinizle iletişime geçin.
             </p>
           </div>
-        </CardContent>
-      </Card>
+        </div>
+      </div>
     </div>
   );
 }
-

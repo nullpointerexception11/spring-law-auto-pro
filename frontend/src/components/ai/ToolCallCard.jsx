@@ -50,9 +50,9 @@ export function ToolCallCard({ toolCall, onResultClick }) {
       animate={{ opacity: 1, y: 0, scale: 1 }}
       className={cn(
         "rounded-2xl border p-4 transition-all",
-        isRunning && "border-indigo-200 bg-indigo-50/30",
+        isRunning && "border-primary/50 bg-primary/5",
         isSuccess && "border-emerald-200 bg-emerald-50/30",
-        isError && "border-red-200 bg-red-50/30",
+        isError && "border-destructive/50 bg-destructive/5",
         isHumanLoop && isSuccess && "border-amber-200 bg-amber-50/30"
       )}
     >
@@ -61,10 +61,10 @@ export function ToolCallCard({ toolCall, onResultClick }) {
         <div className="flex items-center gap-3 min-w-0">
           <div className={cn(
             "flex items-center justify-center size-9 rounded-xl shrink-0",
-            isRunning && "bg-indigo-100 text-indigo-600",
+            isRunning && "bg-primary/20 text-primary",
             isSuccess && !isHumanLoop && "bg-emerald-100 text-emerald-600",
             isHumanLoop && isSuccess && "bg-amber-100 text-amber-600",
-            isError && "bg-red-100 text-red-600"
+            isError && "bg-destructive/20 text-destructive"
           )}>
             {isRunning ? (
               <Loader2 className="size-4 animate-spin" />
@@ -76,8 +76,8 @@ export function ToolCallCard({ toolCall, onResultClick }) {
           </div>
           <div className="min-w-0">
             <div className="flex items-center gap-2">
-              <Icon className="size-4 text-slate-500 shrink-0" />
-              <span className="font-bold text-slate-800 text-sm truncate">
+              <Icon className="size-4 text-muted-foreground shrink-0" />
+              <span className="font-bold text-foreground text-sm truncate">
                 {toolConfig.label}
               </span>
               {isHumanLoop && (
@@ -89,16 +89,16 @@ export function ToolCallCard({ toolCall, onResultClick }) {
             <div className="flex items-center gap-2 mt-0.5">
               <span className={cn(
                 "text-[9px] font-bold uppercase tracking-wider",
-                isRunning && "text-indigo-600",
+                isRunning && "text-primary",
                 isSuccess && "text-emerald-600",
-                isError && "text-red-600"
+                isError && "text-destructive"
               )}>
                 {isRunning ? "Çalışıyor..." : isSuccess ? "Başarılı" : "Hata"}
               </span>
               {duration && (
                 <>
                   <span className="text-slate-300">·</span>
-                  <span className="text-[9px] text-slate-400">{duration}ms</span>
+                  <span className="text-[9px] text-muted-foreground">{duration}ms</span>
                 </>
               )}
             </div>
@@ -111,17 +111,17 @@ export function ToolCallCard({ toolCall, onResultClick }) {
         <div className="mt-3 bg-white/60 rounded-xl border border-slate-100 p-3">
           {input.query && (
             <p className="text-[11px] text-slate-600">
-              <span className="font-bold text-slate-800">Sorgu:</span> {input.query}
+              <span className="font-bold text-foreground">Sorgu:</span> {input.query}
             </p>
           )}
           {input.title && (
             <p className="text-[11px] text-slate-600">
-              <span className="font-bold text-slate-800">{isHumanLoop ? "Taslak:" : "Başlık:"}</span> {input.title}
+              <span className="font-bold text-foreground">{isHumanLoop ? "Taslak:" : "Başlık:"}</span> {input.title}
             </p>
           )}
           {input.sourceType && (
             <p className="text-[11px] text-slate-600">
-              <span className="font-bold text-slate-800">Kaynak Türü:</span> {input.sourceType}
+              <span className="font-bold text-foreground">Kaynak Türü:</span> {input.sourceType}
             </p>
           )}
         </div>

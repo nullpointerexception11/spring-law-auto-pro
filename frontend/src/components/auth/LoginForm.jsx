@@ -1,7 +1,7 @@
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import { Building2, Mail, Lock } from "lucide-react";
+import { Building2, Mail, Lock, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { 
@@ -35,9 +35,9 @@ export function LoginForm({ onSubmit, isLoading }) {
             <FormItem>
               <FormLabel>Şirket Adı</FormLabel>
               <FormControl>
-                <div className="relative group">
-                  <Building2 className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 group-focus-within:text-primary transition-colors" />
-                  <Input {...field} placeholder="Şirket isminiz" className="pl-10 h-12 rounded-xl" />
+                <div className="relative">
+                  <Building2 className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                  <Input {...field} placeholder="Şirket isminiz" className="pl-10 h-11" />
                 </div>
               </FormControl>
               <FormMessage />
@@ -52,9 +52,9 @@ export function LoginForm({ onSubmit, isLoading }) {
             <FormItem>
               <FormLabel>E-posta</FormLabel>
               <FormControl>
-                <div className="relative group">
-                  <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 group-focus-within:text-primary transition-colors" />
-                  <Input {...field} type="email" placeholder="ornek@hukuk.com" className="pl-10 h-12 rounded-xl" />
+                <div className="relative">
+                  <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                  <Input {...field} type="email" placeholder="ornek@hukuk.com" className="pl-10 h-11" />
                 </div>
               </FormControl>
               <FormMessage />
@@ -69,9 +69,9 @@ export function LoginForm({ onSubmit, isLoading }) {
             <FormItem>
               <FormLabel>Şifre</FormLabel>
               <FormControl>
-                <div className="relative group">
-                  <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 group-focus-within:text-primary transition-colors" />
-                  <Input {...field} type="password" placeholder="••••••••" className="pl-10 h-12 rounded-xl" />
+                <div className="relative">
+                  <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                  <Input {...field} type="password" placeholder="••••••••" className="pl-10 h-11" />
                 </div>
               </FormControl>
               <FormMessage />
@@ -79,8 +79,12 @@ export function LoginForm({ onSubmit, isLoading }) {
           )}
         />
 
-        <Button type="submit" disabled={isLoading} className="w-full h-12 rounded-xl text-md font-bold shadow-lg shadow-primary/20 transition-all hover:scale-[1.01]">
-          {isLoading ? "Giriş Yapılıyor..." : "Giriş Yap"}
+        <Button type="submit" disabled={isLoading} className="w-full h-11 font-medium">
+          {isLoading ? (
+            <><Loader2 className="h-4 w-4 mr-2 animate-spin" /> Giriş Yapılıyor...</>
+          ) : (
+            'Giriş Yap'
+          )}
         </Button>
       </form>
     </Form>

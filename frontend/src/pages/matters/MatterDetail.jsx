@@ -15,12 +15,13 @@ import {
   History,
   Files,
   StickyNote,
-  ChevronRight,
-  Edit3
+  Edit3,
+  Hash
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { motion } from 'framer-motion';
+import { Skeleton } from '@/components/ui/skeleton';
+import { cn } from '@/lib/utils';
 
 export default function MatterDetail() {
   const { matterId } = useParams();
@@ -31,9 +32,26 @@ export default function MatterDetail() {
 
   if (isLoading) {
     return (
-      <div className="flex flex-col items-center justify-center h-[calc(100vh-200px)] space-y-4">
-        <Loader2 className="h-10 w-10 animate-spin text-indigo-600" />
-        <p className="text-slate-500 animate-pulse font-medium">Dava detayları hazırlanıyor...</p>
+      <div className="space-y-8">
+        <div className="flex items-center gap-4">
+          <Skeleton className="h-10 w-10 rounded-lg" />
+          <div className="space-y-2">
+            <Skeleton className="h-7 w-64" />
+            <Skeleton className="h-4 w-48" />
+          </div>
+        </div>
+        <div className="flex gap-2">
+          {[...Array(4)].map((_, i) => (
+            <Skeleton key={i} className="h-10 w-28" />
+          ))}
+        </div>
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <div className="lg:col-span-2 space-y-6">
+            <Skeleton className="h-48 rounded-xl" />
+            <Skeleton className="h-64 rounded-xl" />
+          </div>
+          <Skeleton className="h-64 rounded-xl" />
+        </div>
       </div>
     );
   }
@@ -41,17 +59,17 @@ export default function MatterDetail() {
   if (error || !matter) {
     return (
       <div className="flex flex-col items-center justify-center h-[calc(100vh-200px)] space-y-4 text-center">
-        <div className="p-4 rounded-3xl bg-red-50">
-          <ShieldAlert className="h-10 w-10 text-red-600" />
+        <div className="p-4 rounded-2xl bg-destructive/10">
+          <ShieldAlert className="h-10 w-10 text-destructive" />
         </div>
         <div className="space-y-1">
-          <h2 className="text-xl font-bold text-slate-900">Dava bulunamadı</h2>
-          <p className="text-sm text-slate-500">Erişmek istediğiniz dosya mevcut değil veya yetkiniz yok.</p>
+          <h2 className="text-xl font-semibold text-foreground">Dava bulunamadı</h2>
+          <p className="text-sm text-muted-foreground">Erişmek istediğiniz dosya mevcut değil veya yetkiniz yok.</p>
         </div>
         <Button 
           variant="outline"
           onClick={() => navigate('/matters')}
-          className="mt-4 rounded-xl"
+          className="mt-4"
         >
           <ArrowLeft className="h-4 w-4 mr-2" /> Listeye Dön
         </Button>
@@ -66,47 +84,54 @@ export default function MatterDetail() {
     { id: 'notes', label: 'Notlar', icon: StickyNote },
   ];
 
+  const statusVariant = matter.status === 'OPEN' ? 'success' 
+    : matter.status === 'PENDING' ? 'warning' 
+    : matter.status === 'CLOSED' ? 'secondary' 
+    : 'default';
+
   return (
-    <div className="space-y-8 fade-enter-active">
+    <div className="space-y-8">
       {/* Header */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
-        <div className="flex items-center gap-5">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div className="flex items-center gap-4">
           <button 
             onClick={() => navigate('/matters')}
-            className="h-12 w-12 flex items-center justify-center bg-white border border-slate-200 rounded-2xl hover:bg-slate-50 transition-all shadow-sm text-slate-500"
+            className="h-10 w-10 flex items-center justify-center rounded-lg border border-border bg-card hover:bg-accent transition-colors text-muted-foreground"
           >
-            <ArrowLeft className="h-5 w-5" />
+            <ArrowLeft className="h-4 w-4" />
           </button>
           <div>
             <div className="flex items-center gap-3 mb-1">
-              <h1 className="text-2xl font-bold text-slate-900">{matter.title}</h1>
-              <Badge variant="outline" className="rounded-lg bg-indigo-50/50 text-indigo-700 border-indigo-100 font-mono text-[10px]">
+              <h1 className="text-xl font-semibold text-foreground">{matter.title}</h1>
+              <Badge variant="outline" className="font-mono text-[10px]">
                 {matter.referenceNumber || 'YENİ DOSYA'}
               </Badge>
             </div>
-            <div className="flex items-center gap-4 text-xs text-slate-500 font-medium">
+            <div className="flex items-center gap-3 text-xs text-muted-foreground">
               <span className="flex items-center gap-1.5">
-                <Clock className="h-3.5 w-3.5 text-slate-400" />
+                <Clock className="h-3.5 w-3.5" />
                 {new Date(matter.openedAt).toLocaleDateString('tr-TR')} tarihinde açıldı
               </span>
-              <span className="h-1 w-1 rounded-full bg-slate-300" />
-              <span className="text-indigo-600 font-bold uppercase tracking-wider">{matter.status}</span>
+              <span className="h-1 w-1 rounded-full bg-muted-foreground/30" />
+              <Badge variant={statusVariant} className="text-[10px] font-medium uppercase tracking-wider">
+                {matter.status === 'OPEN' ? 'Aktif' 
+                  : matter.status === 'PENDING' ? 'Beklemede' 
+                  : matter.status === 'CLOSED' ? 'Kapalı' 
+                  : matter.status}
+              </Badge>
             </div>
           </div>
         </div>
         
         <div className="flex items-center gap-3">
-          <Button variant="outline" className="rounded-2xl h-11 px-6 shadow-sm">
+          <Button variant="outline" size="sm">
             <Edit3 className="h-4 w-4 mr-2" /> Düzenle
-          </Button>
-          <Button className="rounded-2xl h-11 px-6 bg-indigo-600 hover:bg-indigo-700 shadow-lg shadow-indigo-100">
-            Yeni İşlem
           </Button>
         </div>
       </div>
 
       {/* Navigation Tabs */}
-      <div className="flex items-center border-b border-slate-200 gap-2">
+      <div className="flex items-center border-b border-border">
         {tabs.map((tab) => {
           const Icon = tab.icon;
           const isActive = activeTab === tab.id;
@@ -115,65 +140,85 @@ export default function MatterDetail() {
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}
               className={cn(
-                "flex items-center gap-2 px-6 py-4 text-sm font-bold transition-all relative",
-                isActive ? "text-indigo-600" : "text-slate-500 hover:text-slate-900"
+                "flex items-center gap-2 px-4 py-3 text-sm font-medium transition-colors relative border-b-2 -mb-[1px]",
+                isActive 
+                  ? "text-primary border-primary" 
+                  : "text-muted-foreground border-transparent hover:text-foreground"
               )}
             >
-              <Icon className={cn("h-4 w-4", isActive ? "text-indigo-600" : "text-slate-400")} />
+              <Icon className="h-4 w-4" />
               {tab.label}
-              {isActive && (
-                <motion.div 
-                  layoutId="activeTab"
-                  className="absolute bottom-0 left-0 right-0 h-1 bg-indigo-600 rounded-t-full" 
-                />
-              )}
             </button>
           );
         })}
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        <div className="lg:col-span-2 space-y-8">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className={cn("space-y-6", activeTab === 'overview' ? 'lg:col-span-2' : 'lg:col-span-3')}>
           {activeTab === 'overview' && (
-            <div className="space-y-8">
-              <div className="bg-white p-8 rounded-[32px] border border-slate-100 shadow-sm space-y-6">
-                <div className="flex items-center gap-3 text-slate-900 font-bold">
-                  <div className="h-8 w-8 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center">
+            <div className="space-y-6">
+              {/* Summary Card */}
+              <div className="rounded-xl border border-border bg-card p-6 space-y-4">
+                <div className="flex items-center gap-3 font-medium text-foreground">
+                  <div className="h-8 w-8 rounded-lg bg-primary/10 text-primary flex items-center justify-center">
                     <FileText className="h-4 w-4" />
                   </div>
                   Dosya Özeti
                 </div>
-                <p className="text-sm leading-relaxed text-slate-600 font-medium bg-slate-50/50 p-6 rounded-2xl border border-slate-50">
+                <p className="text-sm leading-relaxed text-muted-foreground bg-muted/50 p-4 rounded-lg">
                   {matter.summary || 'Bu dosya için henüz bir özet girilmemiş.'}
                 </p>
+                {matter.tags?.length > 0 && (
+                  <div className="flex flex-wrap gap-2">
+                    {matter.tags.map((tag, i) => (
+                      <Badge key={i} variant="secondary" className="text-[11px]">{tag}</Badge>
+                    ))}
+                  </div>
+                )}
               </div>
 
-              <div className="bg-white p-8 rounded-[32px] border border-slate-100 shadow-sm">
-                <div className="flex items-center justify-between mb-8">
-                  <div className="flex items-center gap-3 text-slate-900 font-bold">
-                    <div className="h-8 w-8 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center">
+              {/* Parties Card */}
+              {matter.parties?.length > 0 && (
+                <div className="rounded-xl border border-border bg-card p-6">
+                  <div className="flex items-center gap-3 font-medium text-foreground mb-6">
+                    <div className="h-8 w-8 rounded-lg bg-primary/10 text-primary flex items-center justify-center">
                       <User className="h-4 w-4" />
                     </div>
                     Dava Tarafları
                   </div>
+                  
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    {matter.parties.map((party, idx) => (
+                      <div key={idx} className="p-4 rounded-lg bg-muted/50 border border-border flex items-start gap-3 hover:border-primary/20 transition-colors">
+                        <div className="h-9 w-9 rounded-lg bg-background border border-border flex items-center justify-center text-muted-foreground shrink-0">
+                          <User className="h-4 w-4" />
+                        </div>
+                        <div>
+                          <p className="text-sm font-medium text-foreground">{party.fullName}</p>
+                          <p className="text-[11px] text-muted-foreground font-medium uppercase tracking-wider mt-0.5">
+                            {party.roleName}
+                          </p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
                 </div>
-                
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {matter.parties?.map((party, idx) => (
-                    <div key={idx} className="p-5 rounded-2xl bg-slate-50 border border-slate-100 flex items-start gap-4 hover:border-indigo-200 transition-all group">
-                      <div className="h-10 w-10 rounded-xl bg-white shadow-sm flex items-center justify-center text-slate-400 group-hover:text-indigo-600 transition-colors">
-                        <User className="h-5 w-5" />
-                      </div>
-                      <div>
-                        <p className="text-sm font-bold text-slate-900">{party.fullName}</p>
-                        <p className="text-[10px] text-slate-500 font-bold uppercase tracking-wider mt-1">
-                          {party.roleName}
-                        </p>
-                      </div>
+              )}
+
+              {/* Description */}
+              {matter.description && (
+                <div className="rounded-xl border border-border bg-card p-6">
+                  <div className="flex items-center gap-3 font-medium text-foreground mb-4">
+                    <div className="h-8 w-8 rounded-lg bg-primary/10 text-primary flex items-center justify-center">
+                      <Hash className="h-4 w-4" />
                     </div>
-                  ))}
+                    Açıklama
+                  </div>
+                  <p className="text-sm leading-relaxed text-muted-foreground">
+                    {matter.description}
+                  </p>
                 </div>
-              </div>
+              )}
             </div>
           )}
 
@@ -182,78 +227,98 @@ export default function MatterDetail() {
           )}
 
           {activeTab === 'timeline' && (
-            <div className="bg-white p-8 rounded-[32px] border border-slate-100 shadow-sm">
-              <div className="flex items-center gap-3 text-slate-900 font-bold mb-10">
-                <div className="h-8 w-8 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center">
+            <div className="rounded-xl border border-border bg-card p-6">
+              <div className="flex items-center gap-3 font-medium text-foreground mb-8">
+                <div className="h-8 w-8 rounded-lg bg-primary/10 text-primary flex items-center justify-center">
                   <History className="h-4 w-4" />
                 </div>
                 Dosya Geçmişi
               </div>
               
-              <div className="text-center py-12 space-y-4">
-                <div className="h-16 w-16 mx-auto rounded-full bg-slate-50 flex items-center justify-center text-slate-300">
+              <div className="text-center py-12 space-y-3">
+                <div className="h-16 w-16 mx-auto rounded-full bg-muted flex items-center justify-center text-muted-foreground">
                   <History className="h-8 w-8" />
                 </div>
-                <p className="text-sm text-slate-500 font-medium italic">Geçmiş verileri hazırlanıyor...</p>
+                <p className="text-sm text-muted-foreground">Geçmiş verileri hazırlanıyor...</p>
               </div>
             </div>
           )}
 
           {activeTab === 'notes' && (
-            <div className="p-16 rounded-[40px] border border-dashed border-slate-200 bg-slate-50/50 flex flex-col items-center justify-center text-center gap-6">
-              <div className="h-20 w-20 rounded-full bg-white shadow-sm flex items-center justify-center text-slate-300">
-                <StickyNote className="h-10 w-10" />
+            <div className="rounded-xl border border-dashed border-border bg-muted/30 p-12 flex flex-col items-center justify-center text-center gap-4">
+              <div className="h-16 w-16 rounded-full bg-muted flex items-center justify-center text-muted-foreground">
+                <StickyNote className="h-8 w-8" />
               </div>
-              <div className="space-y-2">
-                <h3 className="text-lg font-bold text-slate-900">Dosya Notları</h3>
-                <p className="text-sm text-slate-500 max-w-xs font-medium">Bu bölüm yakında aktif edilecektir. Notlarınızı buradan takip edebileceksiniz.</p>
+              <div className="space-y-1">
+                <h3 className="text-lg font-medium text-foreground">Dosya Notları</h3>
+                <p className="text-sm text-muted-foreground max-w-xs">Bu bölüm yakında aktif edilecektir. Notlarınızı buradan takip edebileceksiniz.</p>
               </div>
             </div>
           )}
         </div>
 
         {/* Sidebar */}
-        <div className="space-y-6">
-          <div className="bg-white p-8 rounded-[32px] border border-slate-100 shadow-sm space-y-8">
-            <div className="flex items-center justify-between">
-              <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Duruşma / Karar</span>
-              <Badge className="bg-emerald-50 text-emerald-700 border-emerald-100 hover:bg-emerald-50 rounded-lg px-3 py-1 font-bold text-[10px]">
-                AKTİF DOSYA
-              </Badge>
-            </div>
-            
-            <div className="space-y-6">
-              <div className="flex items-start gap-4">
-                <div className="h-10 w-10 rounded-xl bg-slate-50 text-slate-400 flex items-center justify-center shrink-0">
-                  <Gavel className="h-5 w-5" />
-                </div>
-                <div className="space-y-1">
-                  <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Mahkeme</p>
-                  <p className="text-sm font-bold text-slate-900">{matter.courtName || 'Henüz Girilmedi'}</p>
-                </div>
+        {activeTab === 'overview' && (
+          <div className="space-y-4">
+            <div className="rounded-xl border border-border bg-card p-6 space-y-5">
+              <div className="flex items-center justify-between">
+                <span className="text-[10px] font-medium text-muted-foreground uppercase tracking-widest">Duruşma / Karar</span>
+                <Badge variant="success" className="text-[10px] font-medium rounded-md">
+                  AKTİF DOSYA
+                </Badge>
               </div>
+              
+              <div className="space-y-4">
+                <div className="flex items-start gap-3">
+                  <div className="h-9 w-9 rounded-lg bg-muted text-muted-foreground flex items-center justify-center shrink-0">
+                    <Gavel className="h-4 w-4" />
+                  </div>
+                  <div className="space-y-0.5">
+                    <p className="text-[10px] font-medium text-muted-foreground uppercase tracking-widest">Mahkeme</p>
+                    <p className="text-sm font-medium text-foreground">{matter.courtName || 'Henüz Girilmedi'}</p>
+                  </div>
+                </div>
 
-              <div className="flex items-start gap-4">
-                <div className="h-10 w-10 rounded-xl bg-slate-50 text-slate-400 flex items-center justify-center shrink-0">
-                  <Calendar className="h-5 w-5" />
+                <div className="flex items-start gap-3">
+                  <div className="h-9 w-9 rounded-lg bg-muted text-muted-foreground flex items-center justify-center shrink-0">
+                    <Calendar className="h-4 w-4" />
+                  </div>
+                  <div className="space-y-0.5">
+                    <p className="text-[10px] font-medium text-muted-foreground uppercase tracking-widest">Dava No</p>
+                    <p className="text-sm font-medium text-foreground">{matter.caseNumber || 'Atanmadı'}</p>
+                  </div>
                 </div>
-                <div className="space-y-1">
-                  <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Dava No</p>
-                  <p className="text-sm font-bold text-slate-900">{matter.caseNumber || 'Atanmadı'}</p>
-                </div>
+
+                {matter.judgeName && (
+                  <div className="flex items-start gap-3">
+                    <div className="h-9 w-9 rounded-lg bg-muted text-muted-foreground flex items-center justify-center shrink-0">
+                      <User className="h-4 w-4" />
+                    </div>
+                    <div className="space-y-0.5">
+                      <p className="text-[10px] font-medium text-muted-foreground uppercase tracking-widest">Hakim</p>
+                      <p className="text-sm font-medium text-foreground">{matter.judgeName}</p>
+                    </div>
+                  </div>
+                )}
+
+                {matter.decisionDate && (
+                  <div className="flex items-start gap-3">
+                    <div className="h-9 w-9 rounded-lg bg-muted text-muted-foreground flex items-center justify-center shrink-0">
+                      <Calendar className="h-4 w-4" />
+                    </div>
+                    <div className="space-y-0.5">
+                      <p className="text-[10px] font-medium text-muted-foreground uppercase tracking-widest">Karar Tarihi</p>
+                      <p className="text-sm font-medium text-foreground">
+                        {new Date(matter.decisionDate).toLocaleDateString('tr-TR')}
+                      </p>
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
-
-            <Button className="w-full h-12 bg-slate-900 hover:bg-slate-800 text-white rounded-2xl font-bold shadow-lg shadow-slate-100">
-              UYAP Entegrasyonu <ExternalLink className="h-4 w-4 ml-2" />
-            </Button>
           </div>
-        </div>
+        )}
       </div>
     </div>
   );
-}
-
-function cn(...classes) {
-  return classes.filter(Boolean).join(' ');
 }

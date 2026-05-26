@@ -25,7 +25,7 @@ export function RagSearchPanel({ isOpen, onClose }) {
   if (!isOpen) return null;
 
   return (
-    <div className="h-full flex flex-col bg-white border-l border-border">
+    <div className="h-full flex flex-col bg-card border-l border-border">
       <div className="px-4 py-3 border-b border-border flex items-center justify-between">
         <h3 className="text-sm font-medium text-foreground">Hukuki Kaynak Taraması</h3>
         <button onClick={onClose} className="p-1 rounded hover:bg-muted transition-colors">

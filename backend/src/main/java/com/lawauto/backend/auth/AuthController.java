@@ -12,9 +12,9 @@ public class AuthController {
 
     @PostMapping("/login")
     public AuthService.LoginResponse login(@RequestBody LoginRequest request) {
-        return authService.login(request.email(), request.password());
+        return authService.login(request.email(), request.password(), request.orgName());
     }
 
-    public record LoginRequest(String email, String password) {
+    public record LoginRequest(String email, String password, String orgName) {
     }
 }

@@ -2,7 +2,7 @@ import { Scale, ShieldCheck, Building2 } from "lucide-react";
 
 export function AuthInfoPanel() {
   return (
-    <div className="relative hidden md:flex flex-col justify-between p-12 bg-primary text-white overflow-hidden">
+    <div className="relative hidden md:flex flex-col justify-between p-12 bg-primary text-primary-foreground overflow-hidden">
       <div className="absolute inset-0 z-0">
         <img 
           src="/bg-office.png" 
@@ -15,7 +15,7 @@ export function AuthInfoPanel() {
       <div className="relative z-10">
         <div className="flex items-center gap-2 mb-8">
           <div className="p-2 bg-white/20 rounded-lg backdrop-blur-sm">
-            <Scale className="w-8 h-8 text-white" />
+              <Scale className="w-8 h-8 text-primary-foreground" />
           </div>
           <span className="text-2xl font-bold tracking-tight">LawAuto Pro</span>
         </div>

@@ -25,13 +25,21 @@ public class DataSeeder implements CommandLineRunner {
     private final PasswordEncoder passwordEncoder;
 
     @Override
+    @Transactional
     public void run(String... args) {
+        log.info("Seeding initial data...");
+
+        seedPrestigeHukuk();
+        seedOrhanDogdu();
+
+        log.info("Seeding completed successfully.");
+    }
+
+    private void seedPrestigeHukuk() {
         if (orgRepository.findBySlug("prestige-law").isPresent()) {
-            log.info("Database already seeded (Org exists). Skipping...");
+            log.info("Org 'prestige-law' already exists. Skipping...");
             return;
         }
-
-        log.info("Seeding initial data...");
 
         // 1. Create Default Org
         Org org = new Org();
@@ -69,8 +77,33 @@ public class DataSeeder implements CommandLineRunner {
         lawyer.setStatus(UserStatus.ACTIVE);
         lawyer.setRoles(Set.of(lawyerRole));
         userRepository.saveAndFlush(lawyer);
+    }
 
-        log.info("Seeding completed successfully.");
+    private void seedOrhanDogdu() {
+        if (orgRepository.findBySlug("orhan-dogdu").isPresent()) {
+            log.info("Org 'orhan-dogdu' already exists. Skipping...");
+            return;
+        }
+
+        Org org = new Org();
+        org.setId(UUID.fromString("22222222-2222-2222-2222-222222222222"));
+        org.setSlug("orhan-dogdu");
+        org.setDisplayName("Orhan Dogdu");
+        org.setPlan(OrgPlan.PRO);
+        orgRepository.saveAndFlush(org);
+
+        Role lawyerRole = createRole(org, RoleKey.LAWYER, "Avukat");
+
+        User user = new User();
+        user.setId(UUID.randomUUID());
+        user.setOrg(org);
+        user.setEmail("orhan@avukat.com");
+        user.setEmailCanonical("orhan@avukat.com");
+        user.setFullName("Orhan Doğdu");
+        user.setPasswordHash(passwordEncoder.encode("1907"));
+        user.setStatus(UserStatus.ACTIVE);
+        user.setRoles(Set.of(lawyerRole));
+        userRepository.saveAndFlush(user);
     }
 
     private Role createRole(Org org, RoleKey key, String displayName) {

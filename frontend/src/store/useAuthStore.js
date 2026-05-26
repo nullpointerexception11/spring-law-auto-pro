@@ -5,16 +5,12 @@ export const useAuthStore = create(
   persist(
     (set, get) => ({
       user: null,
-      token: localStorage.getItem('token') || null,
-      role: localStorage.getItem('role') || null,
-      orgId: localStorage.getItem('orgId') || null,
-      isAuthenticated: !!localStorage.getItem('token'),
+      token: null,
+      role: null,
+      orgId: null,
+      isAuthenticated: false,
 
       setAuth: (data) => {
-        localStorage.setItem('token', data.token);
-        localStorage.setItem('role', data.role);
-        localStorage.setItem('orgId', data.orgId);
-        
         set({
           token: data.token,
           role: data.role,
@@ -25,10 +21,6 @@ export const useAuthStore = create(
       },
 
       logout: () => {
-        localStorage.removeItem('token');
-        localStorage.removeItem('role');
-        localStorage.removeItem('orgId');
-        
         set({
           user: null,
           token: null,
@@ -38,19 +30,15 @@ export const useAuthStore = create(
         });
       },
 
-      // Helper to check permissions
-      hasPermission: (permission) => {
+      hasPermission: (_permission) => {
         const { role } = get();
         if (role === 'PLATFORM_ADMIN') return true;
-        // Logic for role-based permissions can be expanded here
         return false;
       },
     }),
     {
       name: 'law-auto-auth',
       storage: createJSONStorage(() => localStorage),
-      // We only want to persist certain fields if needed, 
-      // but here we sync with localStorage for simplicity and SSR safety
     }
   )
 );

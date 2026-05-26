@@ -6,12 +6,11 @@ export const ROUTES = {
   DASHBOARD: '/dashboard',
   MATTERS: '/matters',
   MATTER_DETAIL: (id) => `/matters/${id || ':matterId'}`,
-  DOCUMENTS: '/documents',
   CALENDAR: '/calendar',
+  LEGAL_SEARCH: '/legal-search',
+  CLIENTS: '/clients',
   BILLING: '/billing',
-  AI: '/ai',
   SETTINGS: '/settings',
-  NOTIFICATIONS: '/notifications',
   SUPER_ADMIN: '/super-admin',
 };
 

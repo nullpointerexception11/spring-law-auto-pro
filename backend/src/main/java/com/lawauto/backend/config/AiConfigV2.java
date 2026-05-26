@@ -36,6 +36,7 @@ public class AiConfigV2 {
      */
     @Bean
     @Primary
+    @SmallModel
     public ChatClient smallModelChatClient(
             ChatClient.Builder builder,
             @SmallModel MessageChatMemoryAdvisor smallMemoryAdvisor,

@@ -18,7 +18,7 @@ public class AuthControllerIT {
     @Test
     void shouldLoginSuccessfullyWithValidCredentials() {
         // Arrange: Use the seed data credentials
-        AuthController.LoginRequest request = new AuthController.LoginRequest("admin@prestige.com", "password");
+        AuthController.LoginRequest request = new AuthController.LoginRequest("admin@prestige.com", "password", null);
 
         // Act
         ResponseEntity<AuthService.LoginResponse> response = restTemplate.postForEntity(

@@ -29,13 +29,19 @@ public class AuthService {
     @Value("${app.jwt.expiration-minutes}")
     private long expirationMinutes;
 
-    public record LoginResponse(String token, String role, String orgId) {
+    public record LoginResponse(String token, String role, String orgId, String fullName, String email) {
     }
 
     @org.springframework.transaction.annotation.Transactional(readOnly = true)
-    public LoginResponse login(String email, String password) {
-        User user = userRepository.findByEmailCanonical(email.toLowerCase())
-                .orElseThrow(() -> new RuntimeException("Invalid credentials"));
+    public LoginResponse login(String email, String password, String orgName) {
+        User user;
+        if (orgName != null && !orgName.isEmpty()) {
+            user = userRepository.findByOrgSlugAndEmailCanonical(orgName.toLowerCase().replaceAll("\\s+", "-"), email.toLowerCase())
+                    .orElseThrow(() -> new RuntimeException("Invalid credentials"));
+        } else {
+            user = userRepository.findByEmailCanonical(email.toLowerCase())
+                    .orElseThrow(() -> new RuntimeException("Invalid credentials"));
+        }
 
         if (!passwordEncoder.matches(password, user.getPasswordHash())) {
             throw new RuntimeException("Invalid credentials");
@@ -44,7 +50,7 @@ public class AuthService {
         String token = generateToken(user);
         String role = user.getRoles().isEmpty() ? "USER" : user.getRoles().iterator().next().getRoleKey().name();
 
-        return new LoginResponse(token, role, user.getOrg().getId().toString());
+        return new LoginResponse(token, role, user.getOrg().getId().toString(), user.getFullName(), user.getEmail());
     }
 
     private String generateToken(User user) {
