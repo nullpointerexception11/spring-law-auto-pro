@@ -6,6 +6,18 @@ spring:
         options:
           model: gpt-4o-mini
           temperature: 0.7
+      embedding:
+        options:
+          model: text-embedding-ada-002
+    # Büyük model (dilekçe yazımı, karmaşık analiz) için ayrı yapılandırma
+    # application.yml'de ayrı bir model tanımı için:
+    # spring.ai.openai.chat.options.model=gpt-4o
+    # Bu runtime'da ModelRouter tarafından yönetilir
+  cache:
+    type: caffeine
+    cache-names: embeddingCache, legalChunkCache
+    caffeine:
+      spec: maximumSize=500,expireAfterAccess=60m
   datasource:
     url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/law_auto}
     username: ${SPRING_DATASOURCE_USERNAME:postgres}

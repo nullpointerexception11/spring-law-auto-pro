@@ -18,7 +18,11 @@ public class AuthControllerIT {
     @Test
     void shouldLoginSuccessfullyWithValidCredentials() {
         // Arrange: Use the seed data credentials
-        AuthController.LoginRequest request = new AuthController.LoginRequest("admin@prestige.com", "password");
+        AuthController.LoginRequest request = new AuthController.LoginRequest(
+                "superadmin@lawauto.com",
+                "superpassword123",
+                null
+        );
 
         // Act
         ResponseEntity<AuthService.LoginResponse> response = restTemplate.postForEntity(
@@ -37,7 +41,11 @@ public class AuthControllerIT {
     
     @Test
     void shouldReturnErrorWithInvalidCredentials() {
-        AuthController.LoginRequest request = new AuthController.LoginRequest("admin@prestige.com", "wrongpassword");
+        AuthController.LoginRequest request = new AuthController.LoginRequest(
+                "superadmin@lawauto.com",
+                "wrongpassword",
+                null
+        );
 
         ResponseEntity<String> response = restTemplate.postForEntity(
                 "/api/auth/login", 

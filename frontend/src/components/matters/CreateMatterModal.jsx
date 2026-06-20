@@ -3,13 +3,6 @@ import { useForm } from 'react-hook-form';
 import { X, Loader2, Plus, Info } from 'lucide-react';
 import { useCreateMatter } from '@/hooks/useMatters';
 import { Button } from '@/components/ui/button';
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter,
-} from '@/components/ui/dialog';
 
 export function CreateMatterModal({ isOpen, onClose }) {
   const mutation = useCreateMatter();

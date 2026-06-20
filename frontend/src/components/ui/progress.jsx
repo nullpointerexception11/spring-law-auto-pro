@@ -11,11 +11,11 @@ const Progress = React.forwardRef(({ className, value = 0, ...props }, ref) => {
       aria-valuemin={0}
       aria-valuemax={100}
       aria-valuenow={safeValue}
-      className={cn("relative h-2 w-full overflow-hidden rounded-full bg-slate-200", className)}
+      className={cn("relative h-2 w-full overflow-hidden rounded-full bg-muted", className)}
       {...props}
     >
       <div
-        className="h-full bg-indigo-600 transition-all"
+        className="h-full bg-primary transition-all"
         style={{ transform: `translateX(-${100 - safeValue}%)` }}
       />
     </div>

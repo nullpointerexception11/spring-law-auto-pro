@@ -11,9 +11,11 @@ public record MatterListDto(
     UUID id,
     String title,
     String referenceNumber,
+    String displayId,
     MatterStatus status,
     OffsetDateTime openedAt,
     String clientName,
     String assignedLawyerName,
-    OffsetDateTime nextHearingDate
+    OffsetDateTime nextHearingDate,
+    String summary
 ) {}

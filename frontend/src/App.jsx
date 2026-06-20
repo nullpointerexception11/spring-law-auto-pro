@@ -9,23 +9,26 @@ import { ProtectedRoute } from './components/auth/ProtectedRoute';
 import { ErrorBoundary, NotFoundPage } from './components/common/ErrorBoundary';
 import { ROUTES } from './lib/constants';
 
-// Lazy Loaded Pages for performance (Items 8 & 9)
+// Lazy Loaded Pages for performance
 const LoginPage = lazy(() => import('./pages/LoginPage'));
 const DashboardPage = lazy(() => import('./pages/DashboardPage'));
 const MatterList = lazy(() => import('./pages/matters/MatterList'));
 const MatterDetail = lazy(() => import('./pages/matters/MatterDetail'));
-const AiAssistantPage = lazy(() => import('./pages/AiAssistantPage'));
 const SuperAdminPage = lazy(() => import('./pages/SuperAdminPage'));
+const CalendarPage = lazy(() => import('./pages/CalendarPage'));
+const BillingPage = lazy(() => import('./pages/BillingPage'));
+const DocumentsPage = lazy(() => import('./pages/DocumentsPage'));
+const AiAssistantPage = lazy(() => import('./pages/AiAssistantPage'));
+const LegalSearchPage = lazy(() => import('./pages/LegalSearchPage'));
+const ClientsPage = lazy(() => import('./pages/ClientsPage'));
+const SettingsPage = lazy(() => import('./pages/SettingsPage'));
 
 /**
  * Loading component for Suspense
  */
 const PageLoader = () => (
-  <div className="flex h-[calc(100vh-100px)] w-full items-center justify-center">
-    <div className="flex flex-col items-center gap-4">
-      <Loader2 className="h-10 w-10 animate-spin text-indigo-600" />
-      <p className="text-sm font-bold text-slate-400 uppercase tracking-widest animate-pulse">Sayfa Yükleniyor...</p>
-    </div>
+  <div className="flex h-screen w-full items-center justify-center bg-background">
+    <Loader2 className="h-6 w-6 animate-spin text-primary" />
   </div>
 );
 
@@ -50,13 +53,13 @@ function App() {
               <Route path={ROUTES.DASHBOARD} element={<DashboardPage />} />
               <Route path={ROUTES.MATTERS} element={<MatterList />} />
               <Route path={ROUTES.MATTER_DETAIL()} element={<MatterDetail />} />
+              <Route path={ROUTES.CALENDAR} element={<CalendarPage />} />
+              <Route path={ROUTES.DOCUMENTS} element={<DocumentsPage />} />
               <Route path={ROUTES.AI} element={<AiAssistantPage />} />
-              
-              {/* Feature Stubs with lazy structure planned */}
-              <Route path={ROUTES.CALENDAR} element={<div className="p-8">Takvim Modülü Yakında</div>} />
-              <Route path={ROUTES.DOCUMENTS} element={<div className="p-8">Belge Yönetimi Yakında</div>} />
-              <Route path={ROUTES.BILLING} element={<div className="p-8">Faturalandırma Yakında</div>} />
-              <Route path={ROUTES.SETTINGS} element={<div className="p-8">Ayarlar Modülü</div>} />
+              <Route path={ROUTES.LEGAL_SEARCH} element={<LegalSearchPage />} />
+              <Route path={ROUTES.CLIENTS} element={<ClientsPage />} />
+              <Route path={ROUTES.BILLING} element={<BillingPage />} />
+              <Route path={ROUTES.SETTINGS} element={<SettingsPage />} />
             </Route>
 
             {/* Restricted Admin Route */}

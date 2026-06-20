@@ -5,30 +5,27 @@ export const useAuthStore = create(
   persist(
     (set, get) => ({
       user: null,
-      token: localStorage.getItem('token') || null,
-      role: localStorage.getItem('role') || null,
-      orgId: localStorage.getItem('orgId') || null,
-      isAuthenticated: !!localStorage.getItem('token'),
+      token: null,
+      role: null,
+      orgId: null,
+      isAuthenticated: false,
 
       setAuth: (data) => {
-        localStorage.setItem('token', data.token);
-        localStorage.setItem('role', data.role);
-        localStorage.setItem('orgId', data.orgId);
-        
+        const token = data.token || null;
+        const user = data.user || (data.fullName || data.email ? {
+          fullName: data.fullName || null,
+          email: data.email || null,
+        } : null);
         set({
-          token: data.token,
-          role: data.role,
-          orgId: data.orgId,
-          isAuthenticated: true,
-          user: data.user || null,
+          token,
+          role: data.role || null,
+          orgId: data.orgId || null,
+          isAuthenticated: Boolean(token),
+          user,
         });
       },
 
       logout: () => {
-        localStorage.removeItem('token');
-        localStorage.removeItem('role');
-        localStorage.removeItem('orgId');
-        
         set({
           user: null,
           token: null,
@@ -38,19 +35,22 @@ export const useAuthStore = create(
         });
       },
 
-      // Helper to check permissions
-      hasPermission: (permission) => {
+      getToken: () => get().token,
+
+      getSession: () => {
+        const { user, token, role, orgId, isAuthenticated } = get();
+        return { user, token, role, orgId, isAuthenticated };
+      },
+
+      hasPermission: (_permission) => {
         const { role } = get();
         if (role === 'PLATFORM_ADMIN') return true;
-        // Logic for role-based permissions can be expanded here
         return false;
       },
     }),
     {
       name: 'law-auto-auth',
       storage: createJSONStorage(() => localStorage),
-      // We only want to persist certain fields if needed, 
-      // but here we sync with localStorage for simplicity and SSR safety
     }
   )
 );

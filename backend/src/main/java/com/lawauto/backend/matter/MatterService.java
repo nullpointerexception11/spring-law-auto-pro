@@ -82,11 +82,13 @@ public class MatterService {
                         p.getId(),
                         p.getTitle(),
                         p.getReferenceNumber(),
+                        p.getDisplayId(),
                         p.getStatus() != null ? MatterStatus.valueOf(p.getStatus()) : null,
                         p.getOpenedAt(),
                         p.getClientName(),
                         p.getAssignedLawyerName(),
-                        p.getNextHearingDate()
+                        p.getNextHearingDate(),
+                        p.getSummary()
                 ));
     }
 

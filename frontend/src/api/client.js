@@ -1,5 +1,6 @@
 import axios from "axios";
 import { useAuthStore } from "@/store/useAuthStore";
+import { ROUTES } from "@/lib/constants";
 import { toast } from "sonner";
 
 export const api = axios.create({
@@ -11,8 +12,9 @@ export const api = axios.create({
 
 // Request interceptor to attach JWT token from store
 api.interceptors.request.use((config) => {
-  const token = useAuthStore.getState().token;
+  const token = useAuthStore.getState().getToken();
   if (token) {
+    config.headers = config.headers || {};
     config.headers.Authorization = `Bearer ${token}`;
   }
   return config;
@@ -33,7 +35,7 @@ api.interceptors.response.use(
       // If we had a refresh token flow, it would go here.
       // For now, we logout on 401 to ensure consistency.
       useAuthStore.getState().logout();
-      window.location.href = "/login";
+      window.location.assign(ROUTES.LOGIN);
       
       toast.error("Oturum süresi doldu. Lütfen tekrar giriş yapın.");
       return Promise.reject(error);

@@ -45,7 +45,7 @@ export function RegisterForm({ onSubmit, isLoading }) {
               <FormLabel>Organizasyon ID</FormLabel>
               <FormControl>
                 <div className="relative group">
-                  <Building2 className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 group-focus-within:text-primary transition-colors" />
+                  <Building2 className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground group-focus-within:text-primary transition-colors" />
                   <Input {...field} placeholder="Organizasyon UUID" className="pl-10 h-12 rounded-xl" />
                 </div>
               </FormControl>
@@ -62,7 +62,7 @@ export function RegisterForm({ onSubmit, isLoading }) {
               <FormLabel>Ad Soyad</FormLabel>
               <FormControl>
                 <div className="relative group">
-                  <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 group-focus-within:text-primary transition-colors" />
+                  <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground group-focus-within:text-primary transition-colors" />
                   <Input {...field} placeholder="Ad Soyad" className="pl-10 h-12 rounded-xl" />
                 </div>
               </FormControl>
@@ -79,7 +79,7 @@ export function RegisterForm({ onSubmit, isLoading }) {
               <FormLabel>E-posta</FormLabel>
               <FormControl>
                 <div className="relative group">
-                  <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 group-focus-within:text-primary transition-colors" />
+                  <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground group-focus-within:text-primary transition-colors" />
                   <Input {...field} type="email" placeholder="ornek@hukuk.com" className="pl-10 h-12 rounded-xl" />
                 </div>
               </FormControl>
@@ -96,7 +96,7 @@ export function RegisterForm({ onSubmit, isLoading }) {
               <FormLabel>Şifre</FormLabel>
               <FormControl>
                 <div className="relative group">
-                  <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 group-focus-within:text-primary transition-colors" />
+                  <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground group-focus-within:text-primary transition-colors" />
                   <Input {...field} type="password" placeholder="••••••••" className="pl-10 h-12 rounded-xl" />
                 </div>
               </FormControl>
