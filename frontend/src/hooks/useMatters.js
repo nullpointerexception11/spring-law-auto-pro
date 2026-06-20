@@ -1,18 +1,68 @@
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient, keepPreviousData } from '@tanstack/react-query';
 import { api } from '@/api/client';
 import { toast } from 'sonner';
+
+const DEFAULT_PAGE_SIZE = 20;
+
+export const MATTER_QUERY_KEYS = {
+  all: ['matters'],
+  list: (page, size) => ['matters', page, size],
+  detail: (id) => ['matter', id],
+};
+
+const normalizePage = (data, fallbackSize = DEFAULT_PAGE_SIZE) => {
+  if (Array.isArray(data)) {
+    return {
+      content: data,
+      number: 0,
+      size: data.length || fallbackSize,
+      totalElements: data.length,
+      totalPages: data.length ? 1 : 0,
+      first: true,
+      last: true,
+      empty: data.length === 0,
+    };
+  }
+
+  if (data && Array.isArray(data.content)) {
+    return {
+      ...data,
+      content: data.content,
+      number: data.number ?? 0,
+      size: data.size ?? fallbackSize,
+      totalElements: data.totalElements ?? data.content.length,
+      totalPages: data.totalPages ?? 1,
+      first: Boolean(data.first),
+      last: Boolean(data.last),
+      empty: Boolean(data.empty),
+    };
+  }
+
+  return {
+    content: [],
+    number: 0,
+    size: fallbackSize,
+    totalElements: 0,
+    totalPages: 0,
+    first: true,
+    last: true,
+    empty: true,
+  };
+};
 
 /**
  * Hook for fetching the list of matters
  */
-export const useMatters = () => {
+export const useMatters = ({ page = 0, size = DEFAULT_PAGE_SIZE } = {}) => {
   return useQuery({
-    queryKey: ['matters'],
+    queryKey: MATTER_QUERY_KEYS.list(page, size),
     queryFn: async () => {
-      const response = await api.get('/matters');
-      // Standardizing response: handle both paged and raw list responses
-      return response.data.content || response.data || [];
+      const response = await api.get('/matters', {
+        params: { page, size },
+      });
+      return normalizePage(response.data, size);
     },
+    placeholderData: keepPreviousData,
     staleTime: 60_000,
     gcTime: 10 * 60_000,
   });
@@ -23,7 +73,7 @@ export const useMatters = () => {
  */
 export const useMatter = (id) => {
   return useQuery({
-    queryKey: ['matters', id],
+    queryKey: MATTER_QUERY_KEYS.detail(id),
     queryFn: async () => {
       const response = await api.get(`/matters/${id}`);
       return response.data;
@@ -42,52 +92,57 @@ export const useCreateMatter = () => {
 
   return useMutation({
     mutationFn: async (newMatter) => {
-      // Logic for tag processing (moved from component to hook)
       const processed = {
         ...newMatter,
-        tags: typeof newMatter.tags === 'string' 
-          ? newMatter.tags.split(',').map(t => t.trim()).filter(Boolean) 
-          : newMatter.tags
+        tags: typeof newMatter.tags === 'string'
+          ? newMatter.tags.split(',').map((tag) => tag.trim()).filter(Boolean)
+          : newMatter.tags,
       };
       const response = await api.post('/matters', processed);
       return response.data;
     },
-    
-    // Step 2: Optimistic Update
     onMutate: async (newMatter) => {
-      // Cancel any outgoing refetches
-      await queryClient.cancelQueries({ queryKey: ['matters'] });
+      await queryClient.cancelQueries({ queryKey: MATTER_QUERY_KEYS.all });
 
-      // Snapshot the previous value
-      const previousMatters = queryClient.getQueryData(['matters']);
+      const previousMatters = queryClient.getQueriesData({ queryKey: MATTER_QUERY_KEYS.all });
+      const optimisticMatter = {
+        id: `temp-${Date.now()}`,
+        title: newMatter.title,
+        referenceNumber: newMatter.referenceNumber || '',
+        summary: newMatter.summary || '',
+        tags: typeof newMatter.tags === 'string'
+          ? newMatter.tags.split(',').map((tag) => tag.trim()).filter(Boolean)
+          : newMatter.tags || [],
+        status: 'PENDING',
+        displayId: 'NEW',
+      };
 
-      // Optimistically update to the new value
-      queryClient.setQueryData(['matters'], (old = []) => [
-        { 
-          id: 'temp-' + Date.now(), 
-          ...newMatter, 
-          status: 'PENDING',
-          displayId: 'NEW' 
-        },
-        ...old,
-      ]);
+      queryClient.setQueriesData({ queryKey: MATTER_QUERY_KEYS.all }, (oldData) => {
+        const page = normalizePage(oldData);
+        if (page.number !== 0) return oldData;
+
+        return {
+          ...page,
+          content: [optimisticMatter, ...page.content].slice(0, page.size || DEFAULT_PAGE_SIZE),
+          totalElements: (page.totalElements || page.content.length) + 1,
+        };
+      });
 
       return { previousMatters };
     },
-
-    // If the mutation fails, use the context returned from onMutate to roll back
-    onError: (err, newMatter, context) => {
-      queryClient.setQueryData(['matters'], context.previousMatters);
+    onError: (err, _newMatter, context) => {
+      if (context?.previousMatters) {
+        context.previousMatters.forEach(([queryKey, data]) => {
+          queryClient.setQueryData(queryKey, data);
+        });
+      }
       toast.error('Dava oluşturulamadı: ' + (err.message || 'Bilinmeyen hata'));
     },
-
-    // Always refetch after error or success:
     onSettled: () => {
-      queryClient.invalidateQueries({ queryKey: ['matters'] });
+      queryClient.invalidateQueries({ queryKey: MATTER_QUERY_KEYS.all });
     },
-    
     onSuccess: () => {
       toast.success('Dava başarıyla oluşturuldu.');
-    }
+    },
   });
 };

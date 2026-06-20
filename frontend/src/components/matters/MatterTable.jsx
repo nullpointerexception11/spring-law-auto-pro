@@ -1,146 +1,128 @@
-import React, { useState, useRef, useMemo } from 'react';
+import React, { memo, useCallback, useDeferredValue, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import {
-  flexRender,
-  getCoreRowModel,
-  useReactTable,
-  getSortedRowModel,
-  getFilteredRowModel,
-} from '@tanstack/react-table';
-import { useVirtualizer } from '@tanstack/react-virtual';
-import { ArrowUpDown, MoreHorizontal, Loader2, Search } from 'lucide-react';
+import { ArrowLeft, ArrowRight, Loader2, Search, MoreHorizontal } from 'lucide-react';
 import { useMatters } from '@/hooks/useMatters';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
+import { Card } from '@/components/ui/card';
+import { ROUTES } from '@/lib/constants';
 import { cn } from '@/lib/utils';
 
-const StatusBadge = ({ status }) => {
-  const s = status?.toUpperCase() || 'UNKNOWN';
-  const variants = {
-    'OPEN': 'bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800',
-    'AKTİF': 'bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800',
-    'PENDING': 'bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300 border-amber-200 dark:border-amber-800',
-    'BEKLEMEDE': 'bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300 border-amber-200 dark:border-amber-800',
-    'CLOSED': 'bg-muted text-muted-foreground border-border',
-    'KAPALI': 'bg-muted text-muted-foreground border-border',
-  };
-  
+const STATUS_BADGE_CLASSES = {
+  OPEN: 'bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800',
+  AKTIF: 'bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800',
+  PENDING: 'bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300 border-amber-200 dark:border-amber-800',
+  BEKLEMEDE: 'bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300 border-amber-200 dark:border-amber-800',
+  CLOSED: 'bg-muted text-muted-foreground border-border',
+  KAPALI: 'bg-muted text-muted-foreground border-border',
+};
+
+const DATE_FORMATTER = new Intl.DateTimeFormat('tr-TR');
+
+const formatDate = (value) => {
+  if (!value) return '-';
+  return DATE_FORMATTER.format(new Date(value));
+};
+
+const normalizeStatus = (status) => (status || 'UNKNOWN').toString().toUpperCase();
+
+const StatusBadge = memo(function StatusBadge({ status }) {
+  const normalized = normalizeStatus(status);
+
   return (
-    <Badge variant="outline" className={cn("rounded-md px-2 py-0.5 font-medium text-[10px] uppercase tracking-wider", variants[s] || "bg-muted text-muted-foreground")}>
+    <Badge
+      variant="outline"
+      className={cn(
+        'rounded-md px-2 py-0.5 font-medium text-[10px] uppercase tracking-wider',
+        STATUS_BADGE_CLASSES[normalized] || 'bg-muted text-muted-foreground border-border'
+      )}
+    >
       {status || 'Bilinmiyor'}
     </Badge>
   );
-};
+});
+
+const MatterRow = memo(function MatterRow({ matter, onOpen }) {
+  const handleOpen = useCallback(() => onOpen(matter.id), [matter.id, onOpen]);
+
+  return (
+    <tr
+      onClick={handleOpen}
+      className="cursor-pointer border-t border-border hover:bg-accent/40 transition-colors"
+    >
+      <td className="px-6 py-4 align-top">
+        <span className="font-mono text-[10px] font-medium text-muted-foreground bg-muted px-2 py-1 rounded-md border border-border">
+          {matter.displayId || matter.referenceNumber || 'N/A'}
+        </span>
+      </td>
+      <td className="px-6 py-4 align-top">
+        <div className="flex flex-col min-w-0">
+          <span className="font-medium text-foreground truncate text-sm">{matter.title}</span>
+          <span className="text-[10px] text-muted-foreground truncate">{matter.summary || 'Özet belirtilmemiş'}</span>
+        </div>
+      </td>
+      <td className="px-6 py-4 align-top">
+        <StatusBadge status={matter.status} />
+      </td>
+      <td className="px-6 py-4 align-top text-sm text-muted-foreground">
+        {formatDate(matter.openedAt)}
+      </td>
+      <td className="px-6 py-4 align-top text-sm text-foreground">
+        {matter.clientName || '-'}
+      </td>
+      <td className="px-6 py-4 align-top text-sm text-foreground">
+        {matter.assignedLawyerName || '-'}
+      </td>
+      <td className="px-6 py-4 align-top text-right">
+        <Button variant="ghost" className="h-8 w-8 p-0" onClick={(event) => event.stopPropagation()}>
+          <MoreHorizontal className="h-4 w-4" />
+        </Button>
+      </td>
+    </tr>
+  );
+});
 
 export function MatterTable() {
-  const [sorting, setSorting] = useState([]);
-  const [globalFilter, setGlobalFilter] = useState('');
   const navigate = useNavigate();
-  const tableContainerRef = useRef(null);
-  const dateFormatter = useMemo(() => new Intl.DateTimeFormat('tr-TR'), []);
+  const [pageIndex, setPageIndex] = useState(0);
+  const [pageSize, setPageSize] = useState(10);
+  const [search, setSearch] = useState('');
+  const deferredSearch = useDeferredValue(search);
 
-  const { data: matters = [], isLoading, error } = useMatters();
+  const { data: pageData, isLoading, error } = useMatters({ page: pageIndex, size: pageSize });
+  const matters = pageData?.content || [];
+  const totalPages = pageData?.totalPages || 0;
+  const totalElements = pageData?.totalElements || 0;
 
-  const columns = useMemo(() => [
-    {
-      accessorKey: 'displayId',
-      header: 'KAYIT NO',
-      cell: info => <span className="font-mono text-[10px] font-medium text-muted-foreground bg-muted px-2 py-1 rounded-md border border-border">{info.getValue() || 'N/A'}</span>,
-      size: 100,
+  const filteredMatters = useMemo(() => {
+    const term = deferredSearch.trim().toLowerCase();
+    if (!term) return matters;
+
+    return matters.filter((matter) => {
+      return [
+        matter.title,
+        matter.summary,
+        matter.clientName,
+        matter.assignedLawyerName,
+        matter.referenceNumber,
+        matter.displayId,
+      ]
+        .filter(Boolean)
+        .some((value) => String(value).toLowerCase().includes(term));
+    });
+  }, [deferredSearch, matters]);
+
+  const handleMatterOpen = useCallback(
+    (matterId) => {
+      navigate(ROUTES.MATTER_DETAIL(matterId));
     },
-    {
-      accessorKey: 'title',
-      header: ({ column }) => (
-        <button
-          onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
-          className="flex items-center gap-2 hover:text-primary transition-colors font-medium"
-        >
-          DAVA BAŞLIĞI
-          <ArrowUpDown className="h-3 w-3" />
-        </button>
-      ),
-      cell: info => (
-        <div className="flex flex-col min-w-0">
-          <span className="font-medium text-foreground truncate text-sm">{info.getValue()}</span>
-          <span className="text-[10px] text-muted-foreground truncate">{info.row.original.summary || 'Özet belirtilmemiş'}</span>
-        </div>
-      ),
-      size: 350,
-    },
-    {
-      accessorKey: 'status',
-      header: 'DURUM',
-      cell: info => <StatusBadge status={info.getValue()} />,
-      size: 120,
-    },
-    {
-      accessorKey: 'openedAt',
-      header: 'AÇILIŞ TARİHİ',
-      cell: info => (
-        <div className="text-[11px] text-muted-foreground">
-          <span>{dateFormatter.format(new Date(info.getValue()))}</span>
-        </div>
-      ),
-      size: 140,
-    },
-    {
-      id: 'actions',
-      header: '',
-      cell: ({ row }) => (
-        <div className="flex justify-end">
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost" className="h-8 w-8 p-0">
-                <MoreHorizontal className="h-4 w-4" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="p-2">
-              <DropdownMenuLabel className="text-[10px] font-medium text-muted-foreground uppercase tracking-widest px-2 py-1.5">İşlemler</DropdownMenuLabel>
-              <DropdownMenuItem onClick={() => navigate(`/matters/${row.original.id}`)} className="rounded-md focus:bg-primary/10 focus:text-primary cursor-pointer">
-                Detayları Görüntüle
-              </DropdownMenuItem>
-              <DropdownMenuItem className="rounded-md focus:bg-primary/10 focus:text-primary cursor-pointer">
-                Dosyayı Düzenle
-              </DropdownMenuItem>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem className="rounded-md focus:bg-destructive/10 focus:text-destructive cursor-pointer text-destructive">
-                Dosyayı Arşivle
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-        </div>
-      ),
-      size: 60,
-    }
-  ], [dateFormatter, navigate]);
-
-  const table = useReactTable({
-    data: matters,
-    columns,
-    state: { sorting, globalFilter },
-    onSortingChange: setSorting,
-    onGlobalFilterChange: setGlobalFilter,
-    getCoreRowModel: getCoreRowModel(),
-    getSortedRowModel: getSortedRowModel(),
-    getFilteredRowModel: getFilteredRowModel(),
-  });
-
-  const { rows } = table.getRowModel();
-
-  const rowVirtualizer = useVirtualizer({
-    count: rows.length,
-    getScrollElement: () => tableContainerRef.current,
-    estimateSize: () => 64,
-    overscan: 10,
-  });
+    [navigate]
+  );
+  const goPrevious = useCallback(() => setPageIndex((current) => Math.max(current - 1, 0)), []);
+  const goNext = useCallback(
+    () => setPageIndex((current) => Math.min(current + 1, Math.max(totalPages - 1, 0))),
+    [totalPages]
+  );
 
   if (isLoading) {
     return (
@@ -149,7 +131,7 @@ export function MatterTable() {
           <div className="h-12 w-12 rounded-xl bg-primary/10 border border-primary/20 animate-pulse" />
           <Loader2 className="h-6 w-6 animate-spin text-primary absolute inset-0 m-auto" />
         </div>
-        <p className="text-sm text-muted-foreground animate-pulse uppercase tracking-widest">Veriler Yükleniyor...</p>
+        <p className="text-sm text-muted-foreground animate-pulse uppercase tracking-widest">Veriler yükleniyor...</p>
       </div>
     );
   }
@@ -161,7 +143,7 @@ export function MatterTable() {
           <Search className="h-6 w-6" />
         </div>
         <div className="text-center">
-          <p className="text-destructive font-medium">Veri Bağlantısı Kesildi</p>
+          <p className="text-destructive font-medium">Veri bağlantısı kesildi</p>
           <p className="text-xs text-muted-foreground mt-1">Sunucuya ulaşılamıyor, lütfen sayfayı yenileyin.</p>
         </div>
       </div>
@@ -170,73 +152,87 @@ export function MatterTable() {
 
   return (
     <div className="space-y-4">
-      <div className="flex flex-col md:flex-row gap-3 items-center justify-between">
-        <div className="relative w-full md:w-96">
+      <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+        <div className="relative w-full md:max-w-sm">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <input
-            value={globalFilter ?? ''}
-            onChange={e => setGlobalFilter(e.target.value)}
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
             placeholder="Dava başlığı, müvekkil veya kayıt no ile ara..."
-            className="h-10 w-full pl-10 pr-4 bg-card border border-input rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-ring focus:border-primary transition-all placeholder:text-muted-foreground"
+            className="h-10 w-full rounded-lg border border-input bg-background pl-10 pr-4 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
           />
+        </div>
+
+        <div className="flex items-center gap-3">
+          <label className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
+            Sayfa boyutu
+          </label>
+          <select
+            value={pageSize}
+            onChange={(e) => {
+              setPageIndex(0);
+              setPageSize(Number(e.target.value));
+            }}
+            className="h-10 rounded-lg border border-input bg-background px-3 text-sm"
+          >
+            {[10, 20, 50].map((size) => (
+              <option key={size} value={size}>
+                {size}
+              </option>
+            ))}
+          </select>
         </div>
       </div>
 
-      <div 
-        ref={tableContainerRef}
-        className="bg-card rounded-xl border border-border overflow-auto max-h-[700px]"
-      >
-        <table className="w-full text-left">
-          <thead className="sticky top-0 z-20 bg-card/95 backdrop-blur-sm">
-            {table.getHeaderGroups().map(headerGroup => (
-              <tr key={headerGroup.id}>
-                {headerGroup.headers.map(header => (
-                  <th 
-                    key={header.id} 
-                    className="px-6 py-3.5 text-[10px] font-medium text-muted-foreground uppercase tracking-widest border-b border-border"
-                    style={{ width: header.getSize() }}
-                  >
-                    {flexRender(header.column.columnDef.header, header.getContext())}
-                  </th>
-                ))}
-              </tr>
-            ))}
-          </thead>
-          <tbody 
-            className="relative"
-            style={{ height: `${rowVirtualizer.getTotalSize()}px` }}
-          >
-            {rowVirtualizer.getVirtualItems().map(virtualRow => {
-              const row = rows[virtualRow.index];
-              return (
-                <tr 
-                  key={row.id}
-                  data-index={virtualRow.index}
-                  ref={node => rowVirtualizer.measureElement(node)}
-                  onClick={() => navigate(`/matters/${row.original.id}`)}
-                  className="group absolute w-full bg-card hover:bg-accent/50 transition-colors cursor-pointer"
-                  style={{ transform: `translateY(${virtualRow.start}px)` }}
-                >
-                  {row.getVisibleCells().map(cell => (
-                    <td key={cell.id} className="px-6 py-3 border-b border-border align-middle">
-                      {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                    </td>
-                  ))}
-                </tr>
-              );
-            })}
-            {rows.length === 0 && (
+      <Card className="overflow-hidden border-border bg-card">
+        <div className="overflow-x-auto">
+          <table className="w-full text-left">
+            <thead className="bg-muted/30">
               <tr>
-                <td colSpan={columns.length} className="h-48 text-center">
-                  <div className="flex flex-col items-center justify-center text-muted-foreground space-y-2">
-                    <Search className="h-8 w-8 opacity-20" />
-                    <p className="text-sm">Aradığınız kriterlere uygun dava bulunamadı.</p>
-                  </div>
-                </td>
+                <th className="px-6 py-3 text-[10px] font-medium text-muted-foreground uppercase tracking-widest">Kayıt No</th>
+                <th className="px-6 py-3 text-[10px] font-medium text-muted-foreground uppercase tracking-widest">Dava Başlığı</th>
+                <th className="px-6 py-3 text-[10px] font-medium text-muted-foreground uppercase tracking-widest">Durum</th>
+                <th className="px-6 py-3 text-[10px] font-medium text-muted-foreground uppercase tracking-widest">Açılış Tarihi</th>
+                <th className="px-6 py-3 text-[10px] font-medium text-muted-foreground uppercase tracking-widest">Müvekkil</th>
+                <th className="px-6 py-3 text-[10px] font-medium text-muted-foreground uppercase tracking-widest">Atanan Avukat</th>
+                <th className="px-6 py-3 text-[10px] font-medium text-muted-foreground uppercase tracking-widest text-right">İşlemler</th>
               </tr>
-            )}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {filteredMatters.map((matter) => (
+                <MatterRow key={matter.id} matter={matter} onOpen={handleMatterOpen} />
+              ))}
+
+              {filteredMatters.length === 0 && (
+                <tr>
+                  <td colSpan={7} className="h-48 text-center">
+                    <div className="flex flex-col items-center justify-center text-muted-foreground space-y-2">
+                      <Search className="h-8 w-8 opacity-20" />
+                      <p className="text-sm">Aradığınız kriterlere uygun dava bulunamadı.</p>
+                    </div>
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
+      </Card>
+
+      <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+        <p className="text-xs text-muted-foreground">
+          {totalElements} toplam kayıt, sayfa {pageIndex + 1} / {Math.max(totalPages, 1)}
+        </p>
+
+        <div className="flex items-center gap-2">
+          <Button variant="outline" size="sm" onClick={goPrevious} disabled={pageIndex === 0}>
+            <ArrowLeft className="h-4 w-4 mr-1.5" />
+            Önceki
+          </Button>
+          <Button variant="outline" size="sm" onClick={goNext} disabled={totalPages === 0 || pageIndex >= totalPages - 1}>
+            Sonraki
+            <ArrowRight className="h-4 w-4 ml-1.5" />
+          </Button>
+        </div>
       </div>
     </div>
   );

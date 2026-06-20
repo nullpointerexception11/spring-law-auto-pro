@@ -17,6 +17,8 @@ const MatterDetail = lazy(() => import('./pages/matters/MatterDetail'));
 const SuperAdminPage = lazy(() => import('./pages/SuperAdminPage'));
 const CalendarPage = lazy(() => import('./pages/CalendarPage'));
 const BillingPage = lazy(() => import('./pages/BillingPage'));
+const DocumentsPage = lazy(() => import('./pages/DocumentsPage'));
+const AiAssistantPage = lazy(() => import('./pages/AiAssistantPage'));
 const LegalSearchPage = lazy(() => import('./pages/LegalSearchPage'));
 const ClientsPage = lazy(() => import('./pages/ClientsPage'));
 const SettingsPage = lazy(() => import('./pages/SettingsPage'));
@@ -52,6 +54,8 @@ function App() {
               <Route path={ROUTES.MATTERS} element={<MatterList />} />
               <Route path={ROUTES.MATTER_DETAIL()} element={<MatterDetail />} />
               <Route path={ROUTES.CALENDAR} element={<CalendarPage />} />
+              <Route path={ROUTES.DOCUMENTS} element={<DocumentsPage />} />
+              <Route path={ROUTES.AI} element={<AiAssistantPage />} />
               <Route path={ROUTES.LEGAL_SEARCH} element={<LegalSearchPage />} />
               <Route path={ROUTES.CLIENTS} element={<ClientsPage />} />
               <Route path={ROUTES.BILLING} element={<BillingPage />} />

@@ -1,6 +1,6 @@
-# spring-law-auto-pro
+﻿# spring-law-auto-pro
 
-## Docker ile h�zl� ba�lang��
+## Docker ile hızlı başlangıç
 1. `cd "C:\Users\Orhan's Comp\Desktop\spring-law-auto-pro"`
 2. `docker compose up --build`
 
@@ -11,20 +11,51 @@ Servisler:
 
 Durdurma:
 - `docker compose down`
-- Volume dahil temizlemek i�in: `docker compose down -v`
+- Volume dahil temizlemek için: `docker compose down -v`
 
 ## Backend test/build (Maven yoksa)
-`backend` i�inde:
+`backend` içinde:
 - Test: `./mvnw test` (Windows: `mvnw.cmd test`)
 - Compile: `./mvnw -DskipTests compile`
 - Run: `./mvnw spring-boot:run`
 
-Not: Bu wrapper yerel Maven gerektirmez; Java ile Maven Wrapper indirerek �al���r.
+Not: Bu wrapper yerel Maven gerektirmez; Java ile Maven Wrapper indirerek çalışır.
 
 ## Frontend (React + Vite)
 1. `cd frontend`
 2. `npm install`
 3. `npm run dev`
+
+### Frontend mimarisi
+- Tek HTTP istemcisi: `frontend/src/api/client.js`
+- Auth kaynağı: `frontend/src/store/useAuthStore.js`
+- API uyumluluk katmanı: `frontend/src/lib/api.js` sadece eski importları taşır
+- Canlı route'lar:
+  - `/dashboard`
+  - `/matters`
+  - `/matters/:matterId`
+  - `/documents`
+  - `/ai`
+  - `/legal-search`
+  - `/clients`
+  - `/settings`
+- Önizleme route'lar:
+  - `/calendar`
+  - `/billing`
+  - `/super-admin`
+
+### Frontend'in kullandığı backend yüzeyleri
+- Auth: `POST /api/auth/login`, `POST /api/auth/register`
+- Davalar: `GET /api/matters`, `GET /api/matters/{id}`
+- Belgeler: `GET /api/documents/matter/{matterId}`, `POST /api/documents/upload`
+- AI: `POST /api/ai/v2/chat`, `POST /api/ai/v2/chat/stream`
+- RAG: `POST /api/rag/search`, `POST /api/rag/hybrid-search`
+- Müşteriler: `GET /api/clients`
+- Global arama: `POST /api/search`
+
+### Önizleme yüzeyleri
+- Takvim, finans ve süper admin ekranları şu anda gerçek backend akışına bağlı değil.
+- Bu alanlar shell içinde görünür ama "Önizleme" olarak işaretlenir.
 
 ## Auth endpointleri
 - `POST /api/auth/register`
@@ -33,7 +64,7 @@ Not: Bu wrapper yerel Maven gerektirmez; Java ile Maven Wrapper indirerek �al���
 
 ## Notlar
 - Flyway migration: `backend/src/main/resources/db/migration/V1__init.sql`
-- JWT ayarlar� environment ile override edilebilir:
+- JWT ayarları environment ile override edilebilir:
   - `APP_JWT_SECRET`
   - `APP_JWT_EXPIRATION_MINUTES`
 
@@ -44,5 +75,6 @@ Base path: /api/operations
 
 ## Postman
 Collection: postman/spring-law-auto.postman_collection.json
+
 
 

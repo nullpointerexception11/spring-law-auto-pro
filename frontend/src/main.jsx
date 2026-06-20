@@ -7,9 +7,10 @@ import './index.css';
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
+      refetchOnMount: false,
       refetchOnWindowFocus: false,
       refetchOnReconnect: false,
-      staleTime: 30_000,
+      staleTime: 2 * 60_000,
       gcTime: 10 * 60_000,
       retry: 1,
     },

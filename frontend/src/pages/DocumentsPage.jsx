@@ -1,165 +1,132 @@
-import React, { useState } from 'react';
-import { FileText, Upload, Search, Filter, Download, Eye, Trash2, FileCheck, FileType } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+import React, { useEffect, useMemo, useState } from 'react';
+import { FileText, FolderOpen, Upload, Sparkles, FileCheck } from 'lucide-react';
+import { useMatters } from '@/hooks/useMatters';
+import { DocumentManager } from '@/components/matters/DocumentManager';
 import { Badge } from '@/components/ui/badge';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
-import { cn } from '@/lib/utils';
-
-const MOCK_DOCUMENTS = [
-  { id: 1, filename: 'Dava_Dilekcesi_2026.pdf', matter: 'İşçi Alacakları Davası', size: '1.2 MB', type: 'application/pdf', date: '2026-05-20', status: 'processed' },
-  { id: 2, filename: 'Bilirkisi_Raporu.docx', matter: 'Tazminat Davası', size: '845 KB', type: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document', date: '2026-05-18', status: 'processing' },
-  { id: 3, filename: 'Tanik_Ifadesi.pdf', matter: 'İşçi Alacakları Davası', size: '320 KB', type: 'application/pdf', date: '2026-05-15', status: 'processed' },
-  { id: 4, filename: 'Sozlesme_Metni.docx', matter: 'Sözleşme İhtilafı', size: '1.5 MB', type: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document', date: '2026-05-12', status: 'processed' },
-  { id: 5, filename: 'Istinaf_Dilekcesi.pdf', matter: 'Tazminat Davası', size: '2.1 MB', type: 'application/pdf', date: '2026-05-10', status: 'error' },
-  { id: 6, filename: 'Delil_Listesi.xlsx', matter: 'Sözleşme İhtilafı', size: '156 KB', type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', date: '2026-05-08', status: 'processed' },
-];
-
-const FILE_ICONS = {
-  'application/pdf': { icon: FileCheck, className: 'bg-red-100 text-red-600 dark:bg-red-900 dark:text-red-400' },
-  'application/vnd.openxmlformats-officedocument.wordprocessingml.document': { icon: FileText, className: 'bg-blue-100 text-blue-600 dark:bg-blue-900 dark:text-blue-400' },
-  'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet': { icon: FileType, className: 'bg-emerald-100 text-emerald-600 dark:bg-emerald-900 dark:text-emerald-400' },
-};
-
-const STATUS_CONFIG = {
-  processed: { label: 'İşlendi', variant: 'success' },
-  processing: { label: 'İşleniyor', variant: 'warning' },
-  error: { label: 'Hata', variant: 'destructive' },
-};
+import { Card, CardContent } from '@/components/ui/card';
 
 export default function DocumentsPage() {
-  const [search, setSearch] = useState('');
-  const [dragActive, setDragActive] = useState(false);
+  const { data: pageData, isLoading } = useMatters({ page: 0, size: 100 });
+  const matters = pageData?.content || [];
+  const [selectedMatterId, setSelectedMatterId] = useState('');
 
-  const filteredDocs = MOCK_DOCUMENTS.filter(doc =>
-    doc.filename.toLowerCase().includes(search.toLowerCase()) ||
-    doc.matter.toLowerCase().includes(search.toLowerCase())
+  useEffect(() => {
+    if (!selectedMatterId && matters.length > 0) {
+      setSelectedMatterId(String(matters[0].id));
+    }
+  }, [matters, selectedMatterId]);
+
+  const selectedMatter = useMemo(
+    () => matters.find((matter) => String(matter.id) === String(selectedMatterId)),
+    [matters, selectedMatterId]
   );
 
-  const handleDrag = (e) => {
-    e.preventDefault(); e.stopPropagation();
-    if (e.type === 'dragenter' || e.type === 'dragover') setDragActive(true);
-    else if (e.type === 'dragleave') setDragActive(false);
-  };
+  const matterCount = pageData?.totalElements ?? matters.length;
 
-  const handleDrop = (e) => {
-    e.preventDefault(); e.stopPropagation();
-    setDragActive(false);
-  };
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center py-16">
+        <div className="h-6 w-6 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
         <div>
           <h1 className="text-xl font-semibold text-foreground">Belgeler</h1>
-          <p className="text-sm text-muted-foreground mt-0.5">Tüm dava dosyalarınızı yönetin ve takip edin.</p>
+          <p className="text-sm text-muted-foreground mt-0.5">
+            Seçili dava için yükleme, OCR ve AI özet akışını yönetin.
+          </p>
+        </div>
+
+        <div className="w-full lg:w-96">
+          <label className="mb-1 block text-[11px] font-medium uppercase tracking-wider text-muted-foreground">
+            Dava seç
+          </label>
+          <select
+            value={selectedMatterId}
+            onChange={(e) => setSelectedMatterId(e.target.value)}
+            className="h-10 w-full rounded-lg border border-input bg-background px-3 text-sm"
+          >
+            {matters.map((matter) => (
+              <option key={matter.id} value={matter.id}>
+                {matter.title}
+              </option>
+            ))}
+          </select>
         </div>
       </div>
 
-      {/* Upload Zone */}
-      <div
-        onDragEnter={handleDrag}
-        onDragLeave={handleDrag}
-        onDragOver={handleDrag}
-        onDrop={handleDrop}
-        className={cn(
-          'relative rounded-xl border-2 border-dashed p-8 text-center transition-all',
-          dragActive 
-            ? 'border-primary bg-primary/5' 
-            : 'border-border hover:border-muted-foreground/30 hover:bg-muted/30'
-        )}
-      >
-        <div className="flex flex-col items-center gap-3">
-          <div className={cn(
-            'h-12 w-12 rounded-full flex items-center justify-center transition-colors',
-            dragActive ? 'bg-primary/10 text-primary' : 'bg-muted text-muted-foreground'
-          )}>
-            <Upload className="h-5 w-5" />
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <Card>
+          <CardContent className="p-5">
+            <div className="flex items-center gap-3 mb-3">
+              <div className="h-9 w-9 rounded-lg bg-primary/10 text-primary flex items-center justify-center">
+                <FolderOpen className="h-4 w-4" />
+              </div>
+              <span className="text-[11px] font-medium text-muted-foreground uppercase tracking-wider">Toplam dava</span>
+            </div>
+            <p className="text-2xl font-semibold text-foreground">{matterCount}</p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardContent className="p-5">
+            <div className="flex items-center gap-3 mb-3">
+              <div className="h-9 w-9 rounded-lg bg-emerald-100 dark:bg-emerald-900 text-emerald-600 dark:text-emerald-400 flex items-center justify-center">
+                <Upload className="h-4 w-4" />
+              </div>
+              <span className="text-[11px] font-medium text-muted-foreground uppercase tracking-wider">Yükleme</span>
+            </div>
+            <p className="text-sm text-foreground">Dosyalar doğrudan seçili davaya eklenir.</p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardContent className="p-5">
+            <div className="flex items-center gap-3 mb-3">
+              <div className="h-9 w-9 rounded-lg bg-violet-100 dark:bg-violet-900 text-violet-600 dark:text-violet-400 flex items-center justify-center">
+                <Sparkles className="h-4 w-4" />
+              </div>
+              <span className="text-[11px] font-medium text-muted-foreground uppercase tracking-wider">AI akışı</span>
+            </div>
+            <p className="text-sm text-foreground">OCR ve AI özeti otomatik olarak takip edilir.</p>
+          </CardContent>
+        </Card>
+      </div>
+
+      {selectedMatter ? (
+        <div className="space-y-4">
+          <div className="rounded-xl border border-border bg-card p-5">
+            <div className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
+              <div>
+                <div className="flex items-center gap-2">
+                  <h2 className="text-base font-semibold text-foreground">{selectedMatter.title}</h2>
+                  <Badge variant="outline" className="text-[10px] font-mono">
+                    {selectedMatter.displayId || selectedMatter.referenceNumber || 'N/A'}
+                  </Badge>
+                </div>
+                <p className="text-sm text-muted-foreground mt-1">
+                  {selectedMatter.summary || 'Bu dava için henüz bir özet girilmemiş.'}
+                </p>
+              </div>
+
+              <div className="text-sm text-muted-foreground">
+                <span className="font-medium text-foreground">Müvekkil:</span>{' '}
+                {selectedMatter.clientName || 'Belirtilmemiş'}
+              </div>
+            </div>
           </div>
-          <div>
-            <p className="text-sm font-medium text-foreground">
-              Dosyaları buraya sürükleyin
-            </p>
-            <p className="text-xs text-muted-foreground mt-1">
-              PDF, Word, Excel (max 25 MB)
-            </p>
-          </div>
-          <Button variant="outline" size="sm" className="mt-2">
-            Dosya Seç
-          </Button>
-        </div>
-      </div>
 
-      {/* Search & Filters */}
-      <div className="flex items-center gap-3">
-        <div className="relative flex-1 max-w-sm">
-          <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-          <Input
-            placeholder="Dosya ara..."
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            className="pl-8 h-9 text-sm"
-          />
-        </div>
-        <Button variant="outline" size="sm" className="h-9">
-          <Filter className="h-4 w-4 mr-1.5" /> Filtrele
-        </Button>
-        <Button variant="outline" size="sm" className="h-9">
-          <Download className="h-4 w-4 mr-1.5" /> Dışa Aktar
-        </Button>
-      </div>
-
-      {/* Document Grid */}
-      {filteredDocs.length > 0 ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-          {filteredDocs.map(doc => {
-            const fileConfig = FILE_ICONS[doc.type] || { icon: FileText, className: 'bg-muted text-muted-foreground' };
-            const FileIcon = fileConfig.icon;
-            const status = STATUS_CONFIG[doc.status];
-            return (
-              <Card key={doc.id} className="hover:border-primary/30 transition-colors group">
-                <CardContent className="p-4">
-                  <div className="flex items-start gap-3">
-                    <div className={cn('h-10 w-10 rounded-lg flex items-center justify-center shrink-0', fileConfig.className)}>
-                      <FileIcon className="h-5 w-5" />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium text-foreground truncate">{doc.filename}</p>
-                      <p className="text-[11px] text-muted-foreground mt-0.5">{doc.matter}</p>
-                      <div className="flex items-center gap-2 mt-2">
-                        <span className="text-[10px] text-muted-foreground">{doc.size}</span>
-                        <span className="text-[10px] text-muted-foreground">
-                          {new Date(doc.date).toLocaleDateString('tr-TR')}
-                        </span>
-                        <Badge variant={status.variant} className="text-[9px] py-0 h-4">
-                          {status.label}
-                        </Badge>
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
-                      <Button variant="ghost" size="icon" className="h-7 w-7">
-                        <Eye className="h-3.5 w-3.5" />
-                      </Button>
-                      <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive hover:text-destructive">
-                        <Trash2 className="h-3.5 w-3.5" />
-                      </Button>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            );
-          })}
+          <DocumentManager matterId={selectedMatterId} />
         </div>
       ) : (
         <Card className="border-dashed">
           <CardContent className="flex flex-col items-center justify-center py-12 gap-3">
-            <div className="h-12 w-12 rounded-full bg-muted flex items-center justify-center text-muted-foreground">
-              <FileText className="h-6 w-6" />
-            </div>
-            <p className="text-sm text-muted-foreground">Henüz belge yüklenmemiş</p>
-            <Button variant="outline" size="sm">
-              <Upload className="h-4 w-4 mr-1.5" /> İlk Belgeyi Yükle
-            </Button>
+            <FileText className="h-10 w-10 text-muted-foreground/40" />
+            <p className="text-sm text-muted-foreground">Belgeleri görmek için bir dava seçin.</p>
           </CardContent>
         </Card>
       )}

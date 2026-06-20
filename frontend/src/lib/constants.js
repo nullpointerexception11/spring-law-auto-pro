@@ -7,6 +7,8 @@ export const ROUTES = {
   MATTERS: '/matters',
   MATTER_DETAIL: (id) => `/matters/${id || ':matterId'}`,
   CALENDAR: '/calendar',
+  DOCUMENTS: '/documents',
+  AI: '/ai',
   LEGAL_SEARCH: '/legal-search',
   CLIENTS: '/clients',
   BILLING: '/billing',

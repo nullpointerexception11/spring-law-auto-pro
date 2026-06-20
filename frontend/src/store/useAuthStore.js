@@ -11,12 +11,17 @@ export const useAuthStore = create(
       isAuthenticated: false,
 
       setAuth: (data) => {
+        const token = data.token || null;
+        const user = data.user || (data.fullName || data.email ? {
+          fullName: data.fullName || null,
+          email: data.email || null,
+        } : null);
         set({
-          token: data.token,
-          role: data.role,
-          orgId: data.orgId,
-          isAuthenticated: true,
-          user: data.user || null,
+          token,
+          role: data.role || null,
+          orgId: data.orgId || null,
+          isAuthenticated: Boolean(token),
+          user,
         });
       },
 
@@ -28,6 +33,13 @@ export const useAuthStore = create(
           orgId: null,
           isAuthenticated: false,
         });
+      },
+
+      getToken: () => get().token,
+
+      getSession: () => {
+        const { user, token, role, orgId, isAuthenticated } = get();
+        return { user, token, role, orgId, isAuthenticated };
       },
 
       hasPermission: (_permission) => {

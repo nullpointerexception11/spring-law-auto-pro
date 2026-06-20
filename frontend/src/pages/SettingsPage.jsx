@@ -1,7 +1,16 @@
-import React, { useState } from 'react';
-import { 
-  User, Bell, Shield, Moon, Sun, Globe, Save, Key, 
-  Building2, Mail, Phone, MapPin, CreditCard, LogOut
+import React, { memo, useCallback, useMemo, useState } from 'react';
+import {
+  User,
+  Bell,
+  Shield,
+  Moon,
+  Sun,
+  Save,
+  Key,
+  Building2,
+  MapPin,
+  CreditCard,
+  LogOut,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -10,6 +19,7 @@ import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { useAuthStore } from '@/store/useAuthStore';
 import { useNavigate } from 'react-router-dom';
+import { ROUTES } from '@/lib/constants';
 import { cn } from '@/lib/utils';
 
 const SETTINGS_SECTIONS = [
@@ -20,23 +30,70 @@ const SETTINGS_SECTIONS = [
   { id: 'organization', label: 'Organizasyon', icon: Building2 },
 ];
 
-export default function SettingsPage() {
+const NOTIFICATIONS = [
+  { label: 'Duruşma hatırlatmaları', description: 'Yaklaşan duruşmalar için bildirim', enabled: true },
+  { label: 'Son tarih uyarıları', description: 'Dilekçe ve evrak son teslim tarihleri', enabled: true },
+  { label: 'Dava güncellemeleri', description: 'Yeni işlem ve durum değişiklikleri', enabled: false },
+  { label: 'Fatura bildirimleri', description: 'Yeni fatura ve ödeme hatırlatmaları', enabled: true },
+  { label: 'Sistem duyuruları', description: 'Platform güncellemeleri ve bakım bildirimleri', enabled: false },
+];
+
+const ORGANIZATION_MEMBERS = [
+  { name: 'Ahmet Yılmaz', role: 'Yönetici', email: 'ahmet@lawauto.com' },
+  { name: 'Ayşe Demir', role: 'Avukat', email: 'ayse@lawauto.com' },
+  { name: 'Mehmet Kaya', role: 'Sekreter', email: 'mehmet@lawauto.com' },
+];
+
+const SettingsNavButton = memo(function SettingsNavButton({ section, activeSection, onSelect }) {
+  const Icon = section.icon;
+
+  return (
+    <button
+      type="button"
+      onClick={() => onSelect(section.id)}
+      className={cn(
+        'flex items-center gap-3 w-full px-3 py-2 rounded-md text-sm transition-colors',
+        activeSection === section.id ? 'bg-primary/10 text-primary font-medium' : 'text-muted-foreground hover:text-foreground hover:bg-accent'
+      )}
+    >
+      <Icon className="h-4 w-4" />
+      {section.label}
+    </button>
+  );
+});
+
+function SettingsPageComponent() {
   const { user, role, orgId, logout } = useAuthStore();
   const navigate = useNavigate();
   const [activeSection, setActiveSection] = useState('profile');
   const [isDark, setIsDark] = useState(() => document.documentElement.classList.contains('dark'));
 
-  const toggleDark = () => {
+  const sectionIcon = useMemo(
+    () => SETTINGS_SECTIONS.find((section) => section.id === activeSection)?.icon || User,
+    [activeSection]
+  );
+  const roleLabel = useMemo(
+    () => (role === 'PLATFORM_ADMIN' ? 'Platform Yöneticisi' : role === 'ORG_ADMIN' ? 'Organizasyon Yöneticisi' : 'Avukat'),
+    [role]
+  );
+
+  const toggleDark = useCallback(() => {
     const dark = document.documentElement.classList.toggle('dark');
     setIsDark(dark);
-  };
+  }, []);
 
-  const handleLogout = () => {
+  const handleLogout = useCallback(() => {
     logout();
-    navigate('/login');
-  };
+    navigate(ROUTES.LOGIN);
+  }, [logout, navigate]);
 
-  const SectionIcon = SETTINGS_SECTIONS.find(s => s.id === activeSection)?.icon || User;
+  const handleSelectSection = useCallback((sectionId) => {
+    setActiveSection(sectionId);
+  }, []);
+
+  const handleNotificationToggle = useCallback((event) => {
+    event.preventDefault();
+  }, []);
 
   return (
     <div className="space-y-6">
@@ -46,32 +103,22 @@ export default function SettingsPage() {
       </div>
 
       <div className="flex flex-col lg:flex-row gap-6">
-        {/* Sidebar Navigation */}
         <div className="lg:w-56 shrink-0">
           <nav className="space-y-1">
-            {SETTINGS_SECTIONS.map(section => {
-              const Icon = section.icon;
-              return (
-                <button
-                  key={section.id}
-                  onClick={() => setActiveSection(section.id)}
-                  className={cn(
-                    'flex items-center gap-3 w-full px-3 py-2 rounded-md text-sm transition-colors',
-                    activeSection === section.id
-                      ? 'bg-primary/10 text-primary font-medium'
-                      : 'text-muted-foreground hover:text-foreground hover:bg-accent'
-                  )}
-                >
-                  <Icon className="h-4 w-4" />
-                  {section.label}
-                </button>
-              );
-            })}
+            {SETTINGS_SECTIONS.map((section) => (
+              <SettingsNavButton
+                key={section.id}
+                section={section}
+                activeSection={activeSection}
+                onSelect={handleSelectSection}
+              />
+            ))}
           </nav>
 
           <Separator className="my-4" />
 
           <button
+            type="button"
             onClick={handleLogout}
             className="flex items-center gap-3 w-full px-3 py-2 rounded-md text-sm text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors"
           >
@@ -80,7 +127,6 @@ export default function SettingsPage() {
           </button>
         </div>
 
-        {/* Content */}
         <div className="flex-1 space-y-6">
           {activeSection === 'profile' && (
             <>
@@ -98,7 +144,7 @@ export default function SettingsPage() {
                       <p className="text-sm font-medium text-foreground">{user?.fullName || 'Avukat'}</p>
                       <p className="text-xs text-muted-foreground">{user?.email || 'ornek@lawauto.com'}</p>
                       <Badge variant="outline" className="mt-1 text-[10px]">
-                        {role === 'PLATFORM_ADMIN' ? 'Platform Yöneticisi' : role === 'ORG_ADMIN' ? 'Organizasyon Yöneticisi' : 'Avukat'}
+                        {roleLabel}
                       </Badge>
                     </div>
                   </div>
@@ -159,28 +205,26 @@ export default function SettingsPage() {
                 <CardDescription className="text-xs">Hangi bildirimleri almak istediğinizi seçin.</CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
-                {[
-                  { label: 'Duruşma hatırlatmaları', description: 'Yaklaşan duruşmalar için bildirim', enabled: true },
-                  { label: 'Son tarih uyarıları', description: 'Dilekçe ve evrak son teslim tarihleri', enabled: true },
-                  { label: 'Dava güncellemeleri', description: 'Yeni işlem ve durum değişiklikleri', enabled: false },
-                  { label: 'Fatura bildirimleri', description: 'Yeni fatura ve ödeme hatırlatmaları', enabled: true },
-                  { label: 'Sistem duyuruları', description: 'Platform güncellemeleri ve bakım bildirimleri', enabled: false },
-                ].map((item, i) => (
-                  <div key={i} className="flex items-center justify-between py-1">
+                {NOTIFICATIONS.map((item) => (
+                  <div key={item.label} className="flex items-center justify-between py-1">
                     <div>
                       <p className="text-sm font-medium text-foreground">{item.label}</p>
                       <p className="text-xs text-muted-foreground">{item.description}</p>
                     </div>
                     <button
+                      type="button"
+                      onClick={handleNotificationToggle}
                       className={cn(
                         'relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors',
                         item.enabled ? 'bg-primary' : 'bg-muted'
                       )}
                     >
-                      <span className={cn(
-                        'pointer-events-none inline-block h-4 w-4 rounded-full bg-background shadow transform ring-0 transition-transform',
-                        item.enabled ? 'translate-x-4' : 'translate-x-0'
-                      )} />
+                      <span
+                        className={cn(
+                          'pointer-events-none inline-block h-4 w-4 rounded-full bg-background shadow transform ring-0 transition-transform',
+                          item.enabled ? 'translate-x-4' : 'translate-x-0'
+                        )}
+                      />
                     </button>
                   </div>
                 ))}
@@ -199,7 +243,10 @@ export default function SettingsPage() {
                   <p className="text-sm font-medium text-foreground">Tema</p>
                   <div className="flex items-center gap-3">
                     <button
-                      onClick={() => { if (isDark) toggleDark(); }}
+                      type="button"
+                      onClick={() => {
+                        if (isDark) toggleDark();
+                      }}
                       className={cn(
                         'flex items-center gap-2 px-4 py-2.5 rounded-lg border text-sm transition-colors',
                         !isDark ? 'border-primary bg-primary/5 text-primary' : 'border-border text-muted-foreground hover:border-muted-foreground/30'
@@ -209,7 +256,10 @@ export default function SettingsPage() {
                       Açık
                     </button>
                     <button
-                      onClick={() => { if (!isDark) toggleDark(); }}
+                      type="button"
+                      onClick={() => {
+                        if (!isDark) toggleDark();
+                      }}
                       className={cn(
                         'flex items-center gap-2 px-4 py-2.5 rounded-lg border text-sm transition-colors',
                         isDark ? 'border-primary bg-primary/5 text-primary' : 'border-border text-muted-foreground hover:border-muted-foreground/30'
@@ -297,12 +347,8 @@ export default function SettingsPage() {
 
                 <div className="space-y-3">
                   <p className="text-sm font-medium text-foreground">Organizasyon Üyeleri</p>
-                  {[
-                    { name: 'Ahmet Yılmaz', role: 'Yönetici', email: 'ahmet@lawauto.com' },
-                    { name: 'Ayşe Demir', role: 'Avukat', email: 'ayse@lawauto.com' },
-                    { name: 'Mehmet Kaya', role: 'Sekreter', email: 'mehmet@lawauto.com' },
-                  ].map((member, i) => (
-                    <div key={i} className="flex items-center justify-between p-3 rounded-lg border border-border">
+                  {ORGANIZATION_MEMBERS.map((member) => (
+                    <div key={member.email} className="flex items-center justify-between p-3 rounded-lg border border-border">
                       <div className="flex items-center gap-3">
                         <div className="h-8 w-8 rounded-full bg-muted flex items-center justify-center text-xs font-medium text-muted-foreground">
                           {member.name.charAt(0)}
@@ -324,3 +370,5 @@ export default function SettingsPage() {
     </div>
   );
 }
+
+export default memo(SettingsPageComponent);

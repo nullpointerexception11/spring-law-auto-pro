@@ -16,7 +16,7 @@ public interface MatterPartyRepository extends JpaRepository<MatterParty, UUID> 
      */
     @Query("""
         SELECT new com.lawauto.backend.matter.dto.MatterDetailDto$PartySummaryDto(
-            p.id, p.fullName, r.displayName, r.category
+            p.id, p.fullName, r.name, r.category
         )
         FROM MatterParty mp
         JOIN mp.party p

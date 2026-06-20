@@ -1,3 +1,4 @@
+import React, { memo } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -19,7 +20,7 @@ const loginSchema = z.object({
   password: z.string().min(6, "Şifre en az 6 karakter olmalıdır"),
 });
 
-export function LoginForm({ onSubmit, isLoading }) {
+function LoginFormComponent({ onSubmit, isLoading }) {
   const form = useForm({
     resolver: zodResolver(loginSchema),
     defaultValues: { orgName: "", email: "", password: "" },
@@ -90,3 +91,5 @@ export function LoginForm({ onSubmit, isLoading }) {
     </Form>
   );
 }
+
+export const LoginForm = memo(LoginFormComponent);

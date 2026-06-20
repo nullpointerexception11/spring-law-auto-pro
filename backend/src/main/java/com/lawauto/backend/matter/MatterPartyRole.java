@@ -9,8 +9,8 @@ import java.time.OffsetDateTime;
 import java.util.UUID;
 
 @Entity
-@Table(name = "matter_party_roles", uniqueConstraints = {
-        @UniqueConstraint(columnNames = {"org_id", "role_key"})
+@Table(name = "matter_party_role", uniqueConstraints = {
+        @UniqueConstraint(columnNames = {"org_id", "name"})
 })
 @Getter
 @Setter
@@ -29,19 +29,12 @@ public class MatterPartyRole {
     @JoinColumn(name = "org_id", nullable = false)
     private Org org;
 
-    @Column(name = "role_key", nullable = false)
-    private String roleKey;
-
-    @Column(nullable = false)
-    private String displayName;
+    @Column(name = "name", nullable = false)
+    private String name;
 
     @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
+    @Column(name = "category")
     private PartyCategory category;
-
-    @Builder.Default
-    @Column(nullable = false)
-    private boolean isSystem = false;
 
     @CreationTimestamp
     @Column(name = "created_at", nullable = false, updatable = false)

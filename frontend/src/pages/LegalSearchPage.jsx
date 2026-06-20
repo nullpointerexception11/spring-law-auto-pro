@@ -5,7 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
 import { cn } from '@/lib/utils';
-import { api } from '@/api/client';
+import { ragService } from '@/api/ragService';
 
 const SOURCE_TYPES = [
   { key: 'all', label: 'Tümü' },
@@ -29,8 +29,7 @@ export default function LegalSearchPage() {
     setLoading(true);
     setSearched(true);
     try {
-      const res = await api.post('/rag/search', { query: query.trim(), limit: 20 });
-      const data = res.data || [];
+      const data = await ragService.hybridSearch(query.trim(), 20);
       if (sourceFilter !== 'all') {
         setResults(data.filter(r => r.sourceType === sourceFilter));
       } else {

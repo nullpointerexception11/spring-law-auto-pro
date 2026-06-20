@@ -6,7 +6,7 @@ import lombok.*;
 import java.util.UUID;
 
 @Entity
-@Table(name = "matter_parties", uniqueConstraints = {
+@Table(name = "matter_party", uniqueConstraints = {
     @UniqueConstraint(columnNames = {"matter_id", "party_id", "role_id"})
 })
 @Getter

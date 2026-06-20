@@ -1,34 +1,87 @@
-import React, { useState } from 'react';
-import { Send, X, Bot, User, Loader2, Sparkles, MessageSquare } from 'lucide-react';
-import { aiService } from '@/api/aiService';
+import React, { memo, useCallback, useMemo, useState } from 'react';
+import { Send, X, Bot, User, Loader2, MessageSquare } from 'lucide-react';
+import { aiV2Service } from '@/api/aiV2Service';
 import ReactMarkdown from 'react-markdown';
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '@/lib/utils';
 
-export default function AiChat() {
+const WELCOME_MESSAGE = {
+  id: 'welcome',
+  role: 'assistant',
+  content: 'Merhaba! Hukuk ile ilgili sorularınızı yanıtlamak için buradayım.',
+};
+
+const ChatMessage = memo(function ChatMessage({ message }) {
+  const isUser = message.role === 'user';
+
+  return (
+    <div className={cn('flex gap-2.5', isUser ? 'justify-end' : '')}>
+      {!isUser && (
+        <div className="h-7 w-7 rounded-md bg-muted flex items-center justify-center shrink-0 mt-0.5">
+          <Bot className="h-3.5 w-3.5 text-muted-foreground" />
+        </div>
+      )}
+      <div
+        className={cn(
+          'px-3.5 py-2.5 rounded-lg text-sm leading-relaxed max-w-[80%]',
+          isUser ? 'bg-primary text-primary-foreground' : 'bg-card border border-border text-foreground'
+        )}
+      >
+        <ReactMarkdown>{message.content}</ReactMarkdown>
+      </div>
+      {isUser && (
+        <div className="h-7 w-7 rounded-md bg-primary flex items-center justify-center shrink-0 mt-0.5">
+          <User className="h-3.5 w-3.5 text-primary-foreground" />
+        </div>
+      )}
+    </div>
+  );
+});
+
+function AiChatComponent() {
   const [isOpen, setIsOpen] = useState(false);
-  const [messages, setMessages] = useState([{ id: 'welcome', role: 'assistant', content: 'Merhaba! Hukuk ile ilgili sorularınızı yanıtlamak için buradayım.' }]);
+  const [messages, setMessages] = useState([WELCOME_MESSAGE]);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [conversationId] = useState(() => crypto.randomUUID());
 
-  const handleSend = async () => {
-    if (!input.trim() || isLoading) return;
-    const text = input;
+  const canSend = useMemo(() => Boolean(input.trim()) && !isLoading, [input, isLoading]);
+
+  const appendMessage = useCallback((message) => {
+    setMessages((prev) => [...prev, message]);
+  }, []);
+
+  const handleSend = useCallback(async () => {
+    if (!canSend) return;
+
+    const text = input.trim();
     setInput('');
-    setMessages(prev => [...prev, { id: crypto.randomUUID(), role: 'user', content: text }]);
+    appendMessage({ id: crypto.randomUUID(), role: 'user', content: text });
     setIsLoading(true);
 
     try {
-      const response = await aiService.chat(text, conversationId);
+      const response = await aiV2Service.chat(text, conversationId);
       const reply = typeof response === 'string' ? response : response.reply || JSON.stringify(response);
-      setMessages(prev => [...prev, { id: crypto.randomUUID(), role: 'assistant', content: reply }]);
+      appendMessage({ id: crypto.randomUUID(), role: 'assistant', content: reply });
     } catch {
-      setMessages(prev => [...prev, { id: crypto.randomUUID(), role: 'assistant', content: 'Bağlantı hatası. Lütfen daha sonra tekrar deneyin.' }]);
+      appendMessage({
+        id: crypto.randomUUID(),
+        role: 'assistant',
+        content: 'Bağlantı hatası. Lütfen daha sonra tekrar deneyin.',
+      });
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [appendMessage, canSend, conversationId, input]);
+
+  const handleInputKeyDown = useCallback(
+    (event) => {
+      if (event.key === 'Enter') {
+        handleSend();
+      }
+    },
+    [handleSend]
+  );
 
   return (
     <>
@@ -54,33 +107,18 @@ export default function AiChat() {
                   </div>
                 </div>
               </div>
-              <button onClick={() => setIsOpen(false)} className="p-1 rounded-md hover:bg-muted text-muted-foreground transition-colors">
+              <button
+                type="button"
+                onClick={() => setIsOpen(false)}
+                className="p-1 rounded-md hover:bg-muted text-muted-foreground transition-colors"
+              >
                 <X className="h-4 w-4" />
               </button>
             </div>
 
             <div className="flex-1 overflow-y-auto px-4 py-4 space-y-4 bg-muted/30">
-              {messages.map(msg => (
-                <div key={msg.id} className={cn('flex gap-2.5', msg.role === 'user' ? 'justify-end' : '')}>
-                  {msg.role === 'assistant' && (
-                    <div className="h-7 w-7 rounded-md bg-muted flex items-center justify-center shrink-0 mt-0.5">
-                      <Bot className="h-3.5 w-3.5 text-muted-foreground" />
-                    </div>
-                  )}
-                  <div className={cn(
-                    'px-3.5 py-2.5 rounded-lg text-sm leading-relaxed max-w-[80%]',
-                    msg.role === 'user'
-                      ? 'bg-primary text-primary-foreground'
-                      : 'bg-card border border-border text-foreground'
-                  )}>
-                    <ReactMarkdown>{msg.content}</ReactMarkdown>
-                  </div>
-                  {msg.role === 'user' && (
-                    <div className="h-7 w-7 rounded-md bg-primary flex items-center justify-center shrink-0 mt-0.5">
-                      <User className="h-3.5 w-3.5 text-primary-foreground" />
-                    </div>
-                  )}
-                </div>
+              {messages.map((message) => (
+                <ChatMessage key={message.id} message={message} />
               ))}
 
               {isLoading && (
@@ -100,15 +138,16 @@ export default function AiChat() {
                 <input
                   type="text"
                   value={input}
-                  onChange={e => setInput(e.target.value)}
-                  onKeyDown={e => e.key === 'Enter' && handleSend()}
+                  onChange={(event) => setInput(event.target.value)}
+                  onKeyDown={handleInputKeyDown}
                   placeholder="Hukuki bir soru sorun..."
                   disabled={isLoading}
                   className="flex-1 h-9 px-3 rounded-md border border-input bg-background text-sm focus:outline-none focus:ring-1 focus:ring-ring disabled:opacity-50"
                 />
                 <button
+                  type="button"
                   onClick={handleSend}
-                  disabled={isLoading || !input.trim()}
+                  disabled={!canSend}
                   className="h-9 w-9 rounded-md bg-primary text-primary-foreground hover:bg-primary/90 disabled:opacity-50 transition-colors flex items-center justify-center shrink-0"
                 >
                   <Send className="h-3.5 w-3.5" />
@@ -125,6 +164,7 @@ export default function AiChat() {
           animate={{ scale: 1 }}
           onClick={() => setIsOpen(true)}
           className="fixed bottom-6 right-6 h-12 w-12 rounded-full bg-primary text-primary-foreground shadow-lg hover:bg-primary/90 transition-colors flex items-center justify-center z-50"
+          type="button"
         >
           <MessageSquare className="h-5 w-5" />
         </motion.button>
@@ -132,3 +172,5 @@ export default function AiChat() {
     </>
   );
 }
+
+export default memo(AiChatComponent);

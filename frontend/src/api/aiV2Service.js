@@ -1,4 +1,5 @@
 import { api } from "./client";
+import { useAuthStore } from "@/store/useAuthStore";
 
 /**
  * AI v2 Service - Backend'deki /api/ai/v2/* endpoint'leri
@@ -29,14 +30,14 @@ export const aiV2Service = {
    * @param {string} conversationId - Sohbet oturum ID'si
    */
   chatStream: async (message, onChunk, signal, conversationId = "default-session") => {
-    const token = localStorage.getItem("token");
-    const baseUrl = import.meta.env.VITE_API_BASE_URL || "http://localhost:8080/api";
+    const token = useAuthStore.getState().getToken();
+    const baseUrl = api.defaults.baseURL || import.meta.env.VITE_API_BASE_URL || "http://localhost:8080/api";
     
     const response = await fetch(`${baseUrl}/ai/v2/chat/stream`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${token}`
+        ...(token ? { Authorization: `Bearer ${token}` } : {})
       },
       body: JSON.stringify({ message, conversationId }),
       signal

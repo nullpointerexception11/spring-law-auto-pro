@@ -1,4 +1,5 @@
 import { api } from "./client";
+import { useAuthStore } from "@/store/useAuthStore";
 
 /**
  * AI Service to interact with the Spring AI Assistant
@@ -10,7 +11,7 @@ export const aiService = {
    * @returns {Promise<{reply: string}>} The assistant's response
    */
   chat: async (message, conversationId = "default-session") => {
-    const response = await api.post("/ai/chat", { message, conversationId });
+    const response = await api.post("/ai/v2/chat", { message, conversationId });
     return response.data;
   },
 
@@ -22,12 +23,12 @@ export const aiService = {
    * @param {string} conversationId Session identifier for history
    */
   chatStream: async (message, onChunk, signal, conversationId = "default-session") => {
-    const token = localStorage.getItem("token");
-    const response = await fetch(`${import.meta.env.VITE_API_BASE_URL || "http://localhost:8080/api"}/ai/chat/stream`, {
+    const token = useAuthStore.getState().getToken();
+    const response = await fetch(`${api.defaults.baseURL}/ai/v2/chat/stream`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${token}`
+        ...(token ? { Authorization: `Bearer ${token}` } : {})
       },
       body: JSON.stringify({ message, conversationId }),
       signal // Item 5: AbortController support

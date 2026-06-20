@@ -19,7 +19,6 @@ export default defineConfig({
         manualChunks(id) {
           if (!id.includes("node_modules")) return;
 
-          if (id.includes("react") && (id.includes("react-dom") || id.includes("scheduler"))) return "vendor-react";
           if (id.includes("framer-motion") || id.includes("motion")) return "vendor-motion";
           if (id.includes("@tanstack/react-table") || id.includes("@tanstack/react-virtual")) return "vendor-table";
           if (id.includes("@radix-ui")) return "vendor-radix";
@@ -32,5 +31,3 @@ export default defineConfig({
     port: 5173,
   },
 });
-
-
