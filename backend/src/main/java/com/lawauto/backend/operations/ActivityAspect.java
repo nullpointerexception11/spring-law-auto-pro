@@ -2,10 +2,6 @@ package com.lawauto.backend.operations;
 
 import com.lawauto.backend.auth.AuthPrincipal;
 import com.lawauto.backend.auth.AuthorizationGuard;
-import com.lawauto.backend.org.Org;
-import com.lawauto.backend.org.OrgRepository;
-import com.lawauto.backend.user.User;
-import com.lawauto.backend.user.UserRepository;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -24,10 +20,8 @@ import java.util.UUID;
 @Slf4j
 public class ActivityAspect {
 
-    private final ActivityEventRepository activityEventRepository;
     private final AuthorizationGuard authorizationGuard;
-    private final OrgRepository orgRepository;
-    private final UserRepository userRepository;
+    private final ActivityAuditLogService activityAuditLogService;
 
     @AfterReturning(pointcut = "@annotation(auditable)", returning = "result")
     public void logActivity(JoinPoint joinPoint, Auditable auditable, Object result) {
@@ -36,10 +30,6 @@ public class ActivityAspect {
             if (principal == null) return;
 
             HttpServletRequest request = ((ServletRequestAttributes) RequestContextHolder.currentRequestAttributes()).getRequest();
-            
-            // Resolve actual entities (using proxy/reference to avoid full fetch if possible)
-            Org org = orgRepository.getReferenceById(java.util.Objects.requireNonNull(principal.orgId(), "orgId cannot be null"));
-            User user = userRepository.getReferenceById(java.util.Objects.requireNonNull(principal.userId(), "userId cannot be null"));
 
             UUID entityId = null;
             if (result instanceof UUID uuid) {
@@ -49,19 +39,19 @@ public class ActivityAspect {
                 entityId = identifiable.getId();
             }
 
-            ActivityEvent event = ActivityEvent.builder()
-                    .org(org)
-                    .user(user)
-                    .action(auditable.action())
-                    .entityType(auditable.entityType())
-                    .entityId(entityId)
-                    .summary(auditable.summary())
-                    .ipAddress(request.getRemoteAddr())
-                    .userAgent(request.getHeader("User-Agent"))
-                    .build();
+            // Capture everything we need from the request/principal on THIS
+            // thread (HttpServletRequest is not safe to touch from the async
+            // worker thread once doFilter returns), then hand off the actual
+            // DB write to an async executor so the response is not delayed
+            // waiting for the audit INSERT to commit.
+            String ipAddress = request.getRemoteAddr();
+            String userAgent = request.getHeader("User-Agent");
 
-            activityEventRepository.save(java.util.Objects.requireNonNull(event, "ActivityEvent cannot be null"));
-            log.debug("Audit log saved: {} on {} by {}", auditable.action(), auditable.entityType(), principal.email());
+            activityAuditLogService.recordAsync(
+                    principal.orgId(), principal.userId(), principal.email(),
+                    auditable.action(), auditable.entityType(), entityId, auditable.summary(),
+                    ipAddress, userAgent
+            );
 
         } catch (Exception e) {
             log.error("Failed to capture audit log", e);

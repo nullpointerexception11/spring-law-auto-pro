@@ -16,7 +16,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useAuthStore } from '@/store/useAuthStore';
-import { useMatters } from '@/hooks/useMatters';
+import { useDashboardStats } from '@/hooks/useMatters';
 import { CreateMatterModal } from '@/components/matters/CreateMatterModal';
 import { ROUTES } from '@/lib/constants';
 import { cn } from '@/lib/utils';
@@ -25,9 +25,14 @@ function DashboardPageComponent() {
   const { user, role } = useAuthStore();
   const navigate = useNavigate();
   const [modalOpen, setModalOpen] = useState(false);
-  const { data, isLoading } = useMatters({ page: 0, size: 100 });
+  const { data: stats, isLoading } = useDashboardStats();
 
-  const matters = data?.content || [];
+  const activeCount = stats?.activeCount ?? 0;
+  const pendingCount = stats?.pendingCount ?? 0;
+  const closedCount = stats?.closedCount ?? 0;
+  const totalCount = stats?.totalCount ?? 0;
+  const recentMatters = stats?.recentMatters ?? [];
+  const firstOpenedAt = stats?.firstOpenedAt ? new Date(stats.firstOpenedAt) : null;
 
   const openCreateMatterModal = useCallback(() => setModalOpen(true), []);
   const closeCreateMatterModal = useCallback(() => setModalOpen(false), []);
@@ -41,42 +46,6 @@ function DashboardPageComponent() {
     },
     [navigate]
   );
-
-  const {
-    activeCount,
-    pendingCount,
-    closedCount,
-    totalCount,
-    recentMatters,
-    firstOpenedAt,
-  } = useMemo(() => {
-    let active = 0;
-    let pending = 0;
-    let closed = 0;
-    let earliest = null;
-
-    for (const matter of matters) {
-      if (matter.status === 'OPEN') active += 1;
-      else if (matter.status === 'PENDING') pending += 1;
-      else if (matter.status === 'CLOSED') closed += 1;
-
-      if (matter.openedAt) {
-        const openedAt = new Date(matter.openedAt).getTime();
-        if (Number.isFinite(openedAt) && (earliest === null || openedAt < earliest)) {
-          earliest = openedAt;
-        }
-      }
-    }
-
-    return {
-      activeCount: active,
-      pendingCount: pending,
-      closedCount: closed,
-      totalCount: matters.length,
-      recentMatters: [...matters].sort((a, b) => new Date(b.openedAt) - new Date(a.openedAt)).slice(0, 5),
-      firstOpenedAt: earliest ? new Date(earliest) : null,
-    };
-  }, [matters]);
 
   const quickActions = useMemo(
     () => [

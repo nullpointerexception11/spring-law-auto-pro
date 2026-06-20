@@ -8,6 +8,7 @@ export const MATTER_QUERY_KEYS = {
   all: ['matters'],
   list: (page, size) => ['matters', page, size],
   detail: (id) => ['matter', id],
+  stats: ['matters', 'stats'],
 };
 
 const normalizePage = (data, fallbackSize = DEFAULT_PAGE_SIZE) => {
@@ -85,6 +86,33 @@ export const useMatter = (id) => {
 };
 
 /**
+ * Hook for the dashboard summary widget (active/pending/closed counts +
+ * top-5 recent matters).
+ *
+ * PERFORMANCE NOTE: this replaces the previous pattern of calling
+ * `useMatters({ page: 0, size: 100 })` from the dashboard just to compute
+ * 3 counters and slice the 5 most recent rows in the browser. That meant:
+ *   - shipping ~100 full matter DTOs over the wire on every dashboard load
+ *   - the backend running its (lateral-join-heavy) list query for 100 rows
+ *     instead of the 5 actually displayed
+ *   - re-deriving the same aggregate in JS on every render
+ * `/matters/stats` does the counting in SQL (single aggregate query) and
+ * returns a handful of numbers plus 5 rows — orders of magnitude less data
+ * and DB work for the same UI.
+ */
+export const useDashboardStats = () => {
+  return useQuery({
+    queryKey: MATTER_QUERY_KEYS.stats,
+    queryFn: async () => {
+      const response = await api.get('/matters/stats');
+      return response.data;
+    },
+    staleTime: 60_000,
+    gcTime: 10 * 60_000,
+  });
+};
+
+/**
  * Hook for creating a new matter with Optimistic Updates
  */
 export const useCreateMatter = () => {
@@ -102,9 +130,18 @@ export const useCreateMatter = () => {
       return response.data;
     },
     onMutate: async (newMatter) => {
-      await queryClient.cancelQueries({ queryKey: MATTER_QUERY_KEYS.all });
+      // Scope to paginated LIST queries only (['matters', page, size]).
+      // MATTER_QUERY_KEYS.all (['matters']) as a predicate would also match
+      // ['matters', 'stats'], whose shape ({activeCount, recentMatters, ...})
+      // is not a paginated page — running it through normalizePage() would
+      // silently replace it with an empty/garbled page object until the
+      // onSettled invalidation refetches it.
+      const isListQuery = (query) =>
+        query.queryKey[0] === 'matters' && typeof query.queryKey[1] === 'number';
 
-      const previousMatters = queryClient.getQueriesData({ queryKey: MATTER_QUERY_KEYS.all });
+      await queryClient.cancelQueries({ predicate: isListQuery });
+
+      const previousMatters = queryClient.getQueriesData({ predicate: isListQuery });
       const optimisticMatter = {
         id: `temp-${Date.now()}`,
         title: newMatter.title,
@@ -117,7 +154,7 @@ export const useCreateMatter = () => {
         displayId: 'NEW',
       };
 
-      queryClient.setQueriesData({ queryKey: MATTER_QUERY_KEYS.all }, (oldData) => {
+      queryClient.setQueriesData({ predicate: isListQuery }, (oldData) => {
         const page = normalizePage(oldData);
         if (page.number !== 0) return oldData;
 

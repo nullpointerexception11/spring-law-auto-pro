@@ -25,7 +25,7 @@ public class EmbeddingService {
 
     public float[] generateEmbedding(String text) {
         if (embeddingCache != null) {
-            String cacheKey = text.hashCode() + "_" + text.length();
+            String cacheKey = cacheKeyFor(text);
             org.springframework.cache.Cache.ValueWrapper cached = embeddingCache.get(cacheKey);
             if (cached != null && cached.get() instanceof float[]) {
                 return (float[]) cached.get();
@@ -36,11 +36,39 @@ public class EmbeddingService {
         float[] embedding = embeddingModel.embed(text);
 
         if (embeddingCache != null) {
-            String cacheKey = text.hashCode() + "_" + text.length();
-            embeddingCache.put(cacheKey, embedding);
+            embeddingCache.put(cacheKeyFor(text), embedding);
         }
 
         return embedding;
+    }
+
+    /**
+     * PERFORMANCE NOTE: the previous key (`text.hashCode() + "_" +
+     * text.length()`) had two problems:
+     *  1. Correctness: java.lang.String#hashCode() is a 32-bit hash with no
+     *     uniqueness guarantee. Two different chunks of the same length
+     *     CAN collide and silently return the wrong cached embedding to the
+     *     vector search / RAG pipeline — a correctness bug disguised as a
+     *     performance optimization.
+     *  2. Hit-rate: raw, un-normalized text means "Hello world" and
+     *     "hello world  " are treated as different keys even though an
+     *     embedding model would likely benefit from being deduplicated.
+     *
+     * SHA-256 over a normalized (trimmed, whitespace-collapsed) string
+     * fixes both: an effectively collision-free key, and a higher cache
+     * hit rate on near-duplicate inputs (common with re-indexed or
+     * re-chunked legal text).
+     */
+    private static String cacheKeyFor(String text) {
+        String normalized = text.trim().replaceAll("\\s+", " ");
+        try {
+            java.security.MessageDigest digest = java.security.MessageDigest.getInstance("SHA-256");
+            byte[] hash = digest.digest(normalized.getBytes(java.nio.charset.StandardCharsets.UTF_8));
+            return java.util.HexFormat.of().formatHex(hash);
+        } catch (java.security.NoSuchAlgorithmException e) {
+            // SHA-256 is guaranteed available on every JVM; this is unreachable.
+            throw new IllegalStateException(e);
+        }
     }
 
     public List<float[]> generateEmbeddings(List<String> texts) {

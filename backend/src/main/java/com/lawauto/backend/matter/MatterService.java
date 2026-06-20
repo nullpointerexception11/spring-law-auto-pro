@@ -93,6 +93,45 @@ public class MatterService {
     }
 
     /**
+     * Lightweight dashboard read-model: aggregate counts (single GROUP BY-ish
+     * query) + bounded top-5 recent list (LIMIT 5, no lateral joins).
+     *
+     * Replaces the previous pattern of the frontend requesting
+     * size=100 full matter rows and reducing them in the browser, which
+     * forced the backend to run the 3-lateral-join list query 100 times
+     * over just to throw away everything except 4 counters and 5 rows.
+     */
+    @Transactional(readOnly = true)
+    public com.lawauto.backend.matter.dto.MatterDashboardStatsDto getDashboardStats(UUID orgId) {
+        authorizationGuard.requireOrg(orgId);
+
+        var stats = matterRepository.getStatsByOrgId(orgId);
+        var recent = matterRepository.findTop5RecentByOrgId(orgId).stream()
+                .map(p -> new MatterListDto(
+                        p.getId(),
+                        p.getTitle(),
+                        p.getReferenceNumber(),
+                        p.getDisplayId(),
+                        p.getStatus() != null ? MatterStatus.valueOf(p.getStatus()) : null,
+                        p.getOpenedAt(),
+                        p.getClientName(),
+                        p.getAssignedLawyerName(),
+                        p.getNextHearingDate(),
+                        p.getSummary()
+                ))
+                .toList();
+
+        return new com.lawauto.backend.matter.dto.MatterDashboardStatsDto(
+                stats.getActiveCount(),
+                stats.getPendingCount(),
+                stats.getClosedCount(),
+                stats.getTotalCount(),
+                stats.getFirstOpenedAt(),
+                recent
+        );
+    }
+
+    /**
      * Retrieves the highly optimized comprehensive Matter Detail Read Model.
      * Enforces fine-grained data-level access control.
      */

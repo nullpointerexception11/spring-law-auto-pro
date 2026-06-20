@@ -27,6 +27,17 @@ public class MatterController {
     }
 
     /**
+     * GET /api/matters/stats
+     * Lightweight aggregate counts + top-5 recent matters for the dashboard.
+     * Replaces the old client-side pattern of fetching size=100 full rows.
+     */
+    @GetMapping("/stats")
+    public com.lawauto.backend.matter.dto.MatterDashboardStatsDto getDashboardStats() {
+        var principal = java.util.Objects.requireNonNull(authorizationGuard.currentPrincipal());
+        return matterService.getDashboardStats(java.util.Objects.requireNonNull(principal.orgId()));
+    }
+
+    /**
      * GET /api/matters/{matterId}
      * Returns a highly optimized, comprehensive Read Model for the Matter Detail view.
      */
