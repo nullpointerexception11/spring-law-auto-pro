@@ -1,0 +1,11 @@
+# Build outputs
+backend/target/
+frontend/node_modules/
+frontend/dist/.vite/
+
+# Logs
+*.log
+
+# OS / editor noise
+.DS_Store
+Thumbs.db
